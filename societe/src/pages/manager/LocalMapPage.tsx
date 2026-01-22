@@ -1,13 +1,10 @@
-import { useMemo, useState } from 'react';
-import { MapPin, Radio, Navigation, Clock, Users, Bus, Filter, ArrowLeft, AlertTriangle } from 'lucide-react@0.487.0';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { MapPin, Navigation, Clock, Bus, AlertTriangle } from 'lucide-react';
 import { Card } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { BackButton } from '../../components/ui/back-button';
 import { useFilteredData } from '../../hooks/useFilteredData';
-import { useAuth } from '../../contexts/AuthContext';
-import { formatTime, filterByToday } from '../../utils/dateUtils';
+import { formatTime } from '../../utils/dateUtils';
 import { getSoldSeatsCount, getActiveLocalTrips } from '../../utils/statsUtils';
 import { getLocalTripStatusBadgeClass } from '../../utils/styleUtils';
 import { getLocalTripStatusLabel } from '../../utils/labels';
@@ -27,15 +24,13 @@ interface LocalTrip {
 }
 
 export default function LocalMapPage() {
-  const { user } = useAuth();
   const { trips } = useFilteredData();
-  const navigate = useNavigate();
   
   // ✅ REFACTORISÉ: Utilise la fonction centralisée avec fenêtre de 2h
-  const localTrips = useMemo(() => {
+  const localTrips = useMemo((): LocalTrip[] => {
     const activeTrips = getActiveLocalTrips(trips, 2);
     
-    return activeTrips.map(trip => {
+    return activeTrips.map((trip: Trip) => {
       // Calculer statut basé sur le trip
       let status: LocalTrip['status'] = 'at_station';
       
@@ -76,10 +71,10 @@ export default function LocalMapPage() {
     });
   }, [trips]);
   
-  const atStation = localTrips.filter(t => t.status === 'at_station' || t.status === 'boarding');
-  const onRoute = localTrips.filter(t => t.status === 'en_route');
-  const delayed = localTrips.filter(t => t.status === 'delayed');
-  const totalPassengers = localTrips.reduce((acc, t) => acc + t.passengers, 0);
+  const atStation = localTrips.filter((t: LocalTrip) => t.status === 'at_station' || t.status === 'boarding');
+  const onRoute = localTrips.filter((t: LocalTrip) => t.status === 'en_route');
+  const delayed = localTrips.filter((t: LocalTrip) => t.status === 'delayed');
+  const totalPassengers = localTrips.reduce((acc: number, t: LocalTrip) => acc + t.passengers, 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -188,7 +183,7 @@ export default function LocalMapPage() {
             </p>
           </Card>
         ) : (
-          localTrips.map((trip) => (
+          localTrips.map((trip: any) => (
             <Card key={trip.id} className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -235,3 +230,5 @@ export default function LocalMapPage() {
     </div>
   );
 }
+
+

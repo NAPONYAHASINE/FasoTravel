@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Search, RefreshCw, XCircle, AlertCircle, Clock, CheckCircle } from 'lucide-react@0.487.0';
-import { useNavigate } from 'react-router-dom';
+import { Search, RefreshCw, XCircle, AlertCircle, CheckCircle } from 'lucide-react';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatCurrency } from '../../utils/formatters';
@@ -14,10 +13,9 @@ import { Input } from '../../components/ui/input';
 import { FormDialog } from '../../components/forms/FormDialog';
 import { BackButton } from '../../components/ui/back-button';
 import type { Ticket } from '../../contexts/DataContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export default function RefundPage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { tickets, refundTicket } = useFilteredData();
   const [searchTerm, setSearchTerm] = useState('');
@@ -174,7 +172,7 @@ export default function RefundPage() {
             </p>
           </Card>
         ) : (
-          filteredTickets.map((ticket) => (
+          filteredTickets.map((ticket: any) => (
             <Card key={ticket.id} className="p-6 hover:border-[#f59e0b] transition-colors">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -304,3 +302,5 @@ export default function RefundPage() {
     </div>
   );
 }
+
+

@@ -1,12 +1,16 @@
 /**
  * Service API pour l'authentification
+ * 
+ * ✅ Utilise config/types/constants communs avec Mobile
  */
 
-import { isLocalMode, API_ENDPOINTS, API_CONFIG } from '../config';
+import { isLocalMode, API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
-import type { LoginDto, RegisterDto, AuthResponse, ResetPasswordDto } from '../types';
+import { STORAGE_AUTH_TOKEN, STORAGE_CURRENT_USER, STORAGE_MANAGERS, STORAGE_CASHIERS } from '../../shared/constants/storage';
+import type { AuthResponse, OperatorUser } from '../../shared/types/common';
+import type { LoginDto, RegisterDto, ResetPasswordDto } from '../types';
 
 class AuthService {
   /**
@@ -17,8 +21,8 @@ class AuthService {
 
     if (isLocalMode()) {
       // MODE LOCAL : Vérifier dans localStorage
-      const managers = storageService.get('managers') || [];
-      const cashiers = storageService.get('cashiers') || [];
+      const managers = storageService.get(STORAGE_MANAGERS) || [];
+      const cashiers = storageService.get(STORAGE_CASHIERS) || [];
       
       // Chercher l'utilisateur
       const manager = managers.find((m: any) => m.email === data.email && m.password === data.password);
@@ -39,21 +43,21 @@ class AuthService {
         user: {
           id: user.id,
           email: user.email,
-          name: user.name,
           role: manager ? 'manager' : 'cashier',
+          status: 'active',
           gareId: user.gareId,
           gareName: user.gareName,
-        },
+        } as OperatorUser,
         token: `mock_token_${user.id}`,
       };
 
       // Sauvegarder la session
-      storageService.set('auth_token', authResponse.token);
-      storageService.set('auth_user', authResponse.user);
+      storageService.set(STORAGE_AUTH_TOKEN, authResponse.token);
+      storageService.set(STORAGE_CURRENT_USER, authResponse.user);
 
-      logger.success('✅ Connexion réussie (local)', { 
-        user: authResponse.user.name, 
-        role: authResponse.user.role 
+      logger.info('✅ Connexion réussie (local)', { 
+        user: authResponse.user.email, 
+        role: (authResponse.user as OperatorUser).role 
       });
 
       return authResponse;
@@ -62,12 +66,12 @@ class AuthService {
       const authResponse = await apiClient.post<AuthResponse>(API_ENDPOINTS.auth.login, data);
 
       // Sauvegarder la session
-      storageService.set('auth_token', authResponse.token);
-      storageService.set('auth_user', authResponse.user);
+      storageService.set(STORAGE_AUTH_TOKEN, authResponse.token);
+      storageService.set(STORAGE_CURRENT_USER, authResponse.user);
 
-      logger.success('✅ Connexion réussie (API)', { 
-        user: authResponse.user.name, 
-        role: authResponse.user.role 
+logger.info('✅ Connexion réussie (API)', {
+        user: authResponse.user.email,
+        role: (authResponse.user as OperatorUser).role 
       });
 
       return authResponse;
@@ -95,15 +99,15 @@ class AuthService {
     logger.info('👋 Déconnexion');
 
     if (isLocalMode()) {
-      storageService.remove('auth_token');
-      storageService.remove('auth_user');
-      logger.success('✅ Déconnexion (local)');
+      storageService.remove(STORAGE_AUTH_TOKEN);
+      storageService.remove(STORAGE_CURRENT_USER);
+      logger.info('✅ Déconnexion (local)');
     } else {
       await apiClient.post(API_ENDPOINTS.auth.logout, {});
 
-      storageService.remove('auth_token');
-      storageService.remove('auth_user');
-      logger.success('✅ Déconnexion (API)');
+      storageService.remove(STORAGE_AUTH_TOKEN);
+      storageService.remove(STORAGE_CURRENT_USER);
+      logger.info('✅ Déconnexion (API)');
     }
   }
 
@@ -111,21 +115,21 @@ class AuthService {
    * Obtenir l'utilisateur connecté
    */
   getCurrentUser(): AuthResponse['user'] | null {
-    return storageService.get('auth_user');
+    return storageService.get(STORAGE_CURRENT_USER);
   }
 
   /**
    * Vérifier si l'utilisateur est connecté
    */
   isAuthenticated(): boolean {
-    return !!storageService.get('auth_token');
+    return !!storageService.get(STORAGE_AUTH_TOKEN);
   }
 
   /**
    * Obtenir le token d'authentification
    */
   getToken(): string | null {
-    return storageService.get('auth_token');
+    return storageService.get(STORAGE_AUTH_TOKEN);
   }
 
   /**
@@ -140,7 +144,7 @@ class AuthService {
       return;
     } else {
       await apiClient.post(API_ENDPOINTS.auth.resetPassword, data);
-      logger.success('✅ Email de réinitialisation envoyé');
+      logger.info('✅ Email de réinitialisation envoyé');
     }
   }
 
@@ -148,7 +152,7 @@ class AuthService {
    * Vérifier si l'utilisateur a un rôle spécifique
    */
   hasRole(role: 'responsable' | 'manager' | 'cashier'): boolean {
-    const user = this.getCurrentUser();
+    const user = this.getCurrentUser() as OperatorUser | null;
     return user?.role === role;
   }
 
@@ -156,7 +160,7 @@ class AuthService {
    * Obtenir l'ID de la gare de l'utilisateur connecté
    */
   getCurrentGareId(): string | undefined {
-    const user = this.getCurrentUser();
+    const user = this.getCurrentUser() as OperatorUser | null;
     return user?.gareId;
   }
 }

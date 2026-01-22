@@ -3,7 +3,7 @@
  * Centralise les classes de badges et couleurs
  */
 
-import { Clock, MapPin, Navigation, CheckCircle2, XCircle } from 'lucide-react@0.487.0';
+import { Clock, MapPin, Navigation, CheckCircle2, XCircle } from 'lucide-react';
 import type { Ticket, Trip, CashTransaction, Incident } from '../contexts/DataContext';
 
 /**

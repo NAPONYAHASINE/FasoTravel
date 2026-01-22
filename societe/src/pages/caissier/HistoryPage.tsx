@@ -10,7 +10,7 @@ import { getTransactionTypeLabel, getPaymentMethodLabel } from '../../utils/labe
 import { formatCurrency } from '../../utils/formatters';
 import { calculateSalesAmount, calculateRefundsAmount, calculateCashMovements, calculateNetRevenue } from '../../utils/statsUtils';
 import { DollarSign, TrendingDown, TrendingUp, Wallet, Calendar, Filter } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 // Helper function to get period label
 const getPeriodLabel = (period: 'today' | 'week' | 'month'): string => {
@@ -43,11 +43,11 @@ export default function HistoryPage() {
     }
 
     return cashTransactions
-      .filter(t => {
+      .filter((t: any) => {
         const transDate = new Date(t.timestamp);
         return transDate >= startDate && t.status === 'completed';
       })
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [cashTransactions, period]);
 
   // Calculate stats
@@ -66,8 +66,8 @@ export default function HistoryPage() {
     };
   }, [filteredTransactions]);
 
-  const getTypeInfo = (type: string) => {
-    const configs = {
+  const getTypeInfo = (type: 'refund' | 'sale' | 'deposit' | 'withdrawal') => {
+    const configs: Record<'refund' | 'sale' | 'deposit' | 'withdrawal', any> = {
       sale: {
         label: getTransactionTypeLabel(type),
         icon: TrendingUp,
@@ -288,7 +288,7 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredTransactions.map((transaction) => {
+            {filteredTransactions.map((transaction: any) => {
               const typeInfo = getTypeInfo(transaction.type);
               const Icon = typeInfo.icon;
               const isPositive = transaction.type === 'sale' || transaction.type === 'deposit';
@@ -339,3 +339,5 @@ export default function HistoryPage() {
     </div>
   );
 }
+
+

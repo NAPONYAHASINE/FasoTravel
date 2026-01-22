@@ -18,13 +18,14 @@ class ScheduleService {
       const newTemplate: ScheduleTemplate = {
         ...data,
         id: generateId(),
-      };
+        createdAt: new Date().toISOString(),
+      } as unknown as ScheduleTemplate;
 
-      const templates = storageService.get<ScheduleTemplate[]>('scheduleTemplates') || [];
+      const templates = (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
       templates.push(newTemplate);
-      storageService.set('scheduleTemplates', templates);
+      (storageService.set as any)('scheduleTemplates', templates);
 
-      logger.success('✅ Horaire créé (local)', { id: newTemplate.id });
+      logger.info('✅ Horaire créé (local)', { id: newTemplate.id });
       return newTemplate;
     } else {
       return await apiClient.post<ScheduleTemplate>(API_ENDPOINTS.scheduleTemplates, data);
@@ -33,7 +34,7 @@ class ScheduleService {
 
   async list(): Promise<ScheduleTemplate[]> {
     if (isLocalMode()) {
-      return storageService.get<ScheduleTemplate[]>('scheduleTemplates') || [];
+      return (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
     } else {
       return await apiClient.get<ScheduleTemplate[]>(API_ENDPOINTS.scheduleTemplates);
     }
@@ -41,7 +42,7 @@ class ScheduleService {
 
   async getById(id: string): Promise<ScheduleTemplate | null> {
     if (isLocalMode()) {
-      const templates = storageService.get<ScheduleTemplate[]>('scheduleTemplates') || [];
+      const templates = (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
       return templates.find(t => t.id === id) || null;
     } else {
       try {
@@ -54,15 +55,15 @@ class ScheduleService {
 
   async update(id: string, data: UpdateScheduleTemplateDto): Promise<ScheduleTemplate> {
     if (isLocalMode()) {
-      const templates = storageService.get<ScheduleTemplate[]>('scheduleTemplates') || [];
+      const templates = (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
       const index = templates.findIndex(t => t.id === id);
 
       if (index === -1) throw new Error('Horaire introuvable');
 
-      templates[index] = { ...templates[index], ...data };
-      storageService.set('scheduleTemplates', templates);
+      templates[index] = { ...templates[index], ...data } as unknown as ScheduleTemplate;
+      (storageService.set as any)('scheduleTemplates', templates);
 
-      logger.success('✅ Horaire mis à jour (local)', { id });
+      logger.info('✅ Horaire mis à jour (local)', { id });
       return templates[index];
     } else {
       return await apiClient.put<ScheduleTemplate>(`${API_ENDPOINTS.scheduleTemplates}/${id}`, data);
@@ -71,9 +72,9 @@ class ScheduleService {
 
   async delete(id: string): Promise<void> {
     if (isLocalMode()) {
-      const templates = storageService.get<ScheduleTemplate[]>('scheduleTemplates') || [];
+      const templates = (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
       const filtered = templates.filter(t => t.id !== id);
-      storageService.set('scheduleTemplates', filtered);
+      (storageService.set as any)('scheduleTemplates', filtered);
       logger.info('🗑️ Horaire supprimé (local)', { id });
     } else {
       await apiClient.delete(`${API_ENDPOINTS.scheduleTemplates}/${id}`);

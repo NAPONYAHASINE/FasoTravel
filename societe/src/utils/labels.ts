@@ -4,7 +4,7 @@
  */
 
 import type { Ticket, Trip, CashTransaction, Incident } from '../contexts/DataContext';
-import { Clock, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react@0.487.0';
+import { Clock, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 /**
  * Retourne le label d'une méthode de paiement

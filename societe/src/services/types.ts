@@ -8,13 +8,6 @@
 import type {
   Ticket,
   Trip,
-  Route,
-  Station,
-  Manager,
-  Cashier,
-  ScheduleTemplate,
-  Story,
-  CashTransaction,
 } from '../contexts/DataContext';
 
 // ============================================
@@ -65,8 +58,8 @@ export interface CreateTicketDto {
   passengerEmail?: string;
   seatNumber: string;
   price: number;
-  salesChannel: 'guichet' | 'app-mobile';
-  paymentMethod: 'cash' | 'mobile-money' | 'card';
+  salesChannel: 'online' | 'counter';
+  paymentMethod: 'cash' | 'mobile_money' | 'card';
   sellerId: string;
   sellerName: string;
   sellerRole: 'manager' | 'cashier';
@@ -259,7 +252,7 @@ export interface UpdateScheduleTemplateDto {
 // PRICING DTOs
 // ============================================
 
-export interface PriceSegment {
+export interface PricingSegment {
   id: string;
   route: string;
   currentPrice: number;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, HelpCircle, Mail, Phone, MessageSquare, CheckCircle, Clock, AlertCircle, Plus } from "lucide-react@0.487.0";
+import { Send, HelpCircle, Mail, Phone, MessageSquare, AlertCircle, Plus } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getSupportTicketStatusLabel, getSupportTicketPriorityLabel, getSupportCategoryIcon } from '../../utils/labels';
 import { getSupportTicketStatusBadgeClass, getSupportTicketPriorityBadgeClass } from '../../utils/styleUtils';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -29,7 +29,7 @@ export default function SupportPage() {
   });
 
   // ✅ Manager voit ses propres demandes d'aide
-  const tickets = supportTickets.sort((a, b) => 
+  const tickets = supportTickets.sort((a: any, b: any) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
@@ -156,7 +156,7 @@ export default function SupportPage() {
               />
             ) : (
               <div className="space-y-4">
-                {tickets.map((ticket) => (
+                {tickets.map((ticket: any) => (
                   <Card key={ticket.id} className="p-4 border-l-4 border-l-blue-500">
                     <div className="space-y-3">
                       {/* Header */}
@@ -192,7 +192,7 @@ export default function SupportPage() {
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
                             💬 Discussion avec l'équipe FasoTravel
                           </p>
-                          {ticket.messages.map((msg) => (
+                          {ticket.messages.map((msg: any) => (
                             <div
                               key={msg.id}
                               className={`p-3 rounded-lg ${
@@ -299,7 +299,7 @@ export default function SupportPage() {
             />
             <Select
               value={newTicket.category}
-              onValueChange={(value) => setNewTicket({ ...newTicket, category: value as 'technical' | 'financial' | 'operational' | 'other' })}
+              onValueChange={(value: any) => setNewTicket({ ...newTicket, category: value as 'technical' | 'financial' | 'operational' | 'other' })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Catégorie" />
@@ -313,7 +313,7 @@ export default function SupportPage() {
             </Select>
             <Select
               value={newTicket.priority}
-              onValueChange={(value) => setNewTicket({ ...newTicket, priority: value as 'low' | 'medium' | 'high' | 'urgent' })}
+              onValueChange={(value: any) => setNewTicket({ ...newTicket, priority: value as 'low' | 'medium' | 'high' | 'urgent' })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Priorité" />
@@ -348,3 +348,5 @@ export default function SupportPage() {
     </div>
   );
 }
+
+

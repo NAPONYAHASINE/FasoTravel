@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Calendar, Edit, History } from "lucide-react@0.487.0";
+import { useState } from 'react';
+import { DollarSign, TrendingUp, Calendar, Edit, History } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { formatCurrency } from '../../utils/formatters';
 import { formatDate } from '../../utils/dateUtils';
 
@@ -321,7 +321,7 @@ export default function PricingPage() {
               </tr>
             </thead>
             <tbody>
-              {segments.map((segment) => {
+              {segments.map((segment: any) => {
                 const priceChange = getPriceChange(segment);
                 
                 return (
@@ -510,3 +510,5 @@ export default function PricingPage() {
     </div>
   );
 }
+
+

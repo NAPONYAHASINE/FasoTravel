@@ -79,18 +79,18 @@ export function generateSeatGrid(layout: SeatLayout): {
     right: string[];
   }[];
 } {
-  const grid = [];
+  const grid: Array<{ left: string[]; right: string[] }> = [];
   const { rows, leftSeats, rightSeats } = layout.structure;
   
   for (let row = 0; row < rows; row++) {
     const rowLetter = String.fromCharCode(65 + row);
     
-    const leftSide = [];
+    const leftSide: string[] = [];
     for (let col = 1; col <= leftSeats; col++) {
       leftSide.push(`${rowLetter}${col}`);
     }
     
-    const rightSide = [];
+    const rightSide: string[] = [];
     for (let col = 1; col <= rightSeats; col++) {
       rightSide.push(`${rowLetter}${col + leftSeats}`);
     }

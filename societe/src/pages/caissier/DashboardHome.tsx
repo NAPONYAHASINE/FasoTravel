@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, DollarSign, MapPin, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -100,7 +99,7 @@ export default function DashboardHome() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentSales.map((ticket) => (
+              {recentSales.map((ticket: any) => (
                 <div
                   key={ticket.id}
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#f59e0b] transition-colors"
@@ -148,7 +147,7 @@ export default function DashboardHome() {
             </div>
           ) : (
             <div className="space-y-3">
-              {upcomingTrips.map((trip) => {
+              {upcomingTrips.map((trip: any) => {
                 const occupancyRate = calculateTripOccupancy(trip);
                 
                 return (
@@ -230,3 +229,6 @@ export default function DashboardHome() {
     </div>
   );
 }
+
+
+

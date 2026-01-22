@@ -1,10 +1,12 @@
 /// <reference types="vite/client" />
 
-// Si tu veux être explicite, tu peux ajouter :
-// interface ImportMetaEnv {
-//   readonly MODE: string;
-//   readonly VITE_API_URL: string;
-// }
-// interface ImportMeta {
-//   readonly env: ImportMetaEnv;
-// }
+interface ImportMetaEnv {
+  readonly MODE: string;
+  readonly DEV: boolean;
+  readonly PROD: boolean;
+  readonly SSR: boolean;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

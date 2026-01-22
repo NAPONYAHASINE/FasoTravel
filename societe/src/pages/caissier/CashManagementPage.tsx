@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, DollarSign, TrendingUp, TrendingDown, Plus, Minus, ShoppingCart, Download, Upload } from 'lucide-react@0.487.0';
-import { useNavigate } from 'react-router-dom';
+import { DollarSign, TrendingUp, TrendingDown, ShoppingCart, Download, Upload } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { formatCurrency } from '../../utils/formatters';
@@ -14,7 +13,7 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { FormDialog } from '../../components/forms/FormDialog';
 import { BackButton } from '../../components/ui/back-button';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export default function CashManagementPage() {
   const { user } = useAuth();
@@ -278,7 +277,7 @@ export default function CashManagementPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {todayTransactions.slice().reverse().map((transaction) => (
+            {todayTransactions.slice().reverse().map((transaction: any) => (
               <div
                 key={transaction.id}
                 className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#f59e0b] transition-colors"
@@ -393,3 +392,5 @@ export default function CashManagementPage() {
     </div>
   );
 }
+
+

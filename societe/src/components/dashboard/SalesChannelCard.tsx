@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TrendingUp, Smartphone, Store, DollarSign } from 'lucide-react@0.487.0';
+import { TrendingUp, Smartphone, Store, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
@@ -221,3 +221,4 @@ export default function SalesChannelCard({ tickets }: SalesChannelCardProps) {
     </Card>
   );
 }
+

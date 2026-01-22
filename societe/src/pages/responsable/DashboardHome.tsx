@@ -1,30 +1,25 @@
-import { useState, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Bus, Users, MapPin, AlertCircle, Clock, DollarSign, Calendar, ArrowUpRight, Activity, Smartphone, Store } from "lucide-react@0.487.0";
+import { useMemo } from 'react';
+import { TrendingUp, Bus, MapPin, AlertCircle, Clock, DollarSign, Calendar, ArrowUpRight, Activity } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
+import type { Incident, Trip } from '../../contexts/DataContext';
 import StatCard from '../../components/dashboard/StatCard';
 import SalesChannelCard from '../../components/dashboard/SalesChannelCard';
 import RecentTripsTable from '../../components/dashboard/RecentTripsTable';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Progress } from '../../components/ui/progress';
-import { Badge } from '../../components/ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useRevenueStats, useOccupancyStats, useTripStats, useLast7DaysSales } from '../../hooks/useDashboardStats';
 import { formatAmount, getActiveAndUpcomingTrips } from '../../utils/statsUtils';
 import { getToday, formatTime } from '../../utils/dateUtils';
 
 export default function DashboardHome() {
   const navigate = useNavigate();
-  const { trips, tickets, stations, incidents, getAnalytics } = useData();
-  const analytics = getAnalytics();
+  const { trips, tickets, stations, incidents } = useData();
 
   // Use custom hooks for stats calculations
-  const { todayRevenue, revenueChange, revenueTrend, revenueChangeFormatted } = useRevenueStats(tickets);
-  const { todayOccupancy, occupancyChange, occupancyTrend, occupancyChangeFormatted } = useOccupancyStats(trips);
-  const { activeTrips, activeTripsCount, upcomingTrips, upcomingTripsCount } = useTripStats(trips, 6);
+  const { todayRevenue, revenueTrend, revenueChangeFormatted } = useRevenueStats(tickets);
+  const { todayOccupancy, occupancyTrend, occupancyChangeFormatted } = useOccupancyStats(trips);
+  const { activeTripsCount, upcomingTripsCount } = useTripStats(trips, 6);
   const last7DaysSales = useLast7DaysSales(tickets);
-
-  // Stats principales
   const stats = [
     {
       title: 'Départs Actifs',
@@ -92,9 +87,9 @@ export default function DashboardHome() {
   const activeIncidents = useMemo(() => {
     // ✅ COHÉRENT avec IncidentsPage: incidents en attente de validation + enrichis avec données trip
     return incidents
-      .filter(i => i.validationStatus === 'pending') // En attente de validation
-      .map(incident => {
-        const trip = trips.find(t => t.id === incident.tripId);
+      .filter((i: Incident) => i.validationStatus === 'pending') // En attente de validation
+      .map((incident: Incident) => {
+        const trip = trips.find((t: Trip) => t.id === incident.tripId);
         return {
           ...incident,
           route: trip ? `${trip.departure} → ${trip.arrival}` : 'N/A',
@@ -159,7 +154,7 @@ export default function DashboardHome() {
 
           {/* Graphique simulé avec barres */}
           <div className="space-y-4">
-            {last7DaysSales.map((dayData) => {
+            {last7DaysSales.map((dayData: any) => {
               const { day, online, guichet, total } = dayData;
 
               return (
@@ -216,7 +211,7 @@ export default function DashboardHome() {
           </h3>
 
           <div className="space-y-4">
-            {garesStats.map((gare) => (
+            {garesStats.map((gare: any) => (
               <div
                 key={gare.id}
                 className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#f59e0b] dark:hover:border-[#f59e0b] transition-colors cursor-pointer"
@@ -292,20 +287,7 @@ export default function DashboardHome() {
           </div>
 
           <div className="space-y-3">
-            {activeIncidents.slice(0, 5).map((incident) => {
-              const typeInfo = (() => {
-                switch (incident.type) {
-                  case 'delay':
-                    return { label: 'Retard', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' };
-                  case 'breakdown':
-                    return { label: 'Panne', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' };
-                  case 'accident':
-                    return { label: 'Accident', color: 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' };
-                  default:
-                    return { label: 'Autre', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' };
-                }
-              })();
-
+            {activeIncidents.slice(0, 5).map((incident: any) => {
               return (
                 <div
                   key={incident.id}
@@ -378,3 +360,5 @@ export default function DashboardHome() {
     </div>
   );
 }
+
+

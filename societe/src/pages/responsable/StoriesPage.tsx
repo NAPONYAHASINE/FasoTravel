@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Upload, Eye, Trash2, Clock, Users, Target } from "lucide-react@0.487.0";
+import { useState } from 'react';
+import { Plus, Upload, Eye, Trash2, Clock, Users, Target } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { useData } from '../../contexts/DataContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { createLogger } from '../../utils/logger';
 
 // Logger pour les stories
@@ -279,8 +279,8 @@ export default function StoriesPage() {
     return '';
   };
 
-  const totalViews = stories.reduce((acc, s) => acc + s.views, 0);
-  const totalClicks = stories.reduce((acc, s) => acc + s.clicks, 0);
+  const totalViews = stories.reduce((acc: any, s: any) => acc + s.views, 0);
+  const totalClicks = stories.reduce((acc: any, s: any) => acc + s.clicks, 0);
   const activeStories = stories.filter(s => s.status === 'active');
 
   return (
@@ -470,6 +470,7 @@ export default function StoriesPage() {
                   className="hidden"
                   accept="image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/webm"
                   onChange={handleFileUpload}
+                  aria-label="Uploader image ou vidéo"
                 />
                 
                 {/* Zone de drop visuelle cliquable */}
@@ -560,6 +561,7 @@ export default function StoriesPage() {
                     onChange={(e) => setFormData({ ...formData, targeting: e.target.value as any, targetValue: '' })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
+                    aria-label="Sélectionnez le ciblage"
                   >
                     <option value="all">Tous les utilisateurs</option>
                     <option value="route">Ligne spécifique</option>
@@ -612,6 +614,7 @@ export default function StoriesPage() {
                       value={formData.actionType}
                       onChange={(e) => setFormData({ ...formData, actionType: e.target.value as any })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      aria-label="Sélectionnez le type d'action"
                     >
                       <option value="none">Aucune</option>
                       <option value="book_route">Réserver une ligne</option>
@@ -735,3 +738,5 @@ export default function StoriesPage() {
     </div>
   );
 }
+
+

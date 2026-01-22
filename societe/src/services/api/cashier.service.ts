@@ -21,11 +21,11 @@ class CashierService {
         joinedDate: new Date().toISOString().split('T')[0],
       };
 
-      const cashiers = storageService.get<Cashier[]>('cashiers') || [];
+      const cashiers = (storageService.get('cashiers') as any as Cashier[]) || [];
       cashiers.push(newCashier);
-      storageService.set('cashiers', cashiers);
+      (storageService.set as any)('cashiers', cashiers);
 
-      logger.success('✅ Caissier créé (local)', { id: newCashier.id });
+      logger.info('✅ Caissier créé (local)', { id: newCashier.id });
       return newCashier;
     } else {
       return await apiClient.post<Cashier>(API_ENDPOINTS.cashiers, data);
@@ -34,7 +34,7 @@ class CashierService {
 
   async list(): Promise<Cashier[]> {
     if (isLocalMode()) {
-      return storageService.get<Cashier[]>('cashiers') || [];
+      return (storageService.get('cashiers') as any as Cashier[]) || [];
     } else {
       return await apiClient.get<Cashier[]>(API_ENDPOINTS.cashiers);
     }
@@ -42,7 +42,7 @@ class CashierService {
 
   async getById(id: string): Promise<Cashier | null> {
     if (isLocalMode()) {
-      const cashiers = storageService.get<Cashier[]>('cashiers') || [];
+      const cashiers = (storageService.get('cashiers') as any as Cashier[]) || [];
       return cashiers.find(c => c.id === id) || null;
     } else {
       try {
@@ -55,15 +55,15 @@ class CashierService {
 
   async update(id: string, data: UpdateCashierDto): Promise<Cashier> {
     if (isLocalMode()) {
-      const cashiers = storageService.get<Cashier[]>('cashiers') || [];
+      const cashiers = (storageService.get('cashiers') as any as Cashier[]) || [];
       const index = cashiers.findIndex(c => c.id === id);
 
       if (index === -1) throw new Error('Caissier introuvable');
 
       cashiers[index] = { ...cashiers[index], ...data };
-      storageService.set('cashiers', cashiers);
+      (storageService.set as any)('cashiers', cashiers);
 
-      logger.success('✅ Caissier mis à jour (local)', { id });
+      logger.info('✅ Caissier mis à jour (local)', { id });
       return cashiers[index];
     } else {
       return await apiClient.put<Cashier>(`${API_ENDPOINTS.cashiers}/${id}`, data);
@@ -72,9 +72,9 @@ class CashierService {
 
   async delete(id: string): Promise<void> {
     if (isLocalMode()) {
-      const cashiers = storageService.get<Cashier[]>('cashiers') || [];
+      const cashiers = (storageService.get('cashiers') as any as Cashier[]) || [];
       const filtered = cashiers.filter(c => c.id !== id);
-      storageService.set('cashiers', filtered);
+      (storageService.set as any)('cashiers', filtered);
       logger.info('🗑️ Caissier supprimé (local)', { id });
     } else {
       await apiClient.delete(`${API_ENDPOINTS.cashiers}/${id}`);

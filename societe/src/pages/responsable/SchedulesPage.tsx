@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Calendar, Plus, Pencil, Trash2, Clock, MapPin, Users, ChevronDown } from 'lucide-react@0.487.0';
+import { useState } from 'react';
+import { Calendar, Plus, Pencil, Trash2, Clock, MapPin, Users, ChevronDown } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -9,7 +9,7 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { FormDialog } from '../../components/forms/FormDialog';
 import { useFilteredData } from '../../hooks/useFilteredData';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import type { ScheduleTemplate } from '../../contexts/DataContext';
 
 const DAYS_OF_WEEK = [
@@ -233,8 +233,8 @@ export default function SchedulesPage() {
   };
 
   // Group templates by route
-  const templatesByRoute = scheduleTemplates.reduce((acc, template) => {
-    const route = routes.find(r => r.id === template.routeId);
+  const templatesByRoute = scheduleTemplates.reduce((acc: any, template: any) => {
+    const route = routes.find((r: any) => r.id === template.routeId);
     if (!route) return acc;
     
     const key = `${route.departure} → ${route.arrival}`;
@@ -396,8 +396,8 @@ export default function SchedulesPage() {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map((template) => {
-                const route = routes.find(r => r.id === template.routeId);
+              {(templates as any).map((template: any) => {
+                const route = routes.find((r: any) => r.id === template.routeId);
                 if (!route) return null;
 
                 return (
@@ -693,3 +693,6 @@ export default function SchedulesPage() {
     </div>
   );
 }
+
+
+

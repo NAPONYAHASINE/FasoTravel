@@ -20,13 +20,13 @@ class TripService {
         id: generateId(),
         status: 'scheduled',
         availableSeats: data.totalSeats,
-      };
+      } as unknown as Trip;
 
-      const trips = storageService.get<Trip[]>('trips') || [];
+      const trips = (storageService.get('trips') as any as Trip[]) || [];
       trips.push(newTrip);
-      storageService.set('trips', trips);
+      (storageService.set as any)('trips', trips);
 
-      logger.success('✅ Départ créé (local)', { id: newTrip.id });
+      logger.info('✅ Départ créé (local)', { id: newTrip.id });
       return newTrip;
     } else {
       return await apiClient.post<Trip>(API_ENDPOINTS.trips, data);
@@ -35,14 +35,14 @@ class TripService {
 
   async list(filters?: TripFilters): Promise<Trip[]> {
     if (isLocalMode()) {
-      let trips = storageService.get<Trip[]>('trips') || [];
+      let trips = (storageService.get('trips') as any as Trip[]) || [];
 
       if (filters) {
         if (filters.routeId) trips = trips.filter(t => t.routeId === filters.routeId);
         if (filters.gareId) trips = trips.filter(t => t.gareId === filters.gareId);
         if (filters.status) trips = trips.filter(t => t.status === filters.status);
-        if (filters.dateFrom) trips = trips.filter(t => t.departureDate >= filters.dateFrom!);
-        if (filters.dateTo) trips = trips.filter(t => t.departureDate <= filters.dateTo!);
+        if (filters.dateFrom) trips = trips.filter(t => t.departure >= filters.dateFrom!);
+        if (filters.dateTo) trips = trips.filter(t => t.departure <= filters.dateTo!);
       }
 
       return trips;
@@ -54,7 +54,7 @@ class TripService {
 
   async getById(id: string): Promise<Trip | null> {
     if (isLocalMode()) {
-      const trips = storageService.get<Trip[]>('trips') || [];
+      const trips = (storageService.get('trips') as any as Trip[]) || [];
       return trips.find(t => t.id === id) || null;
     } else {
       try {
@@ -67,13 +67,13 @@ class TripService {
 
   async update(id: string, data: UpdateTripDto): Promise<Trip> {
     if (isLocalMode()) {
-      const trips = storageService.get<Trip[]>('trips') || [];
+      const trips = (storageService.get('trips') as any as Trip[]) || [];
       const index = trips.findIndex(t => t.id === id);
 
       if (index === -1) throw new Error('Départ introuvable');
 
       trips[index] = { ...trips[index], ...data };
-      storageService.set('trips', trips);
+      (storageService.set as any)('trips', trips);
 
       return trips[index];
     } else {
@@ -83,9 +83,9 @@ class TripService {
 
   async delete(id: string): Promise<void> {
     if (isLocalMode()) {
-      const trips = storageService.get<Trip[]>('trips') || [];
+      const trips = (storageService.get('trips') as any as Trip[]) || [];
       const filtered = trips.filter(t => t.id !== id);
-      storageService.set('trips', filtered);
+      (storageService.set as any)('trips', filtered);
       logger.info('🗑️ Départ supprimé (local)', { id });
     } else {
       await apiClient.delete(`${API_ENDPOINTS.trips}/${id}`);

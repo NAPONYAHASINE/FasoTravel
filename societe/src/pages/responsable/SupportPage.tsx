@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Send, HelpCircle, Mail, Phone, MessageSquare, MessageCircle, CheckCircle, Clock, AlertCircle, Plus } from "lucide-react@0.487.0";
+import { Send, HelpCircle, Mail, Phone, MessageCircle, CheckCircle, Clock, AlertCircle, Plus } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
 import { Badge } from '../../components/ui/badge';
 import { EmptyState } from '../../components/ui/empty-state';
 import { Input } from '../../components/ui/input';
+import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getSupportTicketStatusLabel, getSupportTicketPriorityLabel, getSupportCategoryIcon } from '../../utils/labels';
 import { getSupportTicketStatusBadgeClass, getSupportTicketPriorityBadgeClass } from '../../utils/styleUtils';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -29,7 +30,7 @@ export default function SupportPage() {
   });
 
   // ✅ Responsable voit ses propres tickets de demande d'aide
-  const tickets = supportTickets.sort((a, b) => 
+  const tickets = supportTickets.sort((a: any, b: any) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
@@ -152,7 +153,7 @@ export default function SupportPage() {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Ouverts</p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {tickets.filter(t => t.status === 'open').length}
+                {tickets.filter((t: any) => t.status === 'open').length}
               </p>
             </div>
             <AlertCircle className="text-blue-600 dark:text-blue-400" size={24} />
@@ -164,7 +165,7 @@ export default function SupportPage() {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">En cours</p>
               <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {tickets.filter(t => t.status === 'in_progress').length}
+                {tickets.filter((t: any) => t.status === 'in_progress').length}
               </p>
             </div>
             <Clock className="text-yellow-600 dark:text-yellow-400" size={24} />
@@ -176,7 +177,7 @@ export default function SupportPage() {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Résolus</p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length}
+                {tickets.filter((t: any) => t.status === 'resolved' || t.status === 'closed').length}
               </p>
             </div>
             <CheckCircle className="text-green-600 dark:text-green-400" size={24} />
@@ -198,7 +199,7 @@ export default function SupportPage() {
           />
         ) : (
           <div className="space-y-4">
-            {tickets.map((ticket) => (
+            {tickets.map((ticket: any) => (
               <Card key={ticket.id} className="p-4 border-l-4 border-l-purple-500">
                 <div className="space-y-3">
                   {/* Header */}
@@ -234,7 +235,7 @@ export default function SupportPage() {
                       <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
                         💬 Discussion avec l'équipe FasoTravel
                       </p>
-                      {ticket.messages.map((msg) => (
+                      {ticket.messages.map((msg: any) => (
                         <div
                           key={msg.id}
                           className={`p-3 rounded-lg ${
@@ -330,7 +331,7 @@ export default function SupportPage() {
               value={newTicket.subject}
               onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
             />
-            <Input
+            <Textarea
               placeholder="Description"
               value={newTicket.description}
               onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
@@ -339,7 +340,7 @@ export default function SupportPage() {
             />
             <Select
               value={newTicket.category}
-              onValueChange={(value) => setNewTicket({ ...newTicket, category: value as 'technical' | 'financial' | 'operational' | 'other' })}
+              onValueChange={(value: any) => setNewTicket({ ...newTicket, category: value as 'technical' | 'financial' | 'operational' | 'other' })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Catégorie">{newTicket.category}</SelectValue>
@@ -353,7 +354,7 @@ export default function SupportPage() {
             </Select>
             <Select
               value={newTicket.priority}
-              onValueChange={(value) => setNewTicket({ ...newTicket, priority: value as 'low' | 'medium' | 'high' | 'urgent' })}
+              onValueChange={(value: any) => setNewTicket({ ...newTicket, priority: value as 'low' | 'medium' | 'high' | 'urgent' })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Priorité">{newTicket.priority}</SelectValue>
@@ -388,3 +389,4 @@ export default function SupportPage() {
     </div>
   );
 }
+

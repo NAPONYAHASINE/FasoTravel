@@ -51,6 +51,16 @@ export const getDaysAgo = (days: number): Date => {
 };
 
 /**
+ * Retourne une date X mois dans le passé (début de journée)
+ */
+export const getMonthsAgo = (months: number): Date => {
+  const date = getCurrentDate();
+  date.setMonth(date.getMonth() - months);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+/**
  * Retourne une date X heures dans le futur
  */
 export const getHoursLater = (hours: number): Date => {

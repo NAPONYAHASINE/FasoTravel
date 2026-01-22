@@ -50,7 +50,7 @@ export function useApiState<T>(
   const [state, setState] = useState<T>(() => {
     // En mode local, charger depuis localStorage
     if (isLocalMode()) {
-      const saved = storageService.get<T>(key);
+      const saved = (storageService.get as any)(key) as T;
       
       if (saved !== null && saved !== undefined) {
         // Vérifier si c'est un tableau vide (si l'option est activée)
@@ -105,7 +105,7 @@ export function useApiState<T>(
         
         if (!silent) {
           const count = Array.isArray(data) ? data.length : 'données';
-          logger.success(`useApiState: ${key} - ${count} chargé(es) depuis API`);
+          logger.info(`useApiState: ${key} - ${count} chargé(es) depuis API`);
         }
       }
     } catch (err) {
@@ -137,7 +137,7 @@ export function useApiState<T>(
         return;
       }
       
-      storageService.set(key, state);
+      (storageService.set as any)(key, state);
       
       if (!silent) {
         const count = Array.isArray(state) ? state.length : 'données';

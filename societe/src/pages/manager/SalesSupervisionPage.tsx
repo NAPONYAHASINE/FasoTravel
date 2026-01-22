@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, DollarSign, Users, CreditCard, Smartphone, Banknote, Eye } from 'lucide-react@0.487.0';
+import { ArrowLeft, DollarSign, Users, CreditCard, Smartphone, Banknote, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -70,7 +70,7 @@ export default function SalesSupervisionPage() {
 
     return Array.from(statsMap.values())
       .filter(s => s.ticketCount > 0) // Seulement ceux avec des ventes
-      .sort((a, b) => b.total - a.total);
+      .sort((a: any, b: any) => b.total - a.total);
   }, [cashiers, filteredTickets]);
 
   return (
@@ -212,7 +212,7 @@ export default function SalesSupervisionPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTickets.map((ticket) => (
+                {filteredTickets.map((ticket: any) => (
                   <tr key={ticket.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <td className="py-3 px-4">
                       <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">
@@ -266,7 +266,7 @@ export default function SalesSupervisionPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-[#dc2626] via-[#f59e0b] to-[#16a34a] rounded-full flex items-center justify-center">
                     <span className="text-white font-bold">
-                      {cashier.name.split(' ').map(n => n[0]).join('')}
+                      {cashier.name.split(' ').map((n: any) => n[0]).join('')}
                     </span>
                   </div>
                   <div>
@@ -294,3 +294,5 @@ export default function SalesSupervisionPage() {
     </div>
   );
 }
+
+

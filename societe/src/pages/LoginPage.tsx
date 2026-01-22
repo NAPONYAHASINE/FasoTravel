@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Bus, Lock, Mail, Shield, Loader2, ChevronRight, Sun, Moon } from "lucide-react@0.487.0";
+import { Bus, Lock, Mail, Shield, Loader2, ChevronRight, Sun, Moon } from "lucide-react";
 import logoImage from "figma:asset/ddaf4c7eb0e28936f4d0223e859065e25d5c3fc8.png";
 
 type UserRole = 'responsable' | 'manager' | 'caissier';
@@ -215,7 +215,7 @@ export default function LoginPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {roles.map((role) => (
+                {roles.map((role: any) => (
                   <button
                     key={role.id}
                     onClick={() => handleRoleSelect(role.id)}
@@ -440,3 +440,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+

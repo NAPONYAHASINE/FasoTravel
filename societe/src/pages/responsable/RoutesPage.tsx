@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Navigation, Plus, Edit, Trash2, MapPin, Clock, DollarSign } from "lucide-react@0.487.0";
+import { useState } from 'react';
+import { Navigation, Plus, Edit, Trash2, MapPin, Clock, DollarSign } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { FormDialog } from '../../components/forms/FormDialog';
 import { useFilteredData } from '../../hooks/useFilteredData';
-import { toast } from 'sonner@2.0.3'; // ✅ AJOUTÉ
+import { toast } from 'sonner'; // ✅ AJOUTÉ
 import type { Route } from '../../contexts/DataContext';
 
 export default function RoutesPage() {
@@ -184,8 +184,8 @@ export default function RoutesPage() {
       t => t.routeId === route.id &&
       ['scheduled', 'boarding', 'departed'].includes(t.status)
     );
-    const linkedSchedules = scheduleTemplates.filter(s => s.routeId === route.id);
-    const linkedPricingRules = pricingRules.filter(p => p.routeId === route.id);
+    const linkedSchedules = scheduleTemplates.filter((s: any) => s.routeId === route.id);
+    const linkedPricingRules = pricingRules.filter((p: any) => p.routeId === route.id);
     
     // Bloquer si trips en cours
     if (linkedTrips.length > 0) {
@@ -243,8 +243,8 @@ export default function RoutesPage() {
     }
   };
 
-  const activeRoutes = routes.filter(r => r.status === 'active');
-  const inactiveRoutes = routes.filter(r => r.status === 'inactive');
+  const activeRoutes = routes.filter((r: any) => r.status === 'active');
+  const inactiveRoutes = routes.filter((r: any) => r.status === 'inactive');
 
   return (
     <div className="p-6 space-y-6">
@@ -320,7 +320,7 @@ export default function RoutesPage() {
             <p className="text-sm">Ajoutez votre première route pour commencer</p>
           </div>
         ) : (
-          routes.map((route) => (
+          routes.map((route: any) => (
             <Card key={route.id} className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -606,3 +606,5 @@ export default function RoutesPage() {
     </div>
   );
 }
+
+

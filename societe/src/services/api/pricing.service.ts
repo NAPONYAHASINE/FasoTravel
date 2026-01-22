@@ -6,22 +6,22 @@ import { isLocalMode, API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
-import type { PriceSegment, PriceHistory, UpdatePriceDto } from '../types';
+import type { PricingSegment, PriceHistory, UpdatePriceDto } from '../types';
 
 class PricingService {
-  async listSegments(): Promise<PriceSegment[]> {
+  async listSegments(): Promise<PricingSegment[]> {
     if (isLocalMode()) {
-      return storageService.get<PriceSegment[]>('priceSegments') || [];
+      return (storageService.get('priceSegments') as any as PricingSegment[]) || [];
     } else {
-      return await apiClient.get<PriceSegment[]>(API_ENDPOINTS.priceSegments);
+      return await apiClient.get<PricingSegment[]>(API_ENDPOINTS.priceSegments);
     }
   }
 
-  async updatePrice(segmentId: string, data: UpdatePriceDto): Promise<PriceSegment> {
+  async updatePrice(segmentId: string, data: UpdatePriceDto): Promise<PricingSegment> {
     logger.info('💰 Mise à jour tarif', { segmentId, newPrice: data.currentPrice });
 
     if (isLocalMode()) {
-      const segments = storageService.get<PriceSegment[]>('priceSegments') || [];
+      const segments = (storageService.get('priceSegments') as any as PricingSegment[]) || [];
       const index = segments.findIndex(s => s.id === segmentId);
 
       if (index === -1) throw new Error('Segment introuvable');
@@ -38,7 +38,7 @@ class PricingService {
 
       // Enregistrer dans l'historique si une raison est fournie
       if (data.reason) {
-        const history = storageService.get<PriceHistory[]>('priceHistory') || [];
+        const history = (storageService.get('priceHistory') as any as PriceHistory[]) || [];
         history.push({
           id: `ph_${Date.now()}`,
           segmentId,
@@ -50,16 +50,16 @@ class PricingService {
         storageService.set('priceHistory', history);
       }
 
-      logger.success('✅ Tarif mis à jour (local)', { segmentId });
+      logger.info('✅ Tarif mis à jour (local)', { segmentId });
       return segments[index];
     } else {
-      return await apiClient.put<PriceSegment>(`${API_ENDPOINTS.priceSegments}/${segmentId}`, data);
+      return await apiClient.put<PricingSegment>(`${API_ENDPOINTS.priceSegments}/${segmentId}`, data);
     }
   }
 
   async getHistory(segmentId: string): Promise<PriceHistory[]> {
     if (isLocalMode()) {
-      const history = storageService.get<PriceHistory[]>('priceHistory') || [];
+      const history = (storageService.get('priceHistory') as any as PriceHistory[]) || [];
       return history.filter(h => h.segmentId === segmentId);
     } else {
       return await apiClient.get<PriceHistory[]>(`${API_ENDPOINTS.priceHistory}?segmentId=${segmentId}`);

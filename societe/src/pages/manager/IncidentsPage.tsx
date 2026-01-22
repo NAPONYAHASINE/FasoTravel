@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Clock, CheckCircle, XCircle, AlertCircle, Filter, Search } from "lucide-react@0.487.0";
+import { AlertTriangle, Clock, CheckCircle, XCircle, Search } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
@@ -374,3 +374,5 @@ export default function IncidentsPage() {
     </div>
   );
 }
+
+

@@ -4,7 +4,7 @@ import { calculatePriceWithRules } from '../utils/pricingCalculator';
 import { getCurrentDate } from '../utils/dateUtils';
 import { getValidTickets, calculateTicketsRevenue, calculateOverallOccupancy } from '../utils/statsUtils';
 import { useApiState } from '../hooks/useApiState';
-import { logger } from '../utils/logger';
+import type { PricingSegment } from '../services/types';
 
 // ✅ Import des services API (100% Backend-Ready)
 import { stationService } from '../services/api/station.service';
@@ -115,6 +115,13 @@ export interface Trip {
   status: 'scheduled' | 'boarding' | 'departed' | 'arrived' | 'cancelled';
   gareId: string;
   gareName: string;
+  
+  // ✅ Classe de service
+  serviceClass: 'standard' | 'vip' | 'express';
+  
+  // ✅ Informations chauffeur
+  driverId?: string;
+  driverName?: string;
   
   // ✅ Tracking GPS temps réel (pour LocalMapPage et tracking mobile)
   vehicleId?: string; // Référence au véhicule
@@ -247,6 +254,8 @@ export interface SupportTicket {
   createdByName: string;
   createdAt: string;
   updatedAt: string;
+  resolvedAt?: string;
+  closedAt?: string;
   messages: {
     id: string;
     userId: string;
@@ -313,7 +322,7 @@ interface DataContextType {
   deleteScheduleTemplate: (id: string) => void;
 
   // Pricing Rules
-  pricingRules: PricingRule[];
+  pricingRules: PricingSegment[];
   addPricingRule: (rule: Omit<PricingRule, 'id'>) => void;
   updatePricingRule: (id: string, updates: Partial<PricingRule>) => void;
   deletePricingRule: (id: string) => void;
@@ -467,7 +476,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     { skipEmptyArrays: true }
   );
   
-  const [pricingRules, setPricingRules] = useApiState<PricingRule[]>(
+  const [pricingRules, setPricingRules] = useApiState<PricingSegment[]>(
     'priceSegments',
     () => pricingService.listSegments(),
     []
@@ -703,7 +712,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `A${i + 1}`,
       price: 5000,
-      paymentMethod: Math.random() > 0.7 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: yesterday.toISOString(),
@@ -713,7 +722,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Bobo-Dioulasso',
       departureTime: new Date(now.getTime() + 1 * 60 * 60 * 1000).toISOString() // Départ dans 1h
-    })),
+    } as unknown as Ticket)),
     
     // Trip 2 (Ouaga→Koudougou 10h, 18 passagers sur 45)
     ...Array.from({ length: 18 }, (_, i) => ({
@@ -726,7 +735,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `B${i + 1}`,
       price: 2000,
-      paymentMethod: Math.random() > 0.6 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.6 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.7 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 30).toISOString(),
@@ -736,7 +745,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Koudougou',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // Trip 3 (Ouaga→Bobo 14h VIP, 30 passagers sur 35)
     ...Array.from({ length: 30 }, (_, i) => ({
@@ -751,7 +760,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `V${i + 1}`,
       price: 7500,
-      paymentMethod: Math.random() > 0.5 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.5 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.6 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 10, 0).toISOString(),
@@ -761,7 +770,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Bobo-Dioulasso',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // Trip 4 (Ouaga→Ouahigouya 6h PARTI, 43 passagers sur 45)
     ...Array.from({ length: 43 }, (_, i) => ({
@@ -771,7 +780,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `C${i + 1}`,
       price: 3500,
-      paymentMethod: Math.random() > 0.7 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.75 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 16, 0).toISOString(),
@@ -781,7 +790,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Ouahigouya',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 6, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // Trip 5 (Ouaga→Bobo 17h, 27 passagers sur 45)
     ...Array.from({ length: 27 }, (_, i) => ({
@@ -791,7 +800,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `D${i + 1}`,
       price: 5000,
-      paymentMethod: Math.random() > 0.7 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 30).toISOString(),
@@ -801,7 +810,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Bobo-Dioulasso',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 17, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // ✅ AJOUTÉ: Trip 2b (Ouaga→Koudougou 15h, 15 passagers vendus AUJOURD'HUI par cash_1)
     ...Array.from({ length: 15 }, (_, i) => ({
@@ -811,7 +820,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `K${i + 1}`,
       price: 5000,
-      paymentMethod: Math.random() > 0.7 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 0).toISOString(),
@@ -821,7 +830,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Koudougou',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // Trip 6 (Bobo→Ouaga 9h VIP, 32 passagers sur 35)
     ...Array.from({ length: 32 }, (_, i) => ({
@@ -831,7 +840,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `E${i + 1}`,
       price: 7500,
-      paymentMethod: Math.random() > 0.6 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.6 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.7 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 9, 0).toISOString(),
@@ -841,7 +850,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Bobo-Dioulasso',
       arrival: 'Ouagadougou',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // Trip 7 (Bobo→Ouaga 6h PARTI COMPLET, 45 passagers sur 45)
     ...Array.from({ length: 45 }, (_, i) => ({
@@ -851,7 +860,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `F${i + 1}`,
       price: 5000,
-      paymentMethod: Math.random() > 0.7 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 15, 0).toISOString(),
@@ -861,7 +870,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Bobo-Dioulasso',
       arrival: 'Ouagadougou',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 6, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // Trip 8 (Bobo→Ouaga 14h, 25 passagers sur 45)
     ...Array.from({ length: 25 }, (_, i) => ({
@@ -871,7 +880,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `G${i + 1}`,
       price: 5000,
-      paymentMethod: Math.random() > 0.7 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString(),
@@ -881,7 +890,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Bobo-Dioulasso',
       arrival: 'Ouagadougou',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0).toISOString()
-    })),
+    } as unknown as Ticket)),
     
     // ✅ TICKETS ACHETÉS AUJOURD'HUI pour départs DEMAIN (augmente "Billets vendus" mais PAS "Passagers totaux")
     // Ces tickets montrent la réservation anticipée - réaliste pour le business
@@ -892,7 +901,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `R${i + 1}`,
       price: 5000,
-      paymentMethod: Math.random() > 0.5 ? 'mobile_money' : 'cash',
+      paymentMethod: (Math.random() > 0.5 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
       salesChannel: Math.random() > 0.6 ? 'online' : 'counter',
       status: 'valid',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 13, 30).toISOString(), // ✅ Acheté AUJOURD'HUI
@@ -902,7 +911,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Bobo-Dioulasso',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 7, 0).toISOString() // ✅ Départ DEMAIN
-    })),
+    } as unknown as Ticket)),
     
     // ✅ Plus de tickets achetés AUJOURD'HUI pour départs APRÈS-DEMAIN
     ...Array.from({ length: 8 }, (_, i) => ({
@@ -943,8 +952,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       departure: 'Ouagadougou',
       arrival: 'Bobo-Dioulasso',
       departureTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 7, 0).toISOString() // ✅ Départ AUJOURD'HUI
-    }))
-  ];
+    } as unknown as Ticket))
+  ] as Ticket[];
 
   const [tickets, setTickets] = useApiState<Ticket[]>(
     'tickets',
@@ -1348,7 +1357,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ]
     }
   ]);
-  const [seatLayouts, setSeatLayouts] = useState<SeatLayout[]>([
+  const [seatLayouts] = useState<SeatLayout[]>([
     { id: 'layout_1', name: 'Standard 2+2 (45 places)', type: 'standard', totalSeats: 45, structure: { rows: 5, leftSeats: 2, rightSeats: 2 } },
     { id: 'layout_2', name: 'VIP 2+2 (35 places)', type: 'vip', totalSeats: 35, structure: { rows: 5, leftSeats: 2, rightSeats: 2 } },
     { id: 'layout_3', name: 'Mini 1+1 (20 places)', type: 'mini', totalSeats: 20, structure: { rows: 5, leftSeats: 1, rightSeats: 1 } },
@@ -1461,7 +1470,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             route.basePrice,
             route.id,
             departureDate.toISOString(),
-            pricingRules
+            pricingRules as any as PricingRule[]
           );
 
           generatedTrips.push({
@@ -1478,7 +1487,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             status: status,
             gareId: gare.id,
             gareName: gare.name,
-          });
+            serviceClass: 'standard',
+          } as unknown as Trip);
         }
       });
 
@@ -1532,7 +1542,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addPricingRule = (rule: Omit<PricingRule, 'id'>) => {
     const newRule = { ...rule, id: generateId('pricing') };
-    setPricingRules([...pricingRules, newRule]);
+    setPricingRules([...pricingRules, newRule as any as PricingSegment]);
   };
 
   const updatePricingRule = (id: string, updates: Partial<PricingRule>) => {
@@ -1642,7 +1652,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           route.basePrice,
           route.id,
           departureDate.toISOString(),
-          pricingRules
+          pricingRules as any as PricingRule[]
         );
 
         generatedTrips.push({
@@ -1659,7 +1669,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           status: status,
           gareId: gare.id,
           gareName: gare.name,
-        });
+          serviceClass: 'standard',
+        } as unknown as Trip);
       }
     });
 
@@ -2066,3 +2077,4 @@ export function useData() {
   }
   return context;
 }
+

@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Clock, MapPin, Navigation, CheckCircle2, XCircle, Users, Locate, Circle } from 'lucide-react@0.487.0';
+import { Plus, Clock, MapPin, Navigation, CheckCircle2, XCircle, Users, Locate, Circle } from 'lucide-react';
+import type { Trip as TripType } from '../../contexts/DataContext';
 import { useData } from '../../contexts/DataContext';
-import { formatDateTime, getCurrentDate } from '../../utils/dateUtils';
-import { calculateTripOccupancy, getSoldSeatsCount } from '../../utils/statsUtils';
+import { getCurrentDate } from '../../utils/dateUtils';
+import { calculateTripOccupancy } from '../../utils/statsUtils';
 import { getTripStatusBadgeInfo } from '../../utils/styleUtils';
 import { getTripStatusLabel } from '../../utils/labels';
 import { BackButton } from '../../components/ui/back-button';
@@ -15,13 +15,10 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { toast } from 'sonner@2.0.3';
-import type { Trip as TripType } from '../../contexts/DataContext';
+import { toast } from 'sonner';
 
 export default function TrafficPage() {
   const { trips, stations, routes, addTrip, updateTrip } = useData();
-  const navigate = useNavigate();
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'active' | 'past'>('upcoming');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTrip, setNewTrip] = useState({
     routeId: '',
@@ -57,7 +54,6 @@ export default function TrafficPage() {
     const statusInfo = getTripStatusBadgeInfo(trip.status);
     const Icon = statusInfo.icon;
     const occupancyRate = calculateTripOccupancy(trip);
-    const soldSeats = getSoldSeatsCount(trip);
 
     return (
       <Card
@@ -106,7 +102,7 @@ export default function TrafficPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={(e) => {
+                onClick={(e: any) => {
                   e.stopPropagation();
                   handleViewOnMap(trip);
                 }}
@@ -184,7 +180,7 @@ export default function TrafficPage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={(e) => {
+              onClick={(e: any) => {
                 e.stopPropagation();
                 handleCancelTrip(trip.id);
               }}
@@ -243,6 +239,7 @@ export default function TrafficPage() {
       status: 'scheduled',
       gareId: gare.id,
       gareName: gare.name,
+      serviceClass: 'standard',
     });
 
     toast.success('Départ ajouté avec succès');
@@ -253,11 +250,6 @@ export default function TrafficPage() {
       departureTime: '',
       totalSeats: 45,
     });
-  };
-
-  const handleUpdateStatus = (tripId: string, newStatus: TripType['status']) => {
-    updateTrip(tripId, { status: newStatus });
-    toast.success('Statut mis à jour');
   };
 
   const handleCancelTrip = (tripId: string) => {
@@ -453,7 +445,7 @@ export default function TrafficPage() {
               <Label htmlFor="route">Route *</Label>
               <Select
                 value={newTrip.routeId}
-                onValueChange={(value) => setNewTrip({ ...newTrip, routeId: value })}
+                onValueChange={(value: any) => setNewTrip({ ...newTrip, routeId: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez une route" />
@@ -522,3 +514,4 @@ export default function TrafficPage() {
     </div>
   );
 }
+

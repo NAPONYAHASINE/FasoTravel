@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Star, ThumbsUp, Filter, Search } from "lucide-react@0.487.0";
+import { Star, Search } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
 import { useData } from '../../contexts/DataContext';
@@ -33,7 +32,7 @@ export default function ReviewsPage() {
     return matchesSearch && matchesRating;
   });
 
-  const averageRating = enrichedReviews.reduce((acc, r) => acc + r.rating, 0) / enrichedReviews.length;
+  const averageRating = enrichedReviews.reduce((acc: any, r: any) => acc + r.rating, 0) / enrichedReviews.length;
   const ratingDistribution = [5, 4, 3, 2, 1].map(rating => ({
     rating,
     count: enrichedReviews.filter(r => r.rating === rating).length
@@ -209,3 +208,5 @@ export default function ReviewsPage() {
     </div>
   );
 }
+
+

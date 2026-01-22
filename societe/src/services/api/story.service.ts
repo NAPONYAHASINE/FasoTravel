@@ -17,7 +17,7 @@ class StoryService {
     if (isLocalMode()) {
       // MODE LOCAL : Créer une URL temporaire
       const url = URL.createObjectURL(file);
-      logger.success('✅ Fichier uploadé (local)', { url });
+      logger.info('✅ Fichier uploadé (local)', { url });
       return { url };
     } else {
       // MODE API : Uploader vers le backend
@@ -34,7 +34,7 @@ class StoryService {
       if (!response.ok) throw new Error('Erreur upload fichier');
 
       const result = await response.json();
-      logger.success('✅ Fichier uploadé (API)', { url: result.url });
+      logger.info('✅ Fichier uploadé (API)', { url: result.url });
       return result;
     }
   }
@@ -48,13 +48,13 @@ class StoryService {
         id: generateId(),
         views: 0,
         createdAt: new Date().toISOString(),
-      };
+      } as unknown as Story;
 
-      const stories = storageService.get<Story[]>('stories') || [];
+      const stories = (storageService.get('stories') as any as Story[]) || [];
       stories.push(newStory);
-      storageService.set('stories', stories);
+      (storageService.set as any)('stories', stories);
 
-      logger.success('✅ Story créée (local)', { id: newStory.id });
+      logger.info('✅ Story créée (local)', { id: newStory.id });
       return newStory;
     } else {
       return await apiClient.post<Story>(API_ENDPOINTS.stories, data);
@@ -63,7 +63,7 @@ class StoryService {
 
   async list(): Promise<Story[]> {
     if (isLocalMode()) {
-      return storageService.get<Story[]>('stories') || [];
+      return (storageService.get('stories') as any as Story[]) || [];
     } else {
       return await apiClient.get<Story[]>(API_ENDPOINTS.stories);
     }
@@ -71,7 +71,7 @@ class StoryService {
 
   async getById(id: string): Promise<Story | null> {
     if (isLocalMode()) {
-      const stories = storageService.get<Story[]>('stories') || [];
+      const stories = (storageService.get('stories') as any as Story[]) || [];
       return stories.find(s => s.id === id) || null;
     } else {
       try {
@@ -84,15 +84,15 @@ class StoryService {
 
   async update(id: string, data: UpdateStoryDto): Promise<Story> {
     if (isLocalMode()) {
-      const stories = storageService.get<Story[]>('stories') || [];
+      const stories = (storageService.get('stories') as any as Story[]) || [];
       const index = stories.findIndex(s => s.id === id);
 
       if (index === -1) throw new Error('Story introuvable');
 
-      stories[index] = { ...stories[index], ...data };
-      storageService.set('stories', stories);
+      stories[index] = { ...stories[index], ...data } as unknown as Story;
+      (storageService.set as any)('stories', stories);
 
-      logger.success('✅ Story mise à jour (local)', { id });
+      logger.info('✅ Story mise à jour (local)', { id });
       return stories[index];
     } else {
       return await apiClient.put<Story>(`${API_ENDPOINTS.stories}/${id}`, data);
@@ -101,7 +101,7 @@ class StoryService {
 
   async delete(id: string): Promise<void> {
     if (isLocalMode()) {
-      const stories = storageService.get<Story[]>('stories') || [];
+      const stories = (storageService.get('stories') as any as Story[]) || [];
       const filtered = stories.filter(s => s.id !== id);
       storageService.set('stories', filtered);
       logger.info('🗑️ Story supprimée (local)', { id });

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Bus, Users, Printer } from 'lucide-react@0.487.0';
+import { ArrowLeft, Clock, Bus, Users, Printer } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { Button } from '../../components/ui/button';
@@ -14,8 +14,6 @@ import {
 } from '../../utils/statsUtils';
 import { formatCurrency, calculatePercentage } from '../../utils/formatters';
 import { formatDateTime, formatTime } from '../../utils/dateUtils';
-import { getTripStatusLabel } from '../../utils/labels';
-import { getOccupancyColor } from '../../utils/styleUtils';
 
 export default function DeparturesPage() {
   const { user } = useAuth();
@@ -27,7 +25,7 @@ export default function DeparturesPage() {
   const todayTrips = useMemo(() => {
     return filterByToday(trips, 'departureTime')
       .filter(trip => trip.gareId === user?.gareId)
-      .sort((a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
+      .sort((a: any, b: any) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
   }, [trips, user?.gareId]);
 
   const handlePrintAll = () => {
@@ -103,7 +101,6 @@ export default function DeparturesPage() {
   };
 
   // ✅ CORRIGÉ: Séparer les départs selon leur heure ET statut
-  const now = new Date();
   
   const upcomingDepartures = useMemo(() => {
     return todayTrips.filter(trip => {
@@ -123,7 +120,7 @@ export default function DeparturesPage() {
     todayTripIds.has(t.tripId) && (t.status === 'valid' || t.status === 'used')
   ).length;
 
-  const totalCapacity = todayTrips.reduce((acc, trip) => acc + trip.totalSeats, 0);
+  const totalCapacity = todayTrips.reduce((acc: any, trip: any) => acc + trip.totalSeats, 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -337,3 +334,5 @@ export default function DeparturesPage() {
     </div>
   );
 }
+
+

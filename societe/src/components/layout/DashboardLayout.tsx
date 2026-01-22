@@ -26,3 +26,4 @@ export default function DashboardLayout({ children, role, title, showSearch }: D
     </div>
   );
 }
+

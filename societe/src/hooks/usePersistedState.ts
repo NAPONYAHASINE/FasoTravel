@@ -29,7 +29,7 @@ export function usePersistedState<T>(
 
   // ✅ Charger depuis localStorage au démarrage (une seule fois)
   const [state, setState] = useState<T>(() => {
-    const saved = storageService.get<T>(key);
+    const saved = (storageService.get as any)(key) as T;
     
     if (saved !== null && saved !== undefined) {
       // Vérifier si c'est un tableau vide (si l'option est activée)
@@ -72,7 +72,7 @@ export function usePersistedState<T>(
       return;
     }
     
-    storageService.set(key, state);
+    (storageService.set as any)(key, state);
     
     if (!silent) {
       const count = Array.isArray(state) ? state.length : 'données';

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Users, DollarSign, ShoppingCart, TrendingUp, Clock, Eye, EyeOff, Pencil, Trash2, Plus, CheckCircle } from "lucide-react@0.487.0";
+import { DollarSign, TrendingUp, Eye, EyeOff, Pencil, Trash2, Plus, CheckCircle } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { BackButton } from '../../components/ui/back-button';
 import { Badge } from '../../components/ui/badge';
@@ -7,12 +7,10 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { FormDialog } from '../../components/forms/FormDialog';
-import { useAuth } from '../../contexts/AuthContext';
 import { useFilteredData } from '../../hooks/useFilteredData';
-import { calculateTicketsRevenue, getActiveCashiers, calculateCashBalance, getValidTickets } from '../../utils/statsUtils';
+import { calculateTicketsRevenue, calculateCashBalance } from '../../utils/statsUtils';
 import { filterByToday } from '../../utils/dateUtils';
-import { formatCurrency } from '../../utils/formatters';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export default function CashiersPage() {
   const { cashiers, tickets, cashTransactions, addCashier, updateCashier, deleteCashier } = useFilteredData();
@@ -60,7 +58,7 @@ export default function CashiersPage() {
     
     // Dernière activité basée sur les tickets
     const lastTicket = cashierTickets.length > 0
-      ? cashierTickets.sort((a, b) => 
+      ? cashierTickets.sort((a: any, b: any) => 
           new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime()
         )[0]
       : null;
@@ -213,7 +211,7 @@ export default function CashiersPage() {
       {/* Liste caissiers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {cashiers.map(cashier => {
-          const { sales, ticketsSold, lastActivity, cashBalance } = getCashierStats(cashier.id);
+          const { sales, ticketsSold, lastActivity } = getCashierStats(cashier.id);
           return (
             <Card key={cashier.id} className="p-6">
               <div className="flex items-start gap-4">
@@ -422,3 +420,5 @@ export default function CashiersPage() {
     </div>
   );
 }
+
+

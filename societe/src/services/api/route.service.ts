@@ -20,11 +20,11 @@ class RouteService {
         id: generateId(),
       };
 
-      const routes = storageService.get<Route[]>('routes') || [];
+      const routes = (storageService.get('routes') as any as Route[]) || [];
       routes.push(newRoute);
-      storageService.set('routes', routes);
+      (storageService.set as any)('routes', routes);
 
-      logger.success('✅ Route créée (local)', { id: newRoute.id });
+      logger.info('✅ Route créée (local)', { id: newRoute.id });
       return newRoute;
     } else {
       return await apiClient.post<Route>(API_ENDPOINTS.routes, data);
@@ -33,7 +33,7 @@ class RouteService {
 
   async list(): Promise<Route[]> {
     if (isLocalMode()) {
-      return storageService.get<Route[]>('routes') || [];
+      return (storageService.get('routes') as any as Route[]) || [];
     } else {
       return await apiClient.get<Route[]>(API_ENDPOINTS.routes);
     }
@@ -41,7 +41,7 @@ class RouteService {
 
   async getById(id: string): Promise<Route | null> {
     if (isLocalMode()) {
-      const routes = storageService.get<Route[]>('routes') || [];
+      const routes = (storageService.get('routes') as any as Route[]) || [];
       return routes.find(r => r.id === id) || null;
     } else {
       try {
@@ -54,15 +54,15 @@ class RouteService {
 
   async update(id: string, data: UpdateRouteDto): Promise<Route> {
     if (isLocalMode()) {
-      const routes = storageService.get<Route[]>('routes') || [];
+      const routes = (storageService.get('routes') as any as Route[]) || [];
       const index = routes.findIndex(r => r.id === id);
 
       if (index === -1) throw new Error('Route introuvable');
 
       routes[index] = { ...routes[index], ...data };
-      storageService.set('routes', routes);
+      (storageService.set as any)('routes', routes);
 
-      logger.success('✅ Route mise à jour (local)', { id });
+      logger.info('✅ Route mise à jour (local)', { id });
       return routes[index];
     } else {
       return await apiClient.put<Route>(`${API_ENDPOINTS.routes}/${id}`, data);
@@ -71,9 +71,9 @@ class RouteService {
 
   async delete(id: string): Promise<void> {
     if (isLocalMode()) {
-      const routes = storageService.get<Route[]>('routes') || [];
+      const routes = (storageService.get('routes') as any as Route[]) || [];
       const filtered = routes.filter(r => r.id !== id);
-      storageService.set('routes', filtered);
+      (storageService.set as any)('routes', filtered);
       logger.info('🗑️ Route supprimée (local)', { id });
     } else {
       await apiClient.delete(`${API_ENDPOINTS.routes}/${id}`);

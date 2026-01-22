@@ -6,18 +6,26 @@
  * debugTripsCapacity()  // Affiche tableau complet
  */
 
-import { TRIPS } from '../data/models';
+import { tripService } from '@/services';
 
-export function debugTripsCapacity() {
+export async function debugTripsCapacity() {
   console.group('🎫 DEBUG: Capacité Trajets (Seats)');
   
-  const data = TRIPS.map(trip => {
-    const minSegments = Math.min(...trip.segments.map(s => s.available_seats));
-    const matches = minSegments === trip.available_seats;
+  try {
+    // Récupérer tous les trajets disponibles
+    const trips = await tripService.searchTrips({
+      from_stop_id: '',
+      to_stop_id: '',
+      date: new Date().toISOString().split('T')[0]
+    });
     
-    return {
-      'Trip ID': trip.trip_id,
-      'Operator': trip.operator_name,
+    const data = trips.map(trip => {
+      const minSegments = trip.segments ? Math.min(...trip.segments.map(s => s.available_seats)) : trip.available_seats;
+      const matches = minSegments === trip.available_seats;
+      
+      return {
+        'Trip ID': trip.trip_id,
+        'Operator': trip.operator_name,
       'Route': `${trip.from_stop_name} → ${trip.to_stop_name}`,
       'Segments': trip.segments.length,
       'Declared': trip.available_seats,
@@ -37,6 +45,10 @@ export function debugTripsCapacity() {
   }
   
   console.groupEnd();
+  } catch (err) {
+    console.error('Error loading trips:', err);
+    console.groupEnd();
+  }
 }
 
 export function debugSegmentDetails(tripId: string) {

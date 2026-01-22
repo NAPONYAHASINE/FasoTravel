@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, AlertTriangle, MessageSquare } from "lucide-react@0.487.0";
+import { Send, AlertTriangle, MessageSquare } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getSupportTicketStatusLabel, getSupportTicketPriorityLabel, getSupportCategoryIcon } from '../../utils/labels';
 import { getSupportTicketStatusBadgeClass, getSupportTicketPriorityBadgeClass } from '../../utils/styleUtils';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -65,7 +65,7 @@ export default function ReportPage() {
   };
 
   // ✅ Filtrer les tickets créés par le caissier actuel
-  const myTickets = supportTickets.filter(t => t.createdBy === user?.id);
+  const myTickets = supportTickets.filter((t: any) => t.createdBy === user?.id);
 
   if (!user) return null;
 
@@ -182,8 +182,8 @@ export default function ReportPage() {
         ) : (
           <div className="space-y-3">
             {myTickets
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-              .map((ticket) => (
+              .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .map((ticket: any) => (
                 <Card key={ticket.id} className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -211,10 +211,9 @@ export default function ReportPage() {
                         )}
                       </div>
 
-                      {/* Afficher les réponses s'il y en a */}
                       {ticket.messages && ticket.messages.length > 0 && (
                         <div className="mt-3 pl-4 border-l-2 border-blue-500">
-                          {ticket.messages.map((msg) => (
+                          {ticket.messages.map((msg: any) => (
                             <div key={msg.id} className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
                               <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
                                 {msg.userName}
@@ -237,3 +236,5 @@ export default function ReportPage() {
     </div>
   );
 }
+
+

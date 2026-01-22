@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Users, MapPin, CreditCard, Printer, Plus, Minus, Check, CheckCircle2, ChevronRight, Clock } from 'lucide-react@0.487.0';
-import { useNavigate } from 'react-router-dom';
+import { Search, Users, MapPin, CreditCard, Printer, Check, CheckCircle2, ChevronRight, Clock } from 'lucide-react';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatCurrency } from '../../utils/formatters';
@@ -14,9 +13,7 @@ import { BackButton } from '../../components/ui/back-button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { generateId } from '../../utils/idGenerator';
-import type { Ticket } from '../../contexts/DataContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface PassengerInfo {
   seatNumber: string;
@@ -62,8 +59,8 @@ export default function TicketSalePage() {
   );
 
   // Generate seat grid
-  const generateSeats = (totalSeats: number) => {
-    const seats = [];
+  const generateSeats = (totalSeats: number): string[] => {
+    const seats: string[] = [];
     const seatsPerRow = 4;
     const rows = Math.ceil(totalSeats / seatsPerRow);
     
@@ -250,11 +247,10 @@ export default function TicketSalePage() {
     }
   };
 
-  const totalAmount = passengers.reduce((sum, p) => sum + (currentTrip?.price || 0), 0);
+  const totalAmount = passengers.reduce((sum) => sum + (currentTrip?.price || 0), 0);
   
   // Passager actuel
   const currentSeat = selectedSeats[currentPassengerIndex];
-  const isCurrentPassengerValidated = passengers.some(p => p.seatNumber === currentSeat);
 
   if (!user) return null;
 
@@ -296,7 +292,7 @@ export default function TicketSalePage() {
                 <p className="text-lg">Aucun trajet disponible</p>
               </div>
             ) : (
-              filteredTrips.map((trip) => (
+              filteredTrips.map((trip: any) => (
                 <Card
                   key={trip.id}
                   className="p-4 cursor-pointer hover:border-[#f59e0b] transition-all"
@@ -400,7 +396,7 @@ export default function TicketSalePage() {
 
             {/* Grille */}
             <div className="grid grid-cols-4 gap-3">
-              {generateSeats(currentTrip.totalSeats).map((seatNumber) => {
+              {generateSeats(currentTrip.totalSeats).map((seatNumber: any) => {
                 const isOccupied = occupiedSeats.includes(seatNumber);
                 const isSelected = selectedSeats.includes(seatNumber);
                 const isValidated = passengers.some(p => p.seatNumber === seatNumber);
@@ -543,7 +539,7 @@ export default function TicketSalePage() {
                           { value: 'cash', label: 'Espèces', icon: CreditCard },
                           { value: 'mobile_money', label: 'Mobile Money', icon: CreditCard },
                           { value: 'card', label: 'Carte bancaire', icon: CreditCard },
-                        ].map((method) => (
+                        ].map((method: any) => (
                           <button
                             key={method.value}
                             onClick={() => setPaymentMethod(method.value as any)}
@@ -629,7 +625,7 @@ export default function TicketSalePage() {
             <div>
               <h4 className="text-sm text-gray-600 dark:text-gray-400 mb-2">Passagers:</h4>
               <div className="space-y-2">
-                {passengers.map((p) => (
+                {passengers.map((p: any) => (
                   <div key={p.seatNumber} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700/30 rounded">
                     <Badge className="bg-[#f59e0b]">{p.seatNumber}</Badge>
                     <div className="flex-1">
@@ -685,3 +681,5 @@ export default function TicketSalePage() {
     </div>
   );
 }
+
+

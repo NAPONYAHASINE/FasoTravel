@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import type { Ticket, Trip, CashTransaction } from '../contexts/DataContext';
-import { getToday, getYesterday, getYesterdayEnd, filterByToday, filterByYesterday, getCurrentDate, getDaysAgo } from '../utils/dateUtils';
+import { getToday, getYesterday, getYesterdayEnd, filterByToday, filterByYesterday, getCurrentDate } from '../utils/dateUtils';
 import { 
   calculateTicketsRevenue, 
   calculateSalesAmount,
@@ -148,7 +148,7 @@ export function useTodayTicketsCount(tickets: Ticket[]) {
 export function useLast7DaysSales(tickets: Ticket[]) {
   return useMemo(() => {
     const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-    const salesData = [];
+    const salesData: any[] = [];
 
     for (let i = 6; i >= 0; i--) {
       const date = getCurrentDate();

@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Save, Package, Ban, Shield, Clock, AlertCircle } from "lucide-react@0.487.0";
+import { Save, Package, Ban, Shield, Clock, AlertCircle } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { useData } from '../../contexts/DataContext'; // ✅ AJOUTÉ
-import { toast } from 'sonner@2.0.3'; // ✅ AJOUTÉ
+import { toast } from 'sonner'; // ✅ AJOUTÉ
 
 export default function PoliciesPage() {
   const { policies, updatePolicy } = useData(); // ✅ UTILISE DataContext
@@ -74,7 +74,7 @@ export default function PoliciesPage() {
 
       {/* Grille des politiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {policies.map((policy) => {
+        {policies.map((policy: any) => {
           const Icon = getIconByCategory(policy.category);
           const isEditing = editingId === policy.id;
 
@@ -183,3 +183,5 @@ export default function PoliciesPage() {
     </div>
   );
 }
+
+

@@ -1,18 +1,18 @@
 import { useState, useMemo } from 'react';
-import { Printer, Search, Download, Users } from "lucide-react@0.487.0";
+import { Printer, Search, Download, Users } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { useFilteredData } from '../../hooks/useFilteredData';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import type { Trip } from '../../contexts/DataContext';
 import { formatTime, formatDate } from '../../utils/dateUtils';
 import { getSoldSeatsCount, calculateTripOccupancy, getTripValidTickets, getUpcomingTrips24h } from '../../utils/statsUtils';
 import { getPaymentMethodLabel, getSalesChannelLabel, getTripStatusLabel } from '../../utils/labels';
 import { getTripStatusBadgeInfo, getOccupancyColor } from '../../utils/styleUtils';
-import { formatCurrency, calculatePercentage } from '../../utils/formatters';
+import { calculatePercentage } from '../../utils/formatters';
 
 export default function PassengerListsPage() {
   const { trips, tickets } = useFilteredData();
@@ -40,7 +40,7 @@ export default function PassengerListsPage() {
     if (!selectedTrip) return [];
     
     return getTripValidTickets(tickets, selectedTrip.id)
-      .sort((a, b) => a.seatNumber.toString().localeCompare(b.seatNumber.toString()))
+      .sort((a: any, b: any) => a.seatNumber.toString().localeCompare(b.seatNumber.toString()))
       .map(ticket => ({
         seatNumber: ticket.seatNumber,
         name: ticket.passengerName,
@@ -114,7 +114,7 @@ export default function PassengerListsPage() {
               </p>
             </Card>
           ) : (
-            filteredTrips.map((trip) => {
+            filteredTrips.map((trip: any) => {
               const soldSeats = getSoldSeatsCount(trip);
               const occupancy = calculateTripOccupancy(trip);
               const isSelected = selectedTrip?.id === trip.id;
@@ -284,3 +284,5 @@ export default function PassengerListsPage() {
     </div>
   );
 }
+
+

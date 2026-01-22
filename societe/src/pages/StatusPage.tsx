@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Circle, Sun, Moon } from "lucide-react@0.487.0";
+import { CheckCircle2, Clock, Circle, Sun, Moon } from "lucide-react";
 import { useTheme } from '../contexts/ThemeContext';
 import logoImage from "figma:asset/ddaf4c7eb0e28936f4d0223e859065e25d5c3fc8.png";
 
@@ -78,7 +78,7 @@ export default function StatusPage() {
     }
   };
 
-  const totalFeatures = modules.reduce((acc, module) => acc + module.features.length, 0);
+  const totalFeatures = modules.reduce((acc: any, module: any) => acc + module.features.length, 0);
   const completedFeatures = modules.reduce(
     (acc, module) => acc + module.features.filter(f => f.status === 'fait').length,
     0
@@ -245,3 +245,5 @@ export default function StatusPage() {
     </div>
   );
 }
+
+

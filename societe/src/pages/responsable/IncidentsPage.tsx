@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Clock, CheckCircle, XCircle, AlertCircle, Filter, Search } from "lucide-react@0.487.0";
+import { AlertTriangle, Clock, CheckCircle, XCircle, Search } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
+import type { Incident, Trip } from '../../contexts/DataContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Textarea } from '../../components/ui/textarea';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -23,8 +24,8 @@ export default function IncidentsPage() {
   const [validationComment, setValidationComment] = useState('');
 
   // Enrichir les incidents avec les données du voyage
-  const enrichedIncidents = incidents.map(incident => {
-    const trip = trips.find(t => t.id === incident.tripId);
+  const enrichedIncidents = incidents.map((incident: Incident) => {
+    const trip = trips.find((t: Trip) => t.id === incident.tripId);
     return {
       ...incident,
       route: trip ? `${trip.departure} - ${trip.arrival}` : 'N/A',
@@ -33,7 +34,7 @@ export default function IncidentsPage() {
     };
   });
 
-  const filteredIncidents = enrichedIncidents.filter(incident => {
+  const filteredIncidents = enrichedIncidents.filter((incident: any) => {
     const matchesSearch = 
       incident.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       incident.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -375,3 +376,5 @@ export default function IncidentsPage() {
     </div>
   );
 }
+
+

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react@0.487.0';
+import { Eye, EyeOff } from 'lucide-react';
 import { Input } from './input';
 
 interface PasswordInputProps {
@@ -34,3 +34,4 @@ export function PasswordInput({ id, value, onChange, placeholder, className }: P
     </div>
   );
 }
+

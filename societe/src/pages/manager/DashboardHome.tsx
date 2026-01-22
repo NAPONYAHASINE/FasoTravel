@@ -1,20 +1,16 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, DollarSign, Bus, TrendingUp, Clock, MapPin, CheckCircle } from "lucide-react@0.487.0";
+import { Users, DollarSign, Bus, TrendingUp, Clock } from "lucide-react";
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRevenueStats, useTripStats, useTodayTicketsCount } from '../../hooks/useDashboardStats';
-import { formatCurrency } from '../../utils/formatters';
-import { getActiveCashiers, getValidTickets, calculateCashBalance, calculateTicketsRevenue, formatAmount, calculateTripOccupancy } from '../../utils/statsUtils';
+import { getValidTickets, calculateCashBalance, calculateTicketsRevenue, formatAmount, calculateTripOccupancy } from '../../utils/statsUtils';
 import { filterByToday } from '../../utils/dateUtils';
 import { getTripStatusLabel } from '../../utils/labels';
 import { getTripStatusBadgeInfo } from '../../utils/styleUtils';
 import StatCard from '../../components/dashboard/StatCard';
-import TripCard from '../../components/dashboard/TripCard';
 import { Card } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import type { Trip } from '../../contexts/DataContext';
 
 export default function DashboardHome() {
   const navigate = useNavigate();
@@ -23,7 +19,7 @@ export default function DashboardHome() {
 
   // Use custom hooks for stats
   const { todayRevenue, revenueChangeFormatted, revenueTrend } = useRevenueStats(tickets);
-  const { activeTrips, upcomingTrips, activeTripsCount } = useTripStats(trips, 4);
+  const { activeTripsCount, upcomingTrips } = useTripStats(trips, 4);
   const todayTicketsCount = useTodayTicketsCount(tickets);
 
   // Active cashiers (those who made at least one transaction today)
@@ -64,7 +60,7 @@ export default function DashboardHome() {
           cashBalance,
         };
       })
-      .sort((a, b) => b.revenue - a.revenue);
+      .sort((a: any, b: any) => b.revenue - a.revenue);
   }, [cashiers, tickets, cashTransactions]);
 
   const stats = [
@@ -140,7 +136,7 @@ export default function DashboardHome() {
             </div>
           ) : (
             <div className="space-y-3">
-              {cashierPerformance.slice(0, 4).map((cashier) => (
+              {cashierPerformance.slice(0, 4).map((cashier: any) => (
                 <div
                   key={cashier.id}
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#f59e0b] transition-colors"
@@ -203,7 +199,7 @@ export default function DashboardHome() {
             </div>
           ) : (
             <div className="space-y-3">
-              {upcomingDepartures.map((trip) => {
+              {upcomingDepartures.map((trip: any) => {
                 const occupancyRate = calculateTripOccupancy(trip);
                 
                 return (
@@ -296,3 +292,5 @@ export default function DashboardHome() {
     </div>
   );
 }
+
+

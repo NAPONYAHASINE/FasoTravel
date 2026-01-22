@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Plus, Edit, Trash2, Phone, User, CheckCircle, XCircle, Clock, Package } from "lucide-react@0.487.0";
+import { MapPin, Plus, Edit, Trash2, Phone, User, CheckCircle, XCircle, Clock, Package } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -9,7 +9,7 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { FormDialog } from '../../components/forms/FormDialog';
 import { useFilteredData } from '../../hooks/useFilteredData';
-import { toast } from 'sonner@2.0.3'; // ✅ AJOUTÉ: import toast
+import { toast } from 'sonner'; // ✅ AJOUTÉ: import toast
 import type { Station } from '../../contexts/DataContext';
 
 export default function StationsPage() {
@@ -65,7 +65,7 @@ export default function StationsPage() {
       return;
     }
 
-    const manager = managers.find(m => m.id === formData.managerId);
+    const manager = managers.find((m: any) => m.id === formData.managerId);
 
     // 🚀 BACKEND-READY: Créer la gare via votre API NestJS
     // const response = await fetch('/api/stations', {
@@ -140,7 +140,7 @@ export default function StationsPage() {
       return;
     }
 
-    const manager = managers.find(m => m.id === formData.managerId);
+    const manager = managers.find((m: any) => m.id === formData.managerId);
 
     // 🚀 BACKEND-READY: Mettre à jour la gare via votre API NestJS
     // const response = await fetch(`/api/stations/${editingStation.id}`, {
@@ -341,7 +341,7 @@ export default function StationsPage() {
             <p className="text-sm">Ajoutez votre première gare pour commencer</p>
           </div>
         ) : (
-          stations.map((station) => (
+          stations.map((station: any) => (
             <Card key={station.id} className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -731,3 +731,6 @@ export default function StationsPage() {
     </div>
   );
 }
+
+
+

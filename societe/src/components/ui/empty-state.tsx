@@ -1,4 +1,4 @@
-import { LucideIcon } from 'lucide-react@0.487.0';
+import { LucideIcon } from 'lucide-react';
 import { Button } from './button';
 
 interface EmptyStateProps {
@@ -33,3 +33,4 @@ export const EmptyState = ({ icon: Icon, title, description, action }: EmptyStat
     </div>
   );
 };
+

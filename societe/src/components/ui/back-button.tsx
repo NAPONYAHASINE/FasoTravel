@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react@0.487.0';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from './button';
 
 interface BackButtonProps {
@@ -26,3 +26,4 @@ export function BackButton({ onClick, label = "Retour" }: BackButtonProps) {
     </Button>
   );
 }
+

@@ -1,4 +1,4 @@
-import { Bell, Moon, Sun, Search, Wifi, WifiOff, X } from "lucide-react@0.487.0";
+import { Bell, Moon, Sun, Search, Wifi, WifiOff, X } from "lucide-react";
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -310,3 +310,4 @@ export default function Header({ title, showSearch = false }: HeaderProps) {
     </header>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCheck, Plus, Edit, Trash2, Phone, Mail, MapPin, CheckCircle, XCircle, Lock, Eye, EyeOff } from "lucide-react@0.487.0";
+import { UserCheck, Plus, Edit, Trash2, Phone, Mail, MapPin, CheckCircle, XCircle, Lock, Eye, EyeOff } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { FormDialog } from '../../components/forms/FormDialog';
 import { useFilteredData } from '../../hooks/useFilteredData';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import type { Manager } from '../../contexts/DataContext';
 
 export default function ManagersPage() {
@@ -225,28 +225,10 @@ export default function ManagersPage() {
     }
   };
 
-  const handleResetPassword = (manager: Manager) => {
-    // 🚀 BACKEND-READY: Appeler votre API NestJS
-    // const response = await fetch('/api/auth/reset-password', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     email: manager.email,
-    //     redirectUrl: `${window.location.origin}/reset-password`,
-    //   })
-    // });
-    //
-    // if (!response.ok) {
-    //   const error = await response.json();
-    //   toast.error('Erreur lors de l\'envoi de l\'email: ' + error.message);
-    //   return;
-    // }
-    
-    toast.success(`Email de réinitialisation envoyé à ${manager.email}`);
-  };
 
-  const activeManagers = managers.filter(m => m.status === 'active');
-  const inactiveManagers = managers.filter(m => m.status === 'inactive');
+
+  const activeManagers = managers.filter((m: any) => m.status === 'active');
+  const inactiveManagers = managers.filter((m: any) => m.status === 'inactive');
 
   return (
     <div className="p-6 space-y-6">
@@ -322,7 +304,7 @@ export default function ManagersPage() {
             <p className="text-sm">Ajoutez votre premier manager pour commencer</p>
           </div>
         ) : (
-          managers.map((manager) => (
+          managers.map((manager: any) => (
             <Card key={manager.id} className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -456,15 +438,15 @@ export default function ManagersPage() {
             <Label htmlFor="gare">Gare affectée *</Label>
             <Select
               value={formData.gareId}
-              onValueChange={(value) => setFormData({ ...formData, gareId: value })}
+              onValueChange={(value: any) => setFormData({ ...formData, gareId: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une gare" />
               </SelectTrigger>
               <SelectContent>
                 {stations
-                  .filter(s => s.status === 'active')
-                  .map(station => (
+                  .filter((s: any) => s.status === 'active')
+                  .map((station: any) => (
                     <SelectItem key={station.id} value={station.id}>
                       {station.name}
                     </SelectItem>
@@ -567,15 +549,15 @@ export default function ManagersPage() {
             <Label htmlFor="edit-gare">Gare affectée *</Label>
             <Select
               value={formData.gareId}
-              onValueChange={(value) => setFormData({ ...formData, gareId: value })}
-            >
+              onValueChange={(value: any) => setFormData({ ...formData, gareId: value })}
+              >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une gare" />
               </SelectTrigger>
               <SelectContent>
                 {stations
-                  .filter(s => s.status === 'active')
-                  .map(station => (
+                  .filter((s: any) => s.status === 'active')
+                  .map((station: any) => (
                     <SelectItem key={station.id} value={station.id}>
                       {station.name}
                     </SelectItem>
@@ -639,3 +621,5 @@ export default function ManagersPage() {
     </div>
   );
 }
+
+

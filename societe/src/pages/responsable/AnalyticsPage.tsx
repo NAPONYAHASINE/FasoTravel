@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
-import { TrendingUp, Download, Bus, Calendar, Smartphone, Store } from 'lucide-react@0.487.0';
+import { TrendingUp, Download, Bus, Calendar, Smartphone, Store } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
 import { BackButton } from '../../components/ui/back-button';
 import { useData } from '../../contexts/DataContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   getValidTickets, 
   calculateTicketsRevenue, 
@@ -13,7 +12,7 @@ import {
   calculateOverallOccupancy 
 } from '../../utils/statsUtils';
 import { formatCurrency } from '../../utils/formatters';
-import { getCurrentDate, getDaysAgo, getMonthsAgo } from '../../utils/dateUtils';
+import { getCurrentDate, getDaysAgo } from '../../utils/dateUtils';
 import { exportAnalyticsToExcel, exportAnalyticsToPDF } from '../../utils/exportUtils';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -36,7 +35,7 @@ export default function AnalyticsPage() {
   // ✅ REFACTORISÉ: Calculer revenus selon la période sélectionnée
   const revenueData = useMemo(() => {
     const now = getCurrentDate();
-    const data = [];
+    const data: any[] = [];
 
     if (period === 'week') {
       // 7 derniers jours
@@ -113,7 +112,7 @@ export default function AnalyticsPage() {
 
   // ✅ Calculer passagers par jour (7 derniers jours)
   const passengersData = useMemo(() => {
-    const dailyData = [];
+    const dailyData: any[] = [];
     const now = getCurrentDate();
 
     for (let i = 6; i >= 0; i--) {
@@ -161,7 +160,7 @@ export default function AnalyticsPage() {
         value: total > 0 ? Math.round((count / total) * 100) : 0,
         color: colors[index % colors.length]
       }))
-      .sort((a, b) => b.value - a.value)
+      .sort((a: any, b: any) => b.value - a.value)
       .slice(0, 5);
   }, [tickets]);
 
@@ -183,7 +182,7 @@ export default function AnalyticsPage() {
         ventes,
         taux
       };
-    }).sort((a, b) => b.ventes - a.ventes);
+    }).sort((a: any, b: any) => b.ventes - a.ventes);
   }, [stations, tickets, trips]);
 
   // ✅ REFACTORISÉ: Calculer KPIs réels
@@ -574,3 +573,5 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+
+

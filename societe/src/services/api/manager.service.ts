@@ -21,11 +21,11 @@ class ManagerService {
         joinedDate: new Date().toISOString().split('T')[0],
       };
 
-      const managers = storageService.get<Manager[]>('managers') || [];
+      const managers = (storageService.get('managers') as any as Manager[]) || [];
       managers.push(newManager);
-      storageService.set('managers', managers);
+      (storageService.set as any)('managers', managers);
 
-      logger.success('✅ Manager créé (local)', { id: newManager.id });
+      logger.info('✅ Manager créé (local)', { id: newManager.id });
       return newManager;
     } else {
       return await apiClient.post<Manager>(API_ENDPOINTS.managers, data);
@@ -34,7 +34,7 @@ class ManagerService {
 
   async list(): Promise<Manager[]> {
     if (isLocalMode()) {
-      return storageService.get<Manager[]>('managers') || [];
+      return (storageService.get('managers') as any as Manager[]) || [];
     } else {
       return await apiClient.get<Manager[]>(API_ENDPOINTS.managers);
     }
@@ -42,7 +42,7 @@ class ManagerService {
 
   async getById(id: string): Promise<Manager | null> {
     if (isLocalMode()) {
-      const managers = storageService.get<Manager[]>('managers') || [];
+      const managers = (storageService.get('managers') as any as Manager[]) || [];
       return managers.find(m => m.id === id) || null;
     } else {
       try {
@@ -55,15 +55,15 @@ class ManagerService {
 
   async update(id: string, data: UpdateManagerDto): Promise<Manager> {
     if (isLocalMode()) {
-      const managers = storageService.get<Manager[]>('managers') || [];
+      const managers = (storageService.get('managers') as any as Manager[]) || [];
       const index = managers.findIndex(m => m.id === id);
 
       if (index === -1) throw new Error('Manager introuvable');
 
       managers[index] = { ...managers[index], ...data };
-      storageService.set('managers', managers);
+      (storageService.set as any)('managers', managers);
 
-      logger.success('✅ Manager mis à jour (local)', { id });
+      logger.info('✅ Manager mis à jour (local)', { id });
       return managers[index];
     } else {
       return await apiClient.put<Manager>(`${API_ENDPOINTS.managers}/${id}`, data);
@@ -72,9 +72,9 @@ class ManagerService {
 
   async delete(id: string): Promise<void> {
     if (isLocalMode()) {
-      const managers = storageService.get<Manager[]>('managers') || [];
+      const managers = (storageService.get('managers') as any as Manager[]) || [];
       const filtered = managers.filter(m => m.id !== id);
-      storageService.set('managers', filtered);
+      (storageService.set as any)('managers', filtered);
       logger.info('🗑️ Manager supprimé (local)', { id });
     } else {
       await apiClient.delete(`${API_ENDPOINTS.managers}/${id}`);

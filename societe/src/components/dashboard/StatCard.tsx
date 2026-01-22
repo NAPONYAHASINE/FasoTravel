@@ -1,4 +1,4 @@
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react@0.487.0";
+import { LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -77,3 +77,4 @@ export default function StatCard({ title, value, change, trend, icon: Icon, colo
     </div>
   );
 }
+

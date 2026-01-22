@@ -20,11 +20,11 @@ class StationService {
         id: generateId(),
       };
 
-      const stations = storageService.get<Station[]>('stations') || [];
+      const stations = (storageService.get('stations') as any as Station[]) || [];
       stations.push(newStation);
-      storageService.set('stations', stations);
+      (storageService.set as any)('stations', stations);
 
-      logger.success('✅ Gare créée (local)', { id: newStation.id });
+      logger.info('✅ Gare créée (local)', { id: newStation.id });
       return newStation;
     } else {
       return await apiClient.post<Station>(API_ENDPOINTS.stations, data);
@@ -33,7 +33,7 @@ class StationService {
 
   async list(): Promise<Station[]> {
     if (isLocalMode()) {
-      return storageService.get<Station[]>('stations') || [];
+      return (storageService.get('stations') as any as Station[]) || [];
     } else {
       return await apiClient.get<Station[]>(API_ENDPOINTS.stations);
     }
@@ -41,7 +41,7 @@ class StationService {
 
   async getById(id: string): Promise<Station | null> {
     if (isLocalMode()) {
-      const stations = storageService.get<Station[]>('stations') || [];
+      const stations = (storageService.get('stations') as any as Station[]) || [];
       return stations.find(s => s.id === id) || null;
     } else {
       try {
@@ -54,15 +54,15 @@ class StationService {
 
   async update(id: string, data: UpdateStationDto): Promise<Station> {
     if (isLocalMode()) {
-      const stations = storageService.get<Station[]>('stations') || [];
+      const stations = (storageService.get('stations') as any as Station[]) || [];
       const index = stations.findIndex(s => s.id === id);
 
       if (index === -1) throw new Error('Gare introuvable');
 
       stations[index] = { ...stations[index], ...data };
-      storageService.set('stations', stations);
+      (storageService.set as any)('stations', stations);
 
-      logger.success('✅ Gare mise à jour (local)', { id });
+      logger.info('✅ Gare mise à jour (local)', { id });
       return stations[index];
     } else {
       return await apiClient.put<Station>(`${API_ENDPOINTS.stations}/${id}`, data);
@@ -71,9 +71,9 @@ class StationService {
 
   async delete(id: string): Promise<void> {
     if (isLocalMode()) {
-      const stations = storageService.get<Station[]>('stations') || [];
+      const stations = (storageService.get('stations') as any as Station[]) || [];
       const filtered = stations.filter(s => s.id !== id);
-      storageService.set('stations', filtered);
+      (storageService.set as any)('stations', filtered);
       logger.info('🗑️ Gare supprimée (local)', { id });
     } else {
       await apiClient.delete(`${API_ENDPOINTS.stations}/${id}`);

@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Users, ArrowRight } from 'lucide-react@0.487.0';
+import { MapPin, Clock, Users, ArrowRight } from 'lucide-react';
 import type { Trip } from '../../contexts/DataContext';
 import { formatTime, getCurrentDate } from '../../utils/dateUtils';
 import { getTripStatusLabel } from '../../utils/labels';
 import { getTripStatusBadgeInfo } from '../../utils/styleUtils';
-import { calculateTripOccupancy, getSoldSeatsCount } from '../../utils/statsUtils';
+import { calculateTripOccupancy } from '../../utils/statsUtils';
 import { Badge } from '../ui/badge';
 
 export default function RecentTripsTable({ trips = [] }: { trips?: Trip[] }) {
@@ -109,3 +109,4 @@ export default function RecentTripsTable({ trips = [] }: { trips?: Trip[] }) {
     </div>
   );
 }
+
