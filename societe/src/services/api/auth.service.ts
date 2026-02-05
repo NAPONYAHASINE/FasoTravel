@@ -4,7 +4,8 @@
  * ✅ Utilise config/types/constants communs avec Mobile
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -19,7 +20,7 @@ class AuthService {
   async login(data: LoginDto): Promise<AuthResponse> {
     logger.info('🔐 Tentative connexion', { email: data.email });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       // MODE LOCAL : Vérifier dans localStorage
       const managers = storageService.get(STORAGE_MANAGERS) || [];
       const cashiers = storageService.get(STORAGE_CASHIERS) || [];
@@ -84,7 +85,7 @@ logger.info('✅ Connexion réussie (API)', {
   async register(data: RegisterDto): Promise<AuthResponse> {
     logger.info('📝 Inscription utilisateur', { email: data.email, role: data.role });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       // En mode local, l'inscription se fait via les pages de gestion
       throw new Error('Inscription non disponible en mode local');
     } else {
@@ -98,7 +99,7 @@ logger.info('✅ Connexion réussie (API)', {
   async logout(): Promise<void> {
     logger.info('👋 Déconnexion');
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       storageService.remove(STORAGE_AUTH_TOKEN);
       storageService.remove(STORAGE_CURRENT_USER);
       logger.info('✅ Déconnexion (local)');
@@ -138,7 +139,7 @@ logger.info('✅ Connexion réussie (API)', {
   async resetPassword(data: ResetPasswordDto): Promise<void> {
     logger.info('🔄 Réinitialisation mot de passe', { email: data.email });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       // Simuler l'envoi d'email
       logger.warn('⚠️ Email de réinitialisation simulé (mode local)');
       return;

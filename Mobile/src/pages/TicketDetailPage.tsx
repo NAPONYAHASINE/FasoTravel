@@ -17,7 +17,8 @@ import * as api from '../lib/api';
 import { Ticket, MOCK_TICKETS } from '../data/models';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { useVehicleLiveTracking } from '../lib/hooks';
+import { useVehicleLiveTracking, useEmitLocation } from '../lib/hooks';
+import { useGeolocation } from '../lib/useGeolocation';
 
 interface TicketDetailPageProps {
   ticketId: string;
@@ -32,10 +33,25 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
   const [showQR, setShowQR] = useState(true);
   const [offlineUrl, setOfflineUrl] = useState<string | null>(null);
   
+  // Géolocalisation de l'utilisateur
+  const [geoState] = useGeolocation();
+  const userLocation = geoState.userPosition ? { 
+    lat: geoState.userPosition.lat, 
+    lon: geoState.userPosition.lon 
+  } : null;
+  
   // Load live vehicle tracking when EMBARKED
   const { location: vehicleLocation, isLoading: isTrackingLoading } = useVehicleLiveTracking(
     ticket?.status === 'EMBARKED' ? ticket?.trip_id : null,
     true
+  );
+
+  // Emit location when EMBARKED (collaboratif: un seul passager suffit)
+  const { isLoading: isEmittingLocation, error: emitError } = useEmitLocation(
+    ticket?.status === 'EMBARKED' ? ticket?.ticket_id : null,
+    ticket?.trip_id || null,
+    ticket?.status === 'EMBARKED' ? 'in_progress' : null,
+    userLocation
   );
 
   if (!ticket) {

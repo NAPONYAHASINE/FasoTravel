@@ -2,7 +2,8 @@
  * Service API pour la gestion des caissiers
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -14,7 +15,7 @@ class CashierService {
   async create(data: CreateCashierDto): Promise<Cashier> {
     logger.info('👤 Création caissier', { name: data.name, gare: data.gareName });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const newCashier: Cashier = {
         ...data,
         id: generateId(),
@@ -33,7 +34,7 @@ class CashierService {
   }
 
   async list(): Promise<Cashier[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       return (storageService.get('cashiers') as any as Cashier[]) || [];
     } else {
       return await apiClient.get<Cashier[]>(API_ENDPOINTS.cashiers);
@@ -41,7 +42,7 @@ class CashierService {
   }
 
   async getById(id: string): Promise<Cashier | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const cashiers = (storageService.get('cashiers') as any as Cashier[]) || [];
       return cashiers.find(c => c.id === id) || null;
     } else {
@@ -54,7 +55,7 @@ class CashierService {
   }
 
   async update(id: string, data: UpdateCashierDto): Promise<Cashier> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const cashiers = (storageService.get('cashiers') as any as Cashier[]) || [];
       const index = cashiers.findIndex(c => c.id === id);
 
@@ -71,7 +72,7 @@ class CashierService {
   }
 
   async delete(id: string): Promise<void> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const cashiers = (storageService.get('cashiers') as any as Cashier[]) || [];
       const filtered = cashiers.filter(c => c.id !== id);
       (storageService.set as any)('cashiers', filtered);

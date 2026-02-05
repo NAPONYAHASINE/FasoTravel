@@ -2,7 +2,8 @@
  * Service API pour la gestion des routes
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -14,7 +15,7 @@ class RouteService {
   async create(data: CreateRouteDto): Promise<Route> {
     logger.info('🛣️ Création route', { from: data.departure, to: data.arrival });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const newRoute: Route = {
         ...data,
         id: generateId(),
@@ -32,7 +33,7 @@ class RouteService {
   }
 
   async list(): Promise<Route[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       return (storageService.get('routes') as any as Route[]) || [];
     } else {
       return await apiClient.get<Route[]>(API_ENDPOINTS.routes);
@@ -40,7 +41,7 @@ class RouteService {
   }
 
   async getById(id: string): Promise<Route | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const routes = (storageService.get('routes') as any as Route[]) || [];
       return routes.find(r => r.id === id) || null;
     } else {
@@ -53,7 +54,7 @@ class RouteService {
   }
 
   async update(id: string, data: UpdateRouteDto): Promise<Route> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const routes = (storageService.get('routes') as any as Route[]) || [];
       const index = routes.findIndex(r => r.id === id);
 
@@ -70,7 +71,7 @@ class RouteService {
   }
 
   async delete(id: string): Promise<void> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const routes = (storageService.get('routes') as any as Route[]) || [];
       const filtered = routes.filter(r => r.id !== id);
       (storageService.set as any)('routes', filtered);

@@ -2,7 +2,8 @@
  * Service API pour la gestion des stories
  */
 
-import { isLocalMode, buildApiUrl, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { buildApiUrl, API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -14,7 +15,7 @@ class StoryService {
   async upload(file: File): Promise<{ url: string }> {
     logger.info('📤 Upload fichier story', { name: file.name, size: file.size });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       // MODE LOCAL : Créer une URL temporaire
       const url = URL.createObjectURL(file);
       logger.info('✅ Fichier uploadé (local)', { url });
@@ -42,7 +43,7 @@ class StoryService {
   async create(data: CreateStoryDto): Promise<Story> {
     logger.info('📖 Création story', { title: data.title });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const newStory: Story = {
         ...data,
         id: generateId(),
@@ -62,7 +63,7 @@ class StoryService {
   }
 
   async list(): Promise<Story[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       return (storageService.get('stories') as any as Story[]) || [];
     } else {
       return await apiClient.get<Story[]>(API_ENDPOINTS.stories);
@@ -70,7 +71,7 @@ class StoryService {
   }
 
   async getById(id: string): Promise<Story | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const stories = (storageService.get('stories') as any as Story[]) || [];
       return stories.find(s => s.id === id) || null;
     } else {
@@ -83,7 +84,7 @@ class StoryService {
   }
 
   async update(id: string, data: UpdateStoryDto): Promise<Story> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const stories = (storageService.get('stories') as any as Story[]) || [];
       const index = stories.findIndex(s => s.id === id);
 
@@ -100,7 +101,7 @@ class StoryService {
   }
 
   async delete(id: string): Promise<void> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const stories = (storageService.get('stories') as any as Story[]) || [];
       const filtered = stories.filter(s => s.id !== id);
       storageService.set('stories', filtered);

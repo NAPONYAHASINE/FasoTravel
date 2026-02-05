@@ -1,12 +1,12 @@
 /**
- * Client API centralisé pour TransportBF
+ * HTTP API Client - TransportBF Societe
  * 
- * Gère automatiquement :
- * - Headers d'authentification
- * - Gestion des erreurs HTTP (401, 403, 500, etc.)
- * - Retry automatique en cas d'échec réseau
- * - Timeout des requêtes
- * - Logging unifié
+ * Gère:
+ * - GET, POST, PUT, PATCH, DELETE
+ * - Bearer token automatique
+ * - Timeout avec AbortController
+ * - Retry logic avec backoff exponentiel
+ * - Gestion d'erreurs HTTP
  */
 
 import { buildApiUrl, getDefaultHeaders, API_CONFIG } from '../config';
@@ -28,64 +28,45 @@ export class ApiError extends Error {
   }
 }
 
+export interface ApiClientConfig {
+  baseUrl: string;
+  timeout?: number;
+  maxRetries?: number;
+  getToken?: () => string | null;
+  getHeaders?: () => Record<string, string>;
+  logger?: {
+    error: (msg: string, data?: any) => void;
+    warn: (msg: string, data?: any) => void;
+    debug: (msg: string, data?: any) => void;
+  };
+}
+
 class ApiClient {
-  /**
-   * Effectue une requête HTTP avec gestion complète des erreurs
-   */
-  async request<T>(
-    endpoint: string,
-    options: ApiClientOptions = {}
-  ): Promise<T> {
-    const { retry = 0, timeout = API_CONFIG.timeout, ...fetchOptions } = options;
+  private baseUrl: string;
+  private timeout: number;
+  private maxRetries: number;
+  private getToken: () => string | null;
+  private getHeaders: () => Record<string, string>;
+  private logger: ApiClientConfig['logger'];
 
-    try {
-      // Créer AbortController pour le timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      const response = await fetch(buildApiUrl(endpoint), {
-        ...fetchOptions,
-        headers: {
-          ...getDefaultHeaders(),
-          ...fetchOptions.headers,
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      // Gestion des erreurs HTTP
-      if (!response.ok) {
-        await this.handleErrorResponse(response);
-      }
-
-      // Succès - parser la réponse
-      const data = await response.json();
-      return data;
-    } catch (error: any) {
-      // Gestion timeout
-      if (error.name === 'AbortError') {
-        logger.error('⏱️ Timeout API', { endpoint, timeout });
-        throw new ApiError('Délai d\'attente dépassé', 408);
-      }
-
-      // Retry en cas d'erreur réseau
-      if (retry > 0 && this.shouldRetry(error)) {
-        logger.warn(`🔄 Retry ${retry} restant(s)`, { endpoint });
-        await this.delay(1000); // Attendre 1s avant retry
-        return this.request<T>(endpoint, { ...options, retry: retry - 1 });
-      }
-
-      // Re-throw l'erreur
-      throw error;
-    }
+  constructor(config: ApiClientConfig) {
+    this.baseUrl = config.baseUrl;
+    this.timeout = config.timeout || 30000;
+    this.maxRetries = config.maxRetries || 3;
+    this.getToken = config.getToken || (() => null);
+    this.getHeaders = config.getHeaders || (() => ({}));
+    this.logger = config.logger || {
+      error: () => {},
+      warn: () => {},
+      debug: () => {},
+    };
   }
 
   /**
    * GET request
    */
-  async get<T>(endpoint: string, options?: ApiClientOptions): Promise<T> {
-    return this.request<T>(endpoint, {
+  async get<T = unknown>(url: string, options?: ApiClientOptions): Promise<T> {
+    return this.request<T>(url, {
       ...options,
       method: 'GET',
     });
@@ -94,12 +75,8 @@ class ApiClient {
   /**
    * POST request
    */
-  async post<T>(
-    endpoint: string,
-    data?: any,
-    options?: ApiClientOptions
-  ): Promise<T> {
-    return this.request<T>(endpoint, {
+  async post<T = unknown>(url: string, data?: unknown, options?: ApiClientOptions): Promise<T> {
+    return this.request<T>(url, {
       ...options,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
@@ -109,12 +86,8 @@ class ApiClient {
   /**
    * PUT request
    */
-  async put<T>(
-    endpoint: string,
-    data?: any,
-    options?: ApiClientOptions
-  ): Promise<T> {
-    return this.request<T>(endpoint, {
+  async put<T = unknown>(url: string, data?: unknown, options?: ApiClientOptions): Promise<T> {
+    return this.request<T>(url, {
       ...options,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -122,97 +95,155 @@ class ApiClient {
   }
 
   /**
+   * PATCH request
+   */
+  async patch<T = unknown>(url: string, data?: unknown, options?: ApiClientOptions): Promise<T> {
+    return this.request<T>(url, {
+      ...options,
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  /**
    * DELETE request
    */
-  async delete<T>(endpoint: string, options?: ApiClientOptions): Promise<T> {
-    return this.request<T>(endpoint, {
+  async delete<T = unknown>(url: string, options?: ApiClientOptions): Promise<T> {
+    return this.request<T>(url, {
       ...options,
       method: 'DELETE',
     });
   }
 
   /**
-   * Gestion des erreurs HTTP
+   * Core request logic avec retry et timeout
    */
-  private async handleErrorResponse(response: Response): Promise<never> {
-    const status = response.status;
-    let errorData: any;
+  private async request<T>(
+    url: string,
+    options: ApiClientOptions = {}
+  ): Promise<T> {
+    const { retry = 0, timeout = this.timeout, ...fetchOptions } = options;
+    let lastError: Error | null = null;
+
+    const maxAttempts = this.maxRetries + 1;
+    const attemptNumber = maxAttempts - (retry || 0);
 
     try {
-      errorData = await response.json();
-    } catch {
-      errorData = { message: 'Erreur serveur' };
+      // Créer AbortController pour le timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      const fullUrl = buildApiUrl(url);
+      const headers = this.buildHeaders(fetchOptions.headers as Record<string, string> | undefined);
+
+      this.logger.debug?.(`📤 ${fetchOptions.method || 'GET'} ${url} (tentative ${attemptNumber}/${maxAttempts})`);
+
+      const response = await fetch(fullUrl, {
+        ...fetchOptions,
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      // Gestion des erreurs HTTP
+      if (!response.ok) {
+        this.handleErrorResponse(response);
+      }
+
+      // Succès - parser la réponse
+      const contentType = response.headers.get('content-type');
+      const data = contentType?.includes('application/json') 
+        ? await response.json()
+        : (await response.text() as unknown);
+
+      this.logger.debug?.(`✅ ${fetchOptions.method || 'GET'} ${url} (${response.status})`);
+      return data as T;
+    } catch (error: any) {
+      // Gestion timeout
+      if (error.name === 'AbortError') {
+        this.logger.error?.(`⏱️ Timeout API`, { url, timeout, attempt: attemptNumber });
+        lastError = new ApiError('Délai d\'attente dépassé', 408);
+      } else {
+        lastError = error instanceof Error ? error : new Error(String(error));
+      }
+
+      // Retry logic
+      if (retry < this.maxRetries && this.shouldRetry(lastError)) {
+        const delay = 1000 * Math.pow(2, maxAttempts - retry - 2);
+        this.logger.warn?.(`🔄 Retry dans ${delay}ms`, { url, retriesLeft: retry });
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.request<T>(url, { ...options, retry: retry + 1 });
+      }
+
+      throw lastError;
     }
-
-    const message = errorData.message || this.getDefaultErrorMessage(status);
-
-    // Gestion spécifique par code HTTP
-    switch (status) {
-      case 401:
-        logger.error('🔒 Non autorisé - Session expirée', { status });
-        // Rediriger vers login (sera géré par le composant)
-        throw new ApiError('Session expirée. Veuillez vous reconnecter.', 401, errorData);
-
-      case 403:
-        logger.error('🚫 Accès refusé', { status });
-        throw new ApiError('Accès refusé. Vous n\'avez pas les permissions nécessaires.', 403, errorData);
-
-      case 404:
-        logger.error('🔍 Ressource introuvable', { status });
-        throw new ApiError('Ressource introuvable.', 404, errorData);
-
-      case 422:
-        logger.error('❌ Données invalides', { status, errors: errorData.errors });
-        throw new ApiError('Données invalides.', 422, errorData);
-
-      case 500:
-      case 502:
-      case 503:
-        logger.error('💥 Erreur serveur', { status });
-        throw new ApiError('Erreur serveur. Veuillez réessayer plus tard.', status, errorData);
-
-      default:
-        logger.error('❌ Erreur API', { status, message });
-        throw new ApiError(message, status, errorData);
-    }
-  }
-
-  /**
-   * Messages d'erreur par défaut selon le code HTTP
-   */
-  private getDefaultErrorMessage(status: number): string {
-    const messages: Record<number, string> = {
-      400: 'Requête invalide',
-      401: 'Non autorisé',
-      403: 'Accès refusé',
-      404: 'Ressource introuvable',
-      422: 'Données invalides',
-      500: 'Erreur serveur',
-      502: 'Service temporairement indisponible',
-      503: 'Service en maintenance',
-    };
-
-    return messages[status] || 'Erreur inconnue';
   }
 
   /**
    * Détermine si on doit retry la requête
    */
   private shouldRetry(error: any): boolean {
-    // Retry sur erreurs réseau (pas sur erreurs 4xx)
     if (error instanceof ApiError) {
-      return error.status >= 500; // Retry seulement sur erreurs serveur
+      // Retry seulement sur erreurs serveur (5xx) et timeouts
+      return error.status >= 500 || error.status === 408;
     }
-    return true; // Retry sur erreurs réseau
+    // Retry sur erreurs réseau
+    return true;
   }
 
   /**
-   * Délai asynchrone pour les retries
+   * Construit les headers avec auth token
    */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  private buildHeaders(customHeaders?: Record<string, string>): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...getDefaultHeaders(),
+      ...customHeaders,
+    };
+
+    // Ajouter token d'auth si disponible
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Gestion des erreurs HTTP
+   */
+  private handleErrorResponse(response: Response): never {
+    const status = response.status;
+    const statusText = response.statusText || 'Unknown Error';
+
+    this.logger.error?.(`❌ HTTP ${status}`, { url: response.url });
+
+    throw new ApiError(
+      `HTTP ${status}: ${statusText}`,
+      status
+    );
   }
 }
 
-// Export instance singleton
-export const apiClient = new ApiClient();
+/**
+ * Export instance avec config Societe
+ */
+export const apiClient = new ApiClient({
+  baseUrl: '', // buildApiUrl() inclut déjà le domaine complet
+  timeout: API_CONFIG.timeout || 30000,
+  maxRetries: 3,
+  getToken: () => {
+    // TODO: récupérer depuis auth context ou localStorage
+    return null;
+  },
+  getHeaders: getDefaultHeaders,
+  logger: {
+    error: (msg, data) => logger.error(`[API] ${msg}`, data),
+    warn: (msg, data) => logger.warn(`[API] ${msg}`, data),
+    debug: (msg, data) => logger.debug?.(`[API] ${msg}`, data) || console.debug(`[API] ${msg}`, data),
+  },
+});
+

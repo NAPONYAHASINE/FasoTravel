@@ -1,0 +1,29 @@
+/* RouteMap.tsx styles */
+.route-map-container {
+  min-height: 256px;
+}
+
+/* SwipeableCard.tsx styles */
+.swipeable-action-item {
+  width: 150px;
+}
+
+.swipeable-card-main {
+  transition: transform 0.3s ease-out;
+}
+
+.swipeable-card-main[data-dragging="true"] {
+  transition: none;
+}
+
+/* Progress bar - use data attributes instead of inline styles */
+.progress-bar {
+  display: block;
+  width: 0%;
+  background: inherit;
+}
+
+/* Ad modal gradient - fallback without inline styles */
+.ad-modal-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}

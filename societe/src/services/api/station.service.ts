@@ -2,7 +2,8 @@
  * Service API pour la gestion des gares (Stations)
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -14,7 +15,7 @@ class StationService {
   async create(data: CreateStationDto): Promise<Station> {
     logger.info('🏢 Création gare', { name: data.name, city: data.city });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const newStation: Station = {
         ...data,
         id: generateId(),
@@ -32,7 +33,7 @@ class StationService {
   }
 
   async list(): Promise<Station[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       return (storageService.get('stations') as any as Station[]) || [];
     } else {
       return await apiClient.get<Station[]>(API_ENDPOINTS.stations);
@@ -40,7 +41,7 @@ class StationService {
   }
 
   async getById(id: string): Promise<Station | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const stations = (storageService.get('stations') as any as Station[]) || [];
       return stations.find(s => s.id === id) || null;
     } else {
@@ -53,7 +54,7 @@ class StationService {
   }
 
   async update(id: string, data: UpdateStationDto): Promise<Station> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const stations = (storageService.get('stations') as any as Station[]) || [];
       const index = stations.findIndex(s => s.id === id);
 
@@ -70,7 +71,7 @@ class StationService {
   }
 
   async delete(id: string): Promise<void> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const stations = (storageService.get('stations') as any as Station[]) || [];
       const filtered = stations.filter(s => s.id !== id);
       (storageService.set as any)('stations', filtered);

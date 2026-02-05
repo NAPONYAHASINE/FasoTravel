@@ -18,6 +18,8 @@
  * }
  */
 
+import './styles.css';
+
 import { MapPin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -116,8 +118,7 @@ export function RouteMap({ waypoints = [], totalDistance = 0, className = '' }: 
       {/* Carte Container */}
       <div 
         ref={mapContainerRef}
-        className="w-full h-64 md:h-80 bg-gray-100 dark:bg-gray-900"
-        style={{ minHeight: '256px' }}
+        className="w-full h-64 md:h-80 bg-gray-100 dark:bg-gray-900 route-map-container"
       >
         {/* Fallback: Liste visuelle des waypoints en attendant la vraie carte */}
         <div className="h-full flex flex-col justify-center p-6 space-y-3">

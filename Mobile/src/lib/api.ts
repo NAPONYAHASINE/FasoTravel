@@ -366,251 +366,90 @@ export interface TripSearchParams {
 
 /**
  * Recherche des trajets
+ * DELEGATED TO: tripService.searchTrips()
  */
 export async function getTrips(params: TripSearchParams): Promise<Trip[]> {
-  if (isDevelopment) {
-    // ALL Mock trips (includes both directions for round-trip support)
-    const allMockTrips: Trip[] = [
-      // OUAGA → BOBO (Aller)
-      {
-        trip_id: 'TRIP_001',
-        operator_id: 'AIR_CANADA',
-        operator_name: 'Air Canada Bus',
-        operator_logo: '✈️',
-        vehicle_type: 'Bus climatisé',
-        departure_time: '2025-11-04T07:00:00',
-        arrival_time: '2025-11-04T13:00:00',
-        duration_minutes: 360,
-        base_price: 8500,
-        from_stop_id: 'OUAGA_CENTRE',
-        to_stop_id: 'BOBO_CENTRE',
-        from_stop_name: 'Ouagadougou',
-        to_stop_name: 'Bobo-Dioulasso',
-        segments: [
-          {
-            segment_id: 'SEG_001_1',
-            from_stop_id: 'OUAGA_CENTRE',
-            to_stop_id: 'KOUDOUGOU',
-            from_stop_name: 'Ouagadougou',
-            to_stop_name: 'Koudougou',
-            departure_time: '2025-11-04T07:00:00',
-            arrival_time: '2025-11-04T09:15:00',
-            distance_km: 95,
-            available_seats: 12,
-            total_seats: 45
-          },
-          {
-            segment_id: 'SEG_001_2',
-            from_stop_id: 'KOUDOUGOU',
-            to_stop_id: 'BOBO_CENTRE',
-            from_stop_name: 'Koudougou',
-            to_stop_name: 'Bobo-Dioulasso',
-            departure_time: '2025-11-04T09:30:00',
-            arrival_time: '2025-11-04T13:00:00',
-            distance_km: 155,
-            available_seats: 12,
-            total_seats: 45
-          }
-        ],
-        amenities: ['WiFi', 'AC', 'USB', 'Toilet'],
-        has_live_tracking: true,
-        available_seats: 12,
-        total_seats: 45
-      },
-      {
-        trip_id: 'TRIP_002',
-        operator_id: 'SCOOT',
-        operator_name: 'Scoot Express',
-        operator_logo: '🚌',
-        vehicle_type: 'Mini-bus',
-        departure_time: '2025-11-04T09:00:00',
-        arrival_time: '2025-11-04T15:00:00',
-        duration_minutes: 360,
-        base_price: 7000,
-        from_stop_id: 'OUAGA_CENTRE',
-        to_stop_id: 'BOBO_CENTRE',
-        from_stop_name: 'Ouagadougou',
-        to_stop_name: 'Bobo-Dioulasso',
-        segments: [
-          {
-            segment_id: 'SEG_002_1',
-            from_stop_id: 'OUAGA_CENTRE',
-            to_stop_id: 'BOBO_CENTRE',
-            from_stop_name: 'Ouagadougou',
-            to_stop_name: 'Bobo-Dioulasso',
-            departure_time: '2025-11-04T09:00:00',
-            arrival_time: '2025-11-04T15:00:00',
-            distance_km: 250,
-            available_seats: 8,
-            total_seats: 30
-          }
-        ],
-        amenities: ['AC', 'USB'],
-        has_live_tracking: false,
-        available_seats: 8,
-        total_seats: 30
-      },
-      // BOBO → OUAGA (Retour)
-      {
-        trip_id: 'TRIP_003',
-        operator_id: 'AIR_CANADA',
-        operator_name: 'Air Canada Bus',
-        operator_logo: '✈️',
-        vehicle_type: 'Bus climatisé',
-        departure_time: '2025-11-05T08:00:00',
-        arrival_time: '2025-11-05T14:00:00',
-        duration_minutes: 360,
-        base_price: 8500,
-        from_stop_id: 'BOBO_CENTRE',
-        to_stop_id: 'OUAGA_CENTRE',
-        from_stop_name: 'Bobo-Dioulasso',
-        to_stop_name: 'Ouagadougou',
-        segments: [
-          {
-            segment_id: 'SEG_003_1',
-            from_stop_id: 'BOBO_CENTRE',
-            to_stop_id: 'KOUDOUGOU',
-            from_stop_name: 'Bobo-Dioulasso',
-            to_stop_name: 'Koudougou',
-            departure_time: '2025-11-05T08:00:00',
-            arrival_time: '2025-11-05T11:30:00',
-            distance_km: 155,
-            available_seats: 15,
-            total_seats: 45
-          },
-          {
-            segment_id: 'SEG_003_2',
-            from_stop_id: 'KOUDOUGOU',
-            to_stop_id: 'OUAGA_CENTRE',
-            from_stop_name: 'Koudougou',
-            to_stop_name: 'Ouagadougou',
-            departure_time: '2025-11-05T11:45:00',
-            arrival_time: '2025-11-05T14:00:00',
-            distance_km: 95,
-            available_seats: 15,
-            total_seats: 45
-          }
-        ],
-        amenities: ['WiFi', 'AC', 'USB', 'Toilet'],
-        has_live_tracking: true,
-        available_seats: 15,
-        total_seats: 45
-      },
-      {
-        trip_id: 'TRIP_004',
-        operator_id: 'SCOOT',
-        operator_name: 'Scoot Express',
-        operator_logo: '🚌',
-        vehicle_type: 'Mini-bus',
-        departure_time: '2025-11-05T10:00:00',
-        arrival_time: '2025-11-05T16:00:00',
-        duration_minutes: 360,
-        base_price: 7000,
-        from_stop_id: 'BOBO_CENTRE',
-        to_stop_id: 'OUAGA_CENTRE',
-        from_stop_name: 'Bobo-Dioulasso',
-        to_stop_name: 'Ouagadougou',
-        segments: [
-          {
-            segment_id: 'SEG_004_1',
-            from_stop_id: 'BOBO_CENTRE',
-            to_stop_id: 'OUAGA_CENTRE',
-            from_stop_name: 'Bobo-Dioulasso',
-            to_stop_name: 'Ouagadougou',
-            departure_time: '2025-11-05T10:00:00',
-            arrival_time: '2025-11-05T16:00:00',
-            distance_km: 250,
-            available_seats: 10,
-            total_seats: 30
-          }
-        ],
-        amenities: ['AC', 'USB'],
-        has_live_tracking: false,
-        available_seats: 10,
-        total_seats: 30
-      },
-      {
-        trip_id: 'TRIP_005',
-        operator_id: 'RAKIETA',
-        operator_name: 'Rakieta Transport',
-        operator_logo: '🚍',
-        vehicle_type: 'VIP Bus',
-        departure_time: '2025-11-05T14:00:00',
-        arrival_time: '2025-11-05T20:00:00',
-        duration_minutes: 360,
-        base_price: 9000,
-        from_stop_id: 'BOBO_CENTRE',
-        to_stop_id: 'OUAGA_CENTRE',
-        from_stop_name: 'Bobo-Dioulasso',
-        to_stop_name: 'Ouagadougou',
-        segments: [
-          {
-            segment_id: 'SEG_005_1',
-            from_stop_id: 'BOBO_CENTRE',
-            to_stop_id: 'OUAGA_CENTRE',
-            from_stop_name: 'Bobo-Dioulasso',
-            to_stop_name: 'Ouagadougou',
-            departure_time: '2025-11-05T14:00:00',
-            arrival_time: '2025-11-05T20:00:00',
-            distance_km: 250,
-            available_seats: 20,
-            total_seats: 50
-          }
-        ],
-        amenities: ['WiFi', 'AC', 'USB', 'Toilet', 'TV'],
-        has_live_tracking: true,
-        available_seats: 20,
-        total_seats: 50
-      }
-    ];
-
-    // FILTER based on params
-    let filtered = allMockTrips;
-    
-    if (params.from_stop_id) {
-      filtered = filtered.filter(t => t.from_stop_id === params.from_stop_id);
-    }
-    if (params.to_stop_id) {
-      filtered = filtered.filter(t => t.to_stop_id === params.to_stop_id);
-    }
-    if (params.date) {
-      // Filter by date (YYYY-MM-DD)
-      filtered = filtered.filter(t => t.departure_time.startsWith(params.date!));
-    }
-    if (params.operator_id) {
-      filtered = filtered.filter(t => t.operator_id === params.operator_id);
-    }
-    if (params.min_seats) {
-      filtered = filtered.filter(t => t.available_seats >= params.min_seats!);
-    }
-    
-    return filtered;
-  }
-
-  const queryParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) queryParams.append(key, String(value));
-  });
-
-  const response = await fetch(`${BASE_URL}/trips?${queryParams}`);
-  if (!response.ok) throw new Error('Failed to fetch trips');
-  return response.json();
+  const { tripService } = await import('../services/api/trip.service');
+  const serviceParams = {
+    fromStationId: params.from_stop_id,
+    toStationId: params.to_stop_id,
+    departureDate: params.date,
+    numPassengers: params.min_seats
+  };
+  const results = await tripService.searchTrips(serviceParams);
+  // Map back to snake_case for API compatibility
+  return results.map(trip => ({
+    trip_id: trip.id,
+    operator_id: trip.operatorId,
+    operator_name: trip.operatorName,
+    operator_logo: trip.operatorLogo,
+    vehicle_type: trip.vehicleType,
+    departure_time: trip.departureTime,
+    arrival_time: trip.arrivalTime,
+    duration_minutes: trip.durationMinutes,
+    base_price: trip.basePrice,
+    from_stop_id: trip.fromStationId,
+    to_stop_id: trip.toStationId,
+    from_stop_name: trip.fromStationName,
+    to_stop_name: trip.toStationName,
+    segments: trip.segments.map(seg => ({
+      segment_id: seg.id,
+      from_stop_id: seg.fromStationId,
+      to_stop_id: seg.toStationId,
+      from_stop_name: seg.fromStationName,
+      to_stop_name: seg.toStationName,
+      departure_time: seg.departureTime,
+      arrival_time: seg.arrivalTime,
+      distance_km: seg.distanceKm,
+      available_seats: seg.availableSeats,
+      total_seats: seg.totalSeats
+    })),
+    amenities: trip.amenities,
+    has_live_tracking: trip.hasLiveTracking,
+    available_seats: trip.availableSeats,
+    total_seats: trip.totalSeats
+  }));
 }
 
 /**
  * Récupère un trajet par ID
+ * DELEGATED TO: tripService.getTripById()
  */
 export async function getTripById(tripId: string): Promise<Trip> {
-  if (isDevelopment) {
-    const trips = await getTrips({});
-    const trip = trips.find(t => t.trip_id === tripId);
-    if (!trip) throw new Error('Trip not found');
-    return trip;
-  }
-
-  const response = await fetch(`${BASE_URL}/trips/${tripId}`);
-  if (!response.ok) throw new Error('Failed to fetch trip');
-  return response.json();
+  const { tripService } = await import('../services/api/trip.service');
+  const result = await tripService.getTripById(tripId);
+  // Map back to snake_case for API compatibility
+  return {
+    trip_id: result.id,
+    operator_id: result.operatorId,
+    operator_name: result.operatorName,
+    operator_logo: result.operatorLogo,
+    vehicle_type: result.vehicleType,
+    departure_time: result.departureTime,
+    arrival_time: result.arrivalTime,
+    duration_minutes: result.durationMinutes,
+    base_price: result.basePrice,
+    from_stop_id: result.fromStationId,
+    to_stop_id: result.toStationId,
+    from_stop_name: result.fromStationName,
+    to_stop_name: result.toStationName,
+    segments: result.segments.map(seg => ({
+      segment_id: seg.id,
+      from_stop_id: seg.fromStationId,
+      to_stop_id: seg.toStationId,
+      from_stop_name: seg.fromStationName,
+      to_stop_name: seg.toStationName,
+      departure_time: seg.departureTime,
+      arrival_time: seg.arrivalTime,
+      distance_km: seg.distanceKm,
+      available_seats: seg.availableSeats,
+      total_seats: seg.totalSeats
+    })),
+    amenities: result.amenities,
+    has_live_tracking: result.hasLiveTracking,
+    available_seats: result.availableSeats,
+    total_seats: result.totalSeats
+  };
 }
 
 // ============================================
@@ -674,22 +513,43 @@ export async function confirmBooking(params: ConfirmBookingParams): Promise<Mode
 
 /**
  * Récupère tous les billets de l'utilisateur
+ * DELEGATED TO: ticketService.getMyTickets()
  */
 export async function getMyTickets(): Promise<ModelTicket[]> {
-  if (isDevelopment) {
-    // Return mock tickets with all status types for testing filtering
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const { MOCK_TICKETS } = await import('../data/models');
-    return MOCK_TICKETS;
-  }
-
-  const response = await fetch(`${BASE_URL}/tickets`, {
-    headers: {
-      // 'Authorization': `Bearer ${token}`
-    }
-  });
-  if (!response.ok) throw new Error('Failed to fetch tickets');
-  return response.json();
+  const { ticketService } = await import('../services/api/ticket.service');
+  const results = await ticketService.getMyTickets();
+  // Map back to snake_case for API compatibility
+  return results.map(ticket => ({
+    ticket_id: ticket.id,
+    trip_id: ticket.tripId,
+    operator_id: '', // Not in service Ticket type
+    operator_name: '', // Not in service Ticket type
+    from_stop_id: '', // Not in service Ticket type
+    from_stop_name: '', // Not in service Ticket type
+    to_stop_id: '', // Not in service Ticket type
+    to_stop_name: '', // Not in service Ticket type
+    departure_time: ticket.embarkationTime || '',
+    arrival_time: ticket.embarkationTime || '', // Use same as departure
+    passenger_name: ticket.passengerName,
+    passenger_phone: ticket.passengerPhone,
+    passenger_email: '', // Not in service Ticket type
+    seat_number: ticket.seatNumber,
+    status: ticket.status as any,
+    qr_code: ticket.qrCode || '',
+    alphanumeric_code: ticket.id,
+    price: ticket.price,
+    currency: 'XOF',
+    payment_method: ticket.paymentMethod,
+    payment_id: '',
+    booking_id: '',
+    created_at: ticket.createdAt,
+    updated_at: ticket.updatedAt,
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: new Date().toISOString(),
+    can_cancel: false,
+    can_transfer: false
+  } as any));
 }
 
 // transferTicket et cancelTicket sont définis plus bas dans la section TICKET ACTIONS API
@@ -892,18 +752,43 @@ export async function getPopularRoutes(): Promise<PopularRoute[]> {
 
 /**
  * Récupère un billet par ID
+ * DELEGATED TO: ticketService.getTicketById()
  */
 export async function getTicketById(ticketId: string): Promise<ModelTicket> {
-  if (isDevelopment) {
-    const tickets = await getMyTickets();
-    const ticket = tickets.find(t => t.ticket_id === ticketId);
-    if (!ticket) throw new Error('Ticket not found');
-    return ticket;
-  }
-
-  const response = await fetch(`${BASE_URL}/tickets/${ticketId}`);
-  if (!response.ok) throw new Error('Failed to fetch ticket');
-  return response.json();
+  const { ticketService } = await import('../services/api/ticket.service');
+  const result = await ticketService.getTicketById(ticketId);
+  // Map back to snake_case for API compatibility
+  return {
+    ticket_id: result.id,
+    trip_id: result.tripId,
+    operator_id: '', // Not in service Ticket type
+    operator_name: '', // Not in service Ticket type
+    from_stop_id: '', // Not in service Ticket type
+    from_stop_name: '', // Not in service Ticket type
+    to_stop_id: '', // Not in service Ticket type
+    to_stop_name: '', // Not in service Ticket type
+    departure_time: result.embarkationTime || '',
+    arrival_time: result.embarkationTime || '', // Use same as departure
+    passenger_name: result.passengerName,
+    passenger_phone: result.passengerPhone,
+    passenger_email: '', // Not in service Ticket type
+    seat_number: result.seatNumber,
+    status: result.status as any,
+    qr_code: result.qrCode || '',
+    alphanumeric_code: result.id,
+    price: result.price,
+    currency: 'XOF',
+    payment_method: result.paymentMethod,
+    payment_id: '',
+    booking_id: '',
+    created_at: result.createdAt,
+    updated_at: result.updatedAt,
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: new Date().toISOString(),
+    can_cancel: false,
+    can_transfer: false
+  } as any;
 }
 
 /**

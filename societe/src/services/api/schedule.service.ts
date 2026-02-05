@@ -2,7 +2,8 @@
  * Service API pour la gestion des horaires récurrents (schedule templates)
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -14,7 +15,7 @@ class ScheduleService {
   async create(data: CreateScheduleTemplateDto): Promise<ScheduleTemplate> {
     logger.info('📅 Création horaire récurrent', { gare: data.gareName, time: data.departureTime });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const newTemplate: ScheduleTemplate = {
         ...data,
         id: generateId(),
@@ -33,7 +34,7 @@ class ScheduleService {
   }
 
   async list(): Promise<ScheduleTemplate[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       return (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
     } else {
       return await apiClient.get<ScheduleTemplate[]>(API_ENDPOINTS.scheduleTemplates);
@@ -41,7 +42,7 @@ class ScheduleService {
   }
 
   async getById(id: string): Promise<ScheduleTemplate | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const templates = (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
       return templates.find(t => t.id === id) || null;
     } else {
@@ -54,7 +55,7 @@ class ScheduleService {
   }
 
   async update(id: string, data: UpdateScheduleTemplateDto): Promise<ScheduleTemplate> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const templates = (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
       const index = templates.findIndex(t => t.id === id);
 
@@ -71,7 +72,7 @@ class ScheduleService {
   }
 
   async delete(id: string): Promise<void> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const templates = (storageService.get('scheduleTemplates') as any as ScheduleTemplate[]) || [];
       const filtered = templates.filter(t => t.id !== id);
       (storageService.set as any)('scheduleTemplates', filtered);

@@ -16,6 +16,8 @@ import type {
   OperatorStory as ModelOperatorStory,
   VehicleEstimate as ModelVehicleEstimate
 } from '../data/models';
+import type { VehicleLocation } from '../services/types';
+import { liveLocationService } from '../services/api/liveLocation.service';
 import { saveTicketMeta, getAllTicketMeta, setLastSync, purgeOldTicketMeta } from './offlineTickets';
 
 // ============================================
@@ -664,10 +666,15 @@ export function useUserProfile() {
 
 /**
  * Hook pour le suivi en temps réel d'un véhicule
- * Rafraîchit automatiquement toutes les 10 secondes
+ * 
+ * Utilise liveLocationService avec WebSocket (prod) ou polling (dev)
+ * S'abonne automatiquement quand tripId est fourni
+ * 
+ * @param tripId ID du trajet (null = désabonné)
+ * @param enabled Permet de désactiver temporairement
  */
 export function useVehicleLiveTracking(tripId: string | null, enabled: boolean = true) {
-  const [location, setLocation] = useState<ModelVehicleEstimate | null>(null);
+  const [location, setLocation] = useState<VehicleLocation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -677,33 +684,91 @@ export function useVehicleLiveTracking(tripId: string | null, enabled: boolean =
       return;
     }
 
-  let interval: number | undefined;
+    setIsLoading(true);
+    setError(null);
 
-    async function fetchLocation() {
-      try {
-        setIsLoading(true);
-        setError(null);
-  const data = await api.getVehicleLocation(tripId!);
-  setLocation(data as unknown as ModelVehicleEstimate);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load vehicle location');
-      } finally {
+    // S'abonner aux mises à jour du car
+    const unsubscribe = liveLocationService.onCarLocationUpdate(
+      tripId,
+      (vehicleLocation: VehicleLocation) => {
+        setLocation(vehicleLocation);
         setIsLoading(false);
       }
-    }
+    );
 
-    // Fetch immédiatement
-    fetchLocation();
-
-    // Puis rafraîchir toutes les 10 secondes
-  interval = window.setInterval(fetchLocation, 10000);
-
+    // Cleanup: se désabonner
     return () => {
-  if (interval) window.clearInterval(interval);
+      unsubscribe();
+      setLocation(null);
     };
   }, [tripId, enabled]);
 
   return { location, isLoading, error };
+}
+
+/**
+ * Hook pour émettre la position du passager
+ * 
+ * Envoie périodiquement la position si les conditions sont réunies:
+ * - Billet valide (EMBARKED)
+ * - Trip status = 'boarding' ou 'in_progress'
+ * - À moins de 5 km du trajet
+ * 
+ * @param ticketId ID du billet (null = désactivé)
+ * @param tripId ID du trajet
+ * @param tripStatus Status du trip ('boarding' | 'in_progress' | autre)
+ * @param userLocation Position GPS de l'utilisateur
+ */
+export function useEmitLocation(
+  ticketId: string | null,
+  tripId: string | null,
+  tripStatus: string | null,
+  userLocation: { lat: number; lon: number } | null
+) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Vérifications préalables
+    if (!ticketId || !tripId || !tripStatus || !userLocation) {
+      return;
+    }
+
+    // Intervalle d'émission: toutes les 3 minutes (180 sec)
+    const EMIT_INTERVAL = 3 * 60 * 1000;
+
+    const emitLocation = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await liveLocationService.emitLocationUpdate({
+          ticketId,
+          tripId,
+          userId: 'USER_001', // TODO: obtenir de l'auth context
+          tripStatus: tripStatus as 'boarding' | 'in_progress' | 'cancelled' | 'completed',
+          userLatitude: userLocation.lat,
+          userLongitude: userLocation.lon
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to emit location';
+        setError(message);
+        console.error('Error emitting location:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Émettre immédiatement
+    emitLocation();
+
+    // Puis périodiquement
+    const interval = setInterval(emitLocation, EMIT_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [ticketId, tripId, tripStatus, userLocation]);
+
+  return { isLoading, error };
 }
 
 // ============================================

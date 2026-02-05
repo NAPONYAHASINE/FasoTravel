@@ -958,6 +958,210 @@ export const TRIPS: Trip[] = [
 // ============================================
 // DONNÉES EXEMPLE - BILLETS
 // ============================================
+// MOCK DATA - CENTRALISÉ ET RÉUTILISABLE
+// ============================================
+
+/**
+ * 🔴 RÈGLE CRITIQUE: ZÉRO données mock dans les fichiers service
+ * Tous les mocks (MOCK_TRIPS, MOCK_TICKETS, etc.) DOIVENT être ici
+ * Les services importent et filtrent ces données
+ */
+
+export const MOCK_TRIPS: Trip[] = [
+  // OUAGA → BOBO (Aller)
+  {
+    trip_id: 'TRIP_001',
+    operator_id: 'AIR_CANADA',
+    operator_name: 'Air Canada Bus',
+    operator_logo: '✈️',
+    vehicle_type: 'Bus climatisé',
+    departure_time: '2025-11-04T07:00:00',
+    arrival_time: '2025-11-04T13:00:00',
+    duration_minutes: 360,
+    base_price: 8500,
+    from_stop_id: 'OUAGA_CENTRE',
+    to_stop_id: 'BOBO_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_name: 'Bobo-Dioulasso',
+    segments: [
+      {
+        segment_id: 'SEG_001_1',
+        from_stop_id: 'OUAGA_CENTRE',
+        to_stop_id: 'KOUDOUGOU',
+        from_stop_name: 'Ouagadougou',
+        to_stop_name: 'Koudougou',
+        departure_time: '2025-11-04T07:00:00',
+        arrival_time: '2025-11-04T09:15:00',
+        distance_km: 95,
+        available_seats: 12,
+        total_seats: 45
+      },
+      {
+        segment_id: 'SEG_001_2',
+        from_stop_id: 'KOUDOUGOU',
+        to_stop_id: 'BOBO_CENTRE',
+        from_stop_name: 'Koudougou',
+        to_stop_name: 'Bobo-Dioulasso',
+        departure_time: '2025-11-04T09:30:00',
+        arrival_time: '2025-11-04T13:00:00',
+        distance_km: 155,
+        available_seats: 12,
+        total_seats: 45
+      }
+    ],
+    amenities: ['WiFi', 'AC', 'USB', 'Toilet'],
+    has_live_tracking: true,
+    available_seats: 12,
+    total_seats: 45
+  },
+  {
+    trip_id: 'TRIP_002',
+    operator_id: 'SCOOT',
+    operator_name: 'Scoot Express',
+    operator_logo: '🚌',
+    vehicle_type: 'Mini-bus',
+    departure_time: '2025-11-04T09:00:00',
+    arrival_time: '2025-11-04T15:00:00',
+    duration_minutes: 360,
+    base_price: 7000,
+    from_stop_id: 'OUAGA_CENTRE',
+    to_stop_id: 'BOBO_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_name: 'Bobo-Dioulasso',
+    segments: [
+      {
+        segment_id: 'SEG_002_1',
+        from_stop_id: 'OUAGA_CENTRE',
+        to_stop_id: 'BOBO_CENTRE',
+        from_stop_name: 'Ouagadougou',
+        to_stop_name: 'Bobo-Dioulasso',
+        departure_time: '2025-11-04T09:00:00',
+        arrival_time: '2025-11-04T15:00:00',
+        distance_km: 250,
+        available_seats: 8,
+        total_seats: 30
+      }
+    ],
+    amenities: ['AC', 'USB'],
+    has_live_tracking: false,
+    available_seats: 8,
+    total_seats: 30
+  },
+  // BOBO → OUAGA (Retour)
+  {
+    trip_id: 'TRIP_003',
+    operator_id: 'AIR_CANADA',
+    operator_name: 'Air Canada Bus',
+    operator_logo: '✈️',
+    vehicle_type: 'Bus climatisé',
+    departure_time: '2025-11-05T08:00:00',
+    arrival_time: '2025-11-05T14:00:00',
+    duration_minutes: 360,
+    base_price: 8500,
+    from_stop_id: 'BOBO_CENTRE',
+    to_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Bobo-Dioulasso',
+    to_stop_name: 'Ouagadougou',
+    segments: [
+      {
+        segment_id: 'SEG_003_1',
+        from_stop_id: 'BOBO_CENTRE',
+        to_stop_id: 'KOUDOUGOU',
+        from_stop_name: 'Bobo-Dioulasso',
+        to_stop_name: 'Koudougou',
+        departure_time: '2025-11-05T08:00:00',
+        arrival_time: '2025-11-05T11:30:00',
+        distance_km: 155,
+        available_seats: 15,
+        total_seats: 45
+      },
+      {
+        segment_id: 'SEG_003_2',
+        from_stop_id: 'KOUDOUGOU',
+        to_stop_id: 'OUAGA_CENTRE',
+        from_stop_name: 'Koudougou',
+        to_stop_name: 'Ouagadougou',
+        departure_time: '2025-11-05T11:45:00',
+        arrival_time: '2025-11-05T14:00:00',
+        distance_km: 95,
+        available_seats: 15,
+        total_seats: 45
+      }
+    ],
+    amenities: ['WiFi', 'AC', 'USB', 'Toilet'],
+    has_live_tracking: true,
+    available_seats: 15,
+    total_seats: 45
+  },
+  {
+    trip_id: 'TRIP_004',
+    operator_id: 'SCOOT',
+    operator_name: 'Scoot Express',
+    operator_logo: '🚌',
+    vehicle_type: 'Mini-bus',
+    departure_time: '2025-11-05T10:00:00',
+    arrival_time: '2025-11-05T16:00:00',
+    duration_minutes: 360,
+    base_price: 7000,
+    from_stop_id: 'BOBO_CENTRE',
+    to_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Bobo-Dioulasso',
+    to_stop_name: 'Ouagadougou',
+    segments: [
+      {
+        segment_id: 'SEG_004_1',
+        from_stop_id: 'BOBO_CENTRE',
+        to_stop_id: 'OUAGA_CENTRE',
+        from_stop_name: 'Bobo-Dioulasso',
+        to_stop_name: 'Ouagadougou',
+        departure_time: '2025-11-05T10:00:00',
+        arrival_time: '2025-11-05T16:00:00',
+        distance_km: 250,
+        available_seats: 10,
+        total_seats: 30
+      }
+    ],
+    amenities: ['AC', 'USB'],
+    has_live_tracking: false,
+    available_seats: 10,
+    total_seats: 30
+  },
+  {
+    trip_id: 'TRIP_005',
+    operator_id: 'RAKIETA',
+    operator_name: 'Rakieta Transport',
+    operator_logo: '🚍',
+    vehicle_type: 'VIP Bus',
+    departure_time: '2025-11-05T14:00:00',
+    arrival_time: '2025-11-05T20:00:00',
+    duration_minutes: 360,
+    base_price: 9000,
+    from_stop_id: 'BOBO_CENTRE',
+    to_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Bobo-Dioulasso',
+    to_stop_name: 'Ouagadougou',
+    segments: [
+      {
+        segment_id: 'SEG_005_1',
+        from_stop_id: 'BOBO_CENTRE',
+        to_stop_id: 'OUAGA_CENTRE',
+        from_stop_name: 'Bobo-Dioulasso',
+        to_stop_name: 'Ouagadougou',
+        departure_time: '2025-11-05T14:00:00',
+        arrival_time: '2025-11-05T20:00:00',
+        distance_km: 250,
+        available_seats: 20,
+        total_seats: 50
+      }
+    ],
+    amenities: ['WiFi', 'AC', 'USB', 'Toilet', 'TV'],
+    has_live_tracking: true,
+    available_seats: 20,
+    total_seats: 50
+  }
+];
+
+// ============================================
 
 export const MOCK_TICKETS: Ticket[] = [
   // ====== BILLET ACTIF (PAID) - Peut être annulé et téléchargé ======

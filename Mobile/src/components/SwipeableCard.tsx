@@ -3,7 +3,8 @@
  * Améliore l'interaction mobile
  */
 
-import { ReactNode, useRef, useState } from 'react';
+import './styles.css';
+import { ReactNode, useRef, useState, useLayoutEffect } from 'react';
 import { Trash2, Archive, Share2 } from 'lucide-react';
 import { feedback } from '../lib/interactions';
 
@@ -33,6 +34,7 @@ export function SwipeableCard({
   const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
   const currentXRef = useRef(0);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const actions: SwipeAction[] = customActions || [
     ...(onDelete ? [{
@@ -87,6 +89,13 @@ export function SwipeableCard({
     }
   };
 
+  // Apply dynamic transform using ref to avoid inline styles
+  useLayoutEffect(() => {
+    if (cardRef.current) {
+      cardRef.current.style.transform = `translateX(${offsetX}px)`;
+    }
+  }, [offsetX]);
+
   return (
     <div className="relative overflow-hidden rounded-xl">
       {/* Actions en arrière-plan */}
@@ -94,8 +103,7 @@ export function SwipeableCard({
         {actions.map((action, index) => (
           <div
             key={index}
-            className={`${action.color} h-full flex items-center justify-center px-6 text-white`}
-            style={{ width: '150px' }}
+            className={`${action.color} h-full flex items-center justify-center px-6 text-white swipeable-action-item`}
           >
             <div className="flex flex-col items-center gap-1">
               {action.icon}
@@ -107,14 +115,11 @@ export function SwipeableCard({
 
       {/* Carte principale */}
       <div
+        ref={cardRef}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{
-          transform: `translateX(${offsetX}px)`,
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-        }}
-        className="bg-white relative z-10"
+        className="swipeable-card-main bg-white relative z-10"
       >
         {children}
       </div>

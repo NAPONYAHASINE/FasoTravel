@@ -1,0 +1,17 @@
+/* SwipeableCard - Styles pour carte avec swipe actions */
+
+.draggable {
+  background-color: white;
+  position: relative;
+  z-index: 10;
+}
+
+.drag-container[data-offset="0"] .draggable {
+  transform: translateX(0px);
+  transition: transform 0.3s ease-out;
+}
+
+.dragging .draggable {
+  transition: none !important;
+}
+

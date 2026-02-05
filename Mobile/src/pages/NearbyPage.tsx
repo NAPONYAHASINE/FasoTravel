@@ -21,6 +21,7 @@ import type { Page } from '../App';
  * 4. Implémenter les événements analytics (nearby_permission_granted, etc.)
  */
 
+import '../components/styles.css';
 import { useEffect, useState, useRef } from 'react';
 import { MapPin, Navigation, Clock, Map, Search, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -29,7 +30,7 @@ import { useGeolocation } from '../lib/useGeolocation';
 import { GeolocationPrompt } from '../components/GeolocationPrompt';
 import { motion, PanInfo } from 'motion/react';
 import { feedback } from '../lib/interactions';
-import { useNearbyStations, useVehicleLiveTracking, useMyTickets, useReportIncident, useShareLocation } from '../lib/hooks';
+import { useNearbyStations, useVehicleLiveTracking, useEmitLocation, useMyTickets, useReportIncident, useShareLocation } from '../lib/hooks';
 
 interface NearbyPageProps {
   trackingTripId?: string; // For tracking specific vehicle from ticket detail
@@ -40,6 +41,7 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
   const [geolocationState, geolocationActions] = useGeolocation();
   const { hasPermission, userPosition, isLoading: geoLoading, errorMessage, isGeolocationBlocked } = geolocationState;
   const { requestLocationPermission, useDefaultLocation, checkGeolocationAvailability } = geolocationActions;
+  const progressBarRef = useRef<HTMLDivElement>(null);
 
   // If the user comes from a ticket we track that trip, otherwise if the user has any EMBARKED ticket
   // auto-enable tracking for that trip so Nearby page shows the vehicle immediately.
@@ -59,10 +61,26 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
   const { reportIncident, isLoading: reportingIncident, error: incidentError } = useReportIncident();
   const { shareLocation, isLoading: sharingLocation, error: locationShareError } = useShareLocation();
 
+  // Emit location when EMBARKED (collaboratif)
+  const { isLoading: isEmittingLocation, error: emitError } = useEmitLocation(
+    embarkedTicket?.status === 'EMBARKED' ? embarkedTicket?.ticket_id : null,
+    autoTripId,
+    embarkedTicket?.status === 'EMBARKED' ? 'in_progress' : null,
+    userPosition ? { lat: userPosition.lat, lon: userPosition.lon } : null
+  );
+
   // Check geolocation availability on mount
   useEffect(() => {
     checkGeolocationAvailability();
   }, [checkGeolocationAvailability]);
+
+  // Apply progress bar width using ref
+  useEffect(() => {
+    if (progressBarRef.current && vehicleLocation?.progress_percent !== undefined) {
+      const progress = Math.min(vehicleLocation.progress_percent, 100);
+      progressBarRef.current.style.width = `${progress}%`;
+    }
+  }, [vehicleLocation?.progress_percent]);
 
   const handleUseDefault = () => {
     // Use Ouagadougou as default
@@ -371,8 +389,8 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
                     <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Progression: {vehicleLocation.progress_percent}%</p>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div 
-                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(vehicleLocation.progress_percent, 100)}%` }}
+                        ref={progressBarRef}
+                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300 progress-bar"
                       />
                     </div>
                   </div>

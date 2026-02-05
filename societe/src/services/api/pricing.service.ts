@@ -2,7 +2,8 @@
  * Service API pour la gestion de la tarification
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -10,7 +11,7 @@ import type { PricingSegment, PriceHistory, UpdatePriceDto } from '../types';
 
 class PricingService {
   async listSegments(): Promise<PricingSegment[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       return (storageService.get('priceSegments') as any as PricingSegment[]) || [];
     } else {
       return await apiClient.get<PricingSegment[]>(API_ENDPOINTS.priceSegments);
@@ -20,7 +21,7 @@ class PricingService {
   async updatePrice(segmentId: string, data: UpdatePriceDto): Promise<PricingSegment> {
     logger.info('💰 Mise à jour tarif', { segmentId, newPrice: data.currentPrice });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const segments = (storageService.get('priceSegments') as any as PricingSegment[]) || [];
       const index = segments.findIndex(s => s.id === segmentId);
 
@@ -58,7 +59,7 @@ class PricingService {
   }
 
   async getHistory(segmentId: string): Promise<PriceHistory[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const history = (storageService.get('priceHistory') as any as PriceHistory[]) || [];
       return history.filter(h => h.segmentId === segmentId);
     } else {

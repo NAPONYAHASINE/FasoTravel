@@ -2,7 +2,8 @@
  * Service API pour la gestion des managers
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -14,7 +15,7 @@ class ManagerService {
   async create(data: CreateManagerDto): Promise<Manager> {
     logger.info('👤 Création manager', { name: data.name, gare: data.gareName });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const newManager: Manager = {
         ...data,
         id: generateId(),
@@ -33,7 +34,7 @@ class ManagerService {
   }
 
   async list(): Promise<Manager[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       return (storageService.get('managers') as any as Manager[]) || [];
     } else {
       return await apiClient.get<Manager[]>(API_ENDPOINTS.managers);
@@ -41,7 +42,7 @@ class ManagerService {
   }
 
   async getById(id: string): Promise<Manager | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const managers = (storageService.get('managers') as any as Manager[]) || [];
       return managers.find(m => m.id === id) || null;
     } else {
@@ -54,7 +55,7 @@ class ManagerService {
   }
 
   async update(id: string, data: UpdateManagerDto): Promise<Manager> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const managers = (storageService.get('managers') as any as Manager[]) || [];
       const index = managers.findIndex(m => m.id === id);
 
@@ -71,7 +72,7 @@ class ManagerService {
   }
 
   async delete(id: string): Promise<void> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const managers = (storageService.get('managers') as any as Manager[]) || [];
       const filtered = managers.filter(m => m.id !== id);
       (storageService.set as any)('managers', filtered);

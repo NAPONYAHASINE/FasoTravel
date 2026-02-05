@@ -5,7 +5,8 @@
  * selon la configuration.
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -20,7 +21,7 @@ class TicketService {
   async create(data: CreateTicketDto): Promise<Ticket> {
     logger.info('🎫 Création billet', { salesChannel: data.salesChannel, gare: data.gareName });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       // MODE LOCAL : Utiliser localStorage
       const newTicket: Ticket = {
         ...data,
@@ -50,7 +51,7 @@ class TicketService {
    * Lister les billets avec filtres optionnels
    */
   async list(filters?: TicketFilters): Promise<Ticket[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       // MODE LOCAL
       let tickets = (storageService.get('tickets') as any as Ticket[]) || [];
 
@@ -94,7 +95,7 @@ class TicketService {
    * Obtenir un billet par ID
    */
   async getById(id: string): Promise<Ticket | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const tickets = (storageService.get('tickets') as any as Ticket[]) || [];
       return tickets.find(t => t.id === id) || null;
     } else {
@@ -112,7 +113,7 @@ class TicketService {
   async update(id: string, data: UpdateTicketDto): Promise<Ticket> {
     logger.info('📝 Mise à jour billet', { id });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const tickets = (storageService.get('tickets') as any as Ticket[]) || [];
       const index = tickets.findIndex(t => t.id === id);
 
@@ -139,7 +140,7 @@ class TicketService {
   async cancel(id: string, data?: CancelTicketDto): Promise<void> {
     logger.warn('🚫 Annulation billet', { id, reason: data?.reason });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const tickets = (storageService.get('tickets') as any as Ticket[]) || [];
       const index = tickets.findIndex(t => t.id === id);
 
@@ -167,7 +168,7 @@ class TicketService {
   async refund(id: string, amount: number): Promise<void> {
     logger.info('💰 Remboursement billet', { id, amount });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const tickets = (storageService.get('tickets') as any as Ticket[]) || [];
       const index = tickets.findIndex(t => t.id === id);
 

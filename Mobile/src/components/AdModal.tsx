@@ -17,6 +17,7 @@
  *   - POST /api/ads/:id/click - Track clic
  * - Admin dashboard pour créer/gérer annonces
  */
+import './styles.css';
 import type { Page } from '../App';
 import { useState, useEffect } from 'react';
 import { X, ExternalLink, ChevronRight } from 'lucide-react';
@@ -73,6 +74,7 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
   const [currentAd, setCurrentAd] = useState<Advertisement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const gradientRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadAndShowAd();
@@ -96,6 +98,10 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
     if (ad) {
       setCurrentAd(ad);
       
+      // Apply gradient background using ref when ad changes
+      if (ad.media_type === 'gradient' && gradientRef.current) {
+        gradientRef.current.style.background = ad.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      }
       // Délai avant affichage (moins agressif)
       setTimeout(() => {
         setIsVisible(true);
@@ -286,8 +292,8 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
 
               {currentAd.media_type === 'gradient' && (
                 <div
-                  className="relative w-full h-64 flex items-center justify-center"
-                  style={{ background: currentAd.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                  ref={gradientRef}
+                  className="relative w-full h-64 flex items-center justify-center ad-modal-gradient"
                 >
                   {currentAd.emoji && (
                     <span className="text-8xl">{currentAd.emoji}</span>

@@ -2,7 +2,8 @@
  * Service API pour la gestion des départs (Trips)
  */
 
-import { isLocalMode, API_ENDPOINTS } from '../config';
+import { isDevelopment } from '../../shared/config/deployment';
+import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
@@ -14,7 +15,7 @@ class TripService {
   async create(data: CreateTripDto): Promise<Trip> {
     logger.info('🚌 Création départ', { route: data.routeId, date: data.departureDate });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const newTrip: Trip = {
         ...data,
         id: generateId(),
@@ -34,7 +35,7 @@ class TripService {
   }
 
   async list(filters?: TripFilters): Promise<Trip[]> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       let trips = (storageService.get('trips') as any as Trip[]) || [];
 
       if (filters) {
@@ -53,7 +54,7 @@ class TripService {
   }
 
   async getById(id: string): Promise<Trip | null> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const trips = (storageService.get('trips') as any as Trip[]) || [];
       return trips.find(t => t.id === id) || null;
     } else {
@@ -66,7 +67,7 @@ class TripService {
   }
 
   async update(id: string, data: UpdateTripDto): Promise<Trip> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const trips = (storageService.get('trips') as any as Trip[]) || [];
       const index = trips.findIndex(t => t.id === id);
 
@@ -82,7 +83,7 @@ class TripService {
   }
 
   async delete(id: string): Promise<void> {
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       const trips = (storageService.get('trips') as any as Trip[]) || [];
       const filtered = trips.filter(t => t.id !== id);
       (storageService.set as any)('trips', filtered);
@@ -95,7 +96,7 @@ class TripService {
   async generateFromTemplates(data: GenerateTripsDto): Promise<Trip[]> {
     logger.info('⚙️ Génération départs automatiques', { days: data.daysCount });
 
-    if (isLocalMode()) {
+    if (isDevelopment()) {
       // En mode local, on génère depuis les templates du contexte
       // Cette logique est déjà implémentée dans DataContext
       logger.warn('Génération en local via DataContext');
