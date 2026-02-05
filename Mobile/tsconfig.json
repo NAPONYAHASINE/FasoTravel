@@ -9,7 +9,6 @@
     "declarationMap": true,
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
 
     /* Bundler mode */
     "moduleResolution": "bundler",

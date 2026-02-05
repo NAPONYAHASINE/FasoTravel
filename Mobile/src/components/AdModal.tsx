@@ -19,7 +19,7 @@
  */
 import './styles.css';
 import type { Page } from '../App';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, ExternalLink, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';

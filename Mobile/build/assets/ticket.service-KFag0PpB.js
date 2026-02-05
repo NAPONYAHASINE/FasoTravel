@@ -1,0 +1,1 @@
+import{a as t,A as e}from"./index-C1XF0TJ6.js";class c{async getMyTickets(){return t.get(e.tickets.list)}async getTicketById(i){return t.get(e.tickets.detail(i))}}const a=new c;export{a as ticketService};

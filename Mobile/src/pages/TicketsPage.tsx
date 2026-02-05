@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { t } from '../lib/i18n';
 import { Ticket as TicketIcon, Calendar, XCircle, Loader2, Search } from 'lucide-react';
 import { feedback } from '../lib/interactions';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useMyTickets } from '../lib/hooks';
 import { getLastSync } from '../lib/offlineTickets';
 import * as api from '../lib/api';
@@ -264,157 +264,182 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
 
             {/* Active Tickets */}
             <TabsContent value="active" className="space-y-4">
-              {activeTickets.length === 0 ? (
-                <motion.div 
-                  className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <motion.span 
-                    className="text-6xl mb-4 block"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              <AnimatePresence mode="wait">
+                {activeTickets.length === 0 ? (
+                  <motion.div 
+                    key="empty"
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: 0.5 }}
                   >
-                    🎫
-                  </motion.span>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    {searchQuery ? `Aucun billet trouvé pour "${searchQuery}"` : 'Aucun billet actif'}
-                  </p>
-                  <motion.button
-                    onClick={() => {
-                      feedback.tap();
-                      onNavigate('home');
-                    }}
-                    className="text-red-600 dark:text-red-400 hover:underline px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Réserver un voyage
-                  </motion.button>
-                </motion.div>
-              ) : (
-                activeTickets.map((ticket, index) => (
-                  <motion.div
-                    key={ticket.ticket_id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                  >
-                    <TicketCard
-                      ticket={ticket}
-                      onDownload={handleDownload}
-                      onCancel={handleCancel}
-                      onClick={handleTicketClick}
-                    />
+                    <motion.span 
+                      className="text-6xl mb-4 block"
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    >
+                      🎫
+                    </motion.span>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      {searchQuery ? `Aucun billet trouvé pour "${searchQuery}"` : 'Aucun billet actif'}
+                    </p>
+                    <motion.button
+                      onClick={() => {
+                        feedback.tap();
+                        onNavigate('home');
+                      }}
+                      className="text-red-600 dark:text-red-400 hover:underline px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Réserver un voyage
+                    </motion.button>
                   </motion.div>
-                ))
-              )}
+                ) : (
+                  <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    {activeTickets.map((ticket, index) => (
+                      <motion.div
+                        key={ticket.ticket_id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 + index * 0.1 }}
+                        className="mb-4"
+                      >
+                        <TicketCard
+                          ticket={ticket}
+                          onDownload={handleDownload}
+                          onCancel={handleCancel}
+                          onClick={handleTicketClick}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </TabsContent>
 
             {/* Embarked Tickets */}
             <TabsContent value="embarked" className="space-y-4">
-              {embarkedTickets.length === 0 ? (
-                <motion.div 
-                  className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <motion.span 
-                    className="text-6xl mb-4 block"
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+              <AnimatePresence mode="wait">
+                {embarkedTickets.length === 0 ? (
+                  <motion.div 
+                    key="empty"
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: 0.5 }}
                   >
-                    🚌
-                  </motion.span>
-                  <p className="text-gray-600 dark:text-gray-400">Aucun voyage embarqué</p>
-                </motion.div>
-              ) : (
-                embarkedTickets.map((ticket, index) => (
-                  <motion.div
-                    key={ticket.ticket_id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                  >
-                    <TicketCard
-                      ticket={ticket}
-                      onClick={handleTicketClick}
-                    />
+                    <motion.span 
+                      className="text-6xl mb-4 block"
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      🚌
+                    </motion.span>
+                    <p className="text-gray-600 dark:text-gray-400">Aucun voyage embarqué</p>
                   </motion.div>
-                ))
-              )}
+                ) : (
+                  <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    {embarkedTickets.map((ticket, index) => (
+                      <motion.div
+                        key={ticket.ticket_id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + index * 0.1 }}
+                      >
+                        <TicketCard
+                          ticket={ticket}
+                          onClick={handleTicketClick}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </TabsContent>
 
             {/* Cancelled Tickets */}
             <TabsContent value="cancelled" className="space-y-4">
-              {cancelledTickets.length === 0 ? (
-                <motion.div 
-                  className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <motion.span 
-                    className="text-6xl mb-4 block"
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+              <AnimatePresence mode="wait">
+                {cancelledTickets.length === 0 ? (
+                  <motion.div 
+                    key="empty"
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: 0.5 }}
                   >
-                    ✅
-                  </motion.span>
-                  <p className="text-gray-600 dark:text-gray-400">Aucun billet annulé</p>
-                </motion.div>
-              ) : (
-                cancelledTickets.map((ticket, index) => (
-                  <motion.div
-                    key={ticket.ticket_id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                  >
-                    <TicketCard
-                      ticket={ticket}
-                      onClick={handleTicketClick}
-                    />
+                    <motion.span 
+                      className="text-6xl mb-4 block"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      ✅
+                    </motion.span>
+                    <p className="text-gray-600 dark:text-gray-400">Aucun billet annulé</p>
                   </motion.div>
-                ))
-              )}
+                ) : (
+                  <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    {cancelledTickets.map((ticket, index) => (
+                      <motion.div
+                        key={ticket.ticket_id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + index * 0.1 }}
+                      >
+                        <TicketCard
+                          ticket={ticket}
+                          onClick={handleTicketClick}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </TabsContent>
 
             {/* Expired Tickets */}
             <TabsContent value="expired" className="space-y-4">
-              {expiredTickets.length === 0 ? (
-                <motion.div 
-                  className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <motion.span 
-                    className="text-6xl mb-4 block"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+              <AnimatePresence mode="wait">
+                {expiredTickets.length === 0 ? (
+                  <motion.div 
+                    key="empty"
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-12 text-center shadow-lg"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: 0.5 }}
                   >
-                    📅
-                  </motion.span>
-                  <p className="text-gray-600 dark:text-gray-400">Aucun billet expiré</p>
-                </motion.div>
-              ) : (
-                expiredTickets.map((ticket, index) => (
-                  <motion.div
-                    key={ticket.ticket_id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                  >
-                    <TicketCard
-                      ticket={ticket}
-                      onClick={handleTicketClick}
-                    />
+                    <motion.span 
+                      className="text-6xl mb-4 block"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      📅
+                    </motion.span>
+                    <p className="text-gray-600 dark:text-gray-400">Aucun billet expiré</p>
                   </motion.div>
-                ))
-              )}
+                ) : (
+                  <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    {expiredTickets.map((ticket, index) => (
+                      <motion.div
+                        key={ticket.ticket_id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + index * 0.1 }}
+                      >
+                        <TicketCard
+                          ticket={ticket}
+                          onClick={handleTicketClick}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </TabsContent>
           </Tabs>
         </div>

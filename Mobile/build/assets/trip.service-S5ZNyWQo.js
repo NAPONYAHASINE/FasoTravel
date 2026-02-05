@@ -1,1 +1,0 @@
-import{a,A as i}from"./index-D2PKHyOz.js";class c{async searchTrips(r){const e=new URLSearchParams;return Object.entries(r).forEach(([s,t])=>{t!==void 0&&e.append(s,String(t))}),a.get(`${i.trips.search}?${e}`)}async getTripById(r){return a.get(i.trips.detail(r))}}const o=new c;export{o as tripService};

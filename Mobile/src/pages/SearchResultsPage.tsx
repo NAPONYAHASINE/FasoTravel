@@ -19,7 +19,7 @@ import { BookingStepIndicator } from '../components/BookingStepIndicator';
 import { AnimatedList, AnimatedListItem } from '../components/AnimatedCard';
 import { EmptyState } from '../components/LoadingStates';
 import { Frown } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
 import { useTrips } from '../lib/hooks';
 
@@ -252,65 +252,86 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
           </motion.div>
 
           {/* Loading State */}
-          {isLoading && (
-            <motion.div
-              className="flex items-center justify-center py-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <Loader2 className="w-8 h-8 text-green-600 dark:text-green-400 animate-spin" />
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {isLoading && (
+              <motion.div
+                key="loading"
+                className="flex items-center justify-center py-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Loader2 className="w-8 h-8 text-green-600 dark:text-green-400 animate-spin" />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Error State */}
-          {error && !isLoading && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <EmptyState
-                icon={<Frown className="w-12 h-12" />}
-                title="Erreur de chargement"
-                message={error}
-                action={{
-                  label: "Réessayer",
-                  onClick: onBack
-                }}
-              />
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && !isLoading && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                <EmptyState
+                  icon={<Frown className="w-12 h-12" />}
+                  title="Erreur de chargement"
+                  message={error}
+                  action={{
+                    label: "Réessayer",
+                    onClick: onBack
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Trips List */}
-          {!isLoading && !error && sortedTrips.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <EmptyState
-                icon={<Frown className="w-12 h-12" />}
-                title="Aucun trajet disponible"
-                message="Essayez une autre date ou une autre destination"
-                action={{
-                  label: "Nouvelle recherche",
-                  onClick: onBack
-                }}
-              />
-            </motion.div>
-          )}
-          
-          {!isLoading && !error && sortedTrips.length > 0 && (
-            <AnimatedList className="space-y-4">
-              {sortedTrips.map((trip, index) => (
-                <AnimatedListItem key={trip.trip_id} delay={0.5 + index * 0.1}>
-                  <TripCard
-                    trip={trip}
-                    onSelect={handleTripSelect}
-                  />
-                </AnimatedListItem>
-              ))}
-            </AnimatedList>
-          )}
+          <AnimatePresence mode="wait">
+            {!isLoading && !error && sortedTrips.length === 0 && (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: 0.5 }}
+              >
+                <EmptyState
+                  icon={<Frown className="w-12 h-12" />}
+                  title="Aucun trajet disponible"
+                  message="Essayez une autre date ou une autre destination"
+                  action={{
+                    label: "Nouvelle recherche",
+                    onClick: onBack
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
+            {!isLoading && !error && sortedTrips.length > 0 && (
+              <motion.div
+                key="trips"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <AnimatedList className="space-y-4">
+                  {sortedTrips.map((trip, index) => (
+                    <AnimatedListItem key={trip.trip_id} delay={0.5 + index * 0.1}>
+                      <TripCard
+                        trip={trip}
+                        onSelect={handleTripSelect}
+                      />
+                    </AnimatedListItem>
+                  ))}
+                </AnimatedList>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Round Trip Section */}
           {searchParams.type === 'ALLER_RETOUR' && sortedTrips.length > 0 && (

@@ -12,7 +12,7 @@ import type { Page } from '../App';
 import { useState } from 'react';
 import { ArrowLeft, Save, Loader } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
 
 interface EditProfilePageProps {
@@ -133,26 +133,34 @@ export function EditProfilePage({
       >
         <div className="max-w-2xl mx-auto">
           {/* Success Message */}
-          {success && (
-            <motion.div
-              className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              ✓ Vos informations ont été mises à jour avec succès. Redirection en cours...
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {success && (
+              <motion.div
+                key="success"
+                className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                ✓ Vos informations ont été mises à jour avec succès. Redirection en cours...
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Error Message */}
-          {error && (
-            <motion.div
-              className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              ✗ {error}
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div
+                key="error"
+                className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                ✗ {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Form */}
           <motion.form
@@ -257,17 +265,30 @@ export function EditProfilePage({
                 className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
                 disabled={loading || !isValid()}
               >
-                {loading ? (
-                  <>
-                    <Loader className="w-4 h-4 mr-2 animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Enregistrer
-                  </>
-                )}
+                <span className="inline-flex items-center gap-2">
+                  <AnimatePresence mode="wait">
+                    {loading ? (
+                      <motion.span
+                        key="loader"
+                        initial={{ opacity: 0, rotate: -90 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        exit={{ opacity: 0, rotate: 90 }}
+                      >
+                        <Loader className="w-4 h-4 animate-spin" />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="save"
+                        initial={{ opacity: 0, rotate: 90 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        exit={{ opacity: 0, rotate: -90 }}
+                      >
+                        <Save className="w-4 h-4" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  <span>{loading ? 'Enregistrement...' : 'Enregistrer'}</span>
+                </span>
               </Button>
             </div>
           </motion.form>

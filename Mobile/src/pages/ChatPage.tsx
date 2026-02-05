@@ -11,7 +11,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Paperclip, Send, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
 
 interface ChatPageProps {
