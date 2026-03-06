@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, otp?: string) => {
+  const login = async (email: string, _password: string, _otp?: string) => {
     setLoading(true);
     logger.info('Tentative de connexion', { email });
     

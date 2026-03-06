@@ -42,19 +42,15 @@ export interface ApiClientConfig {
 }
 
 class ApiClient {
-  private baseUrl: string;
   private timeout: number;
   private maxRetries: number;
   private getToken: () => string | null;
-  private getHeaders: () => Record<string, string>;
-  private logger: ApiClientConfig['logger'];
+  private logger: NonNullable<ApiClientConfig['logger']>;
 
   constructor(config: ApiClientConfig) {
-    this.baseUrl = config.baseUrl;
     this.timeout = config.timeout || 30000;
     this.maxRetries = config.maxRetries || 3;
     this.getToken = config.getToken || (() => null);
-    this.getHeaders = config.getHeaders || (() => ({}));
     this.logger = config.logger || {
       error: () => {},
       warn: () => {},
@@ -243,7 +239,9 @@ export const apiClient = new ApiClient({
   logger: {
     error: (msg, data) => logger.error(`[API] ${msg}`, data),
     warn: (msg, data) => logger.warn(`[API] ${msg}`, data),
-    debug: (msg, data) => logger.debug?.(`[API] ${msg}`, data) || console.debug(`[API] ${msg}`, data),
+    debug: (msg, data) => {
+      if (logger.debug) { logger.debug(`[API] ${msg}`, data); } else { console.debug(`[API] ${msg}`, data); }
+    },
   },
 });
 
