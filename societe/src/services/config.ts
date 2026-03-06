@@ -92,8 +92,8 @@ export const API_ENDPOINTS = {
 /**
  * Configuration des headers par défaut
  */
-export const getDefaultHeaders = (): HeadersInit => {
-  const headers: HeadersInit = {
+export const getDefaultHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   
