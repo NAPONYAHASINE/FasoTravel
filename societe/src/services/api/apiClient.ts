@@ -42,19 +42,15 @@ export interface ApiClientConfig {
 }
 
 class ApiClient {
-  private baseUrl: string;
   private timeout: number;
   private maxRetries: number;
   private getToken: () => string | null;
-  private getHeaders: () => Record<string, string>;
   private logger: ApiClientConfig['logger'];
 
   constructor(config: ApiClientConfig) {
-    this.baseUrl = config.baseUrl;
     this.timeout = config.timeout || 30000;
     this.maxRetries = config.maxRetries || 3;
     this.getToken = config.getToken || (() => null);
-    this.getHeaders = config.getHeaders || (() => ({}));
     this.logger = config.logger || {
       error: () => {},
       warn: () => {},
@@ -136,7 +132,7 @@ class ApiClient {
       const fullUrl = buildApiUrl(url);
       const headers = this.buildHeaders(fetchOptions.headers as Record<string, string> | undefined);
 
-      this.logger.debug?.(`📤 ${fetchOptions.method || 'GET'} ${url} (tentative ${attemptNumber}/${maxAttempts})`);
+      this.logger?.debug?.(`📤 ${fetchOptions.method || 'GET'} ${url} (tentative ${attemptNumber}/${maxAttempts})`);
 
       const response = await fetch(fullUrl, {
         ...fetchOptions,
@@ -157,12 +153,12 @@ class ApiClient {
         ? await response.json()
         : (await response.text() as unknown);
 
-      this.logger.debug?.(`✅ ${fetchOptions.method || 'GET'} ${url} (${response.status})`);
+      this.logger?.debug?.(`✅ ${fetchOptions.method || 'GET'} ${url} (${response.status})`);
       return data as T;
     } catch (error: any) {
       // Gestion timeout
       if (error.name === 'AbortError') {
-        this.logger.error?.(`⏱️ Timeout API`, { url, timeout, attempt: attemptNumber });
+        this.logger?.error?.(`⏱️ Timeout API`, { url, timeout, attempt: attemptNumber });
         lastError = new ApiError('Délai d\'attente dépassé', 408);
       } else {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -171,7 +167,7 @@ class ApiClient {
       // Retry logic
       if (retry < this.maxRetries && this.shouldRetry(lastError)) {
         const delay = 1000 * Math.pow(2, maxAttempts - retry - 2);
-        this.logger.warn?.(`🔄 Retry dans ${delay}ms`, { url, retriesLeft: retry });
+        this.logger?.warn?.(`🔄 Retry dans ${delay}ms`, { url, retriesLeft: retry });
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.request<T>(url, { ...options, retry: retry + 1 });
       }
@@ -219,7 +215,7 @@ class ApiClient {
     const status = response.status;
     const statusText = response.statusText || 'Unknown Error';
 
-    this.logger.error?.(`❌ HTTP ${status}`, { url: response.url });
+    this.logger?.error?.(`❌ HTTP ${status}`, { url: response.url });
 
     throw new ApiError(
       `HTTP ${status}: ${statusText}`,
@@ -243,7 +239,7 @@ export const apiClient = new ApiClient({
   logger: {
     error: (msg, data) => logger.error(`[API] ${msg}`, data),
     warn: (msg, data) => logger.warn(`[API] ${msg}`, data),
-    debug: (msg, data) => logger.debug?.(`[API] ${msg}`, data) || console.debug(`[API] ${msg}`, data),
+    debug: (msg, data) => { logger.debug?.(`[API] ${msg}`, data); },
   },
 });
 

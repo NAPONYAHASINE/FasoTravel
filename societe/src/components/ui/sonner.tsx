@@ -2,7 +2,8 @@ import { Toaster as Sonner, ToasterProps } from "sonner";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme } = useTheme();
+  const { darkMode } = useTheme();
+  const theme = darkMode ? 'dark' : 'light';
 
   return (
     <Sonner

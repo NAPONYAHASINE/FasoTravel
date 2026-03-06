@@ -11,6 +11,21 @@ import type {
 } from '../contexts/DataContext';
 
 // ============================================
+// LIVE LOCATION TYPES
+// ============================================
+
+export interface VehicleLocation {
+  tripId: string;
+  latitude: number;
+  longitude: number;
+  heading: number;
+  speed: number;
+  accuracy: number;
+  timestamp: string;
+  updatedAt: string;
+}
+
+// ============================================
 // AUTH DTOs
 // ============================================
 
