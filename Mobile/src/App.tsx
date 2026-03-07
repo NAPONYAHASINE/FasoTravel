@@ -53,7 +53,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
-import { LandingPage } from './pages/LandingPage';
+import { App as CapApp } from '@capacitor/app';import { LandingPage } from './pages/LandingPage';
 import { HomePage, SearchParams } from './pages/HomePage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { TripDetailPage } from './pages/TripDetailPage';
@@ -73,12 +73,14 @@ import { OperatorsPage } from './pages/OperatorsPage';
 import { OperatorDetailPage } from './pages/OperatorDetailPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { RatingReviewPage } from './pages/RatingReviewPage';
+import { OTPVerificationPage } from './pages/OTPVerificationPage';
 import { Toaster } from './components/ui/sonner';
 import { AdModal } from './components/AdModal';
 
 export type Page = 
   | 'landing'
   | 'auth'
+  | 'otp-verification'
   | 'home' 
   | 'search-results' 
   | 'trip-detail' 
@@ -117,10 +119,12 @@ interface AppState {
   selectedTripId?: string;
   selectedTicketId?: string;
   selectedOperatorId?: string;
+  selectedPaymentMethod?: string; // Payment method selected before OTP
   reservationData?: any;
   trackingTripId?: string; // For tracking live vehicle location from ticket detail
   profileData?: { name: string; email: string; phone: string }; // Updated profile data
   tripData?: { trip_id: string; operator_id: string; operator_name: string; from_stop_name: string; to_stop_name: string; departure_time: string; arrival_time: string; ticket_id: string }; // Trip data for rating page
+  otpData?: { identifier: string; mode: 'auth' | 'payment'; returnPage: Page; paymentMethod?: string }; // OTP verification data
   history: Page[];
 }
 
@@ -131,12 +135,35 @@ export default function App() {
     return saved ? JSON.parse(saved) : false;
   });
 
+  const [pendingAuthData, setPendingAuthData] = useState<User | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true); // Check localStorage on mount
+
   const [appState, setAppState] = useState<AppState>({
-    currentPage: 'home', // Start with home page
-    user: null, // User must authenticate
+    currentPage: 'landing',
+    user: null,
     showAuth: false,
     history: []
   });
+
+  // Initialize user from localStorage on mount
+  // Always show landing (splash) first, then navigate after animation
+  useEffect(() => {
+    const storedUser = localStorage.getItem('auth_user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setAppState(prev => ({
+          ...prev,
+          user,
+          currentPage: 'landing' // Always show splash first
+        }));
+      } catch (error) {
+        console.error('Failed to parse stored user', error);
+        localStorage.removeItem('auth_user');
+      }
+    }
+    setIsInitializing(false);
+  }, []);
 
   // Apply dark mode class to html element
   useEffect(() => {
@@ -148,13 +175,32 @@ export default function App() {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
+  // Android hardware back button handler
+  useEffect(() => {
+    const listener = CapApp.addListener('backButton', () => {
+      setAppState(prev => {
+        if (prev.history.length > 0) {
+          const newHistory = [...prev.history];
+          const previousPage = newHistory.pop()!;
+          return { ...prev, currentPage: previousPage, history: newHistory };
+        } else if (prev.currentPage === 'home') {
+          CapApp.minimizeApp();
+          return prev;
+        } else {
+          return { ...prev, currentPage: prev.user ? 'home' : 'landing', history: [] };
+        }
+      });
+    });
+    return () => { listener.then(l => l.remove()); };
+  }, []);
+
   const handleToggleDarkMode = (enabled: boolean) => {
     setDarkMode(enabled);
   };
 
   const navigateTo = (page: Page, data?: any) => {
     // Pages publiques (accessible sans authentification)
-    const publicPages: Page[] = ['landing', 'auth', 'terms-conditions', 'home', 'nearby', 'search-results', 'operators', 'operator-detail'];
+    const publicPages: Page[] = ['landing', 'auth', 'otp-verification', 'terms-conditions', 'home', 'nearby', 'search-results', 'operators', 'operator-detail'];
     
     // Pages protégées (nécessitent authentification)
     const protectedPages: Page[] = ['trip-detail', 'seat-selection', 'payment', 'tickets', 'support', 'profile', 'edit-profile', 'rating-review'];
@@ -196,8 +242,12 @@ export default function App() {
         selectedTripId: typeof data === 'string' ? data : data.tripId,
         reservationData: typeof data === 'object' ? data : undefined
       } : {}),
-      ...(page === 'payment' && data ? { reservationData: data } : {}),
+      ...(page === 'payment' && data ? { 
+        reservationData: data.paymentMethod ? prev.reservationData : data,
+        selectedPaymentMethod: data.paymentMethod
+      } : {}),
       ...(page === 'payment-success' && data ? { reservationData: data } : {}),
+      ...(page === 'otp-verification' && data ? { otpData: data } : {}),
       ...(page === 'ticket-detail' && data ? { selectedTicketId: data } : {}),
       ...(page === 'operator-detail' && data ? { selectedOperatorId: data } : {}),
       ...(page === 'nearby' && data ? { trackingTripId: data } : {}), // Pass tripId for tracking
@@ -207,21 +257,43 @@ export default function App() {
   };
 
   const handleAuth = (user: User) => {
-    setAppState(prev => {
-      // Si on revient d'une page protégée, revenir à cette page
-      const returnPage = prev.authReturnTo || 'home';
-      return {
-        ...prev,
-        user,
-        currentPage: returnPage,
-        showAuth: false,
-        authReturnTo: undefined
-      };
-    });
+    // Store auth data temporarily and navigate to OTP verification
+    setPendingAuthData(user);
+    setAppState(prev => ({
+      ...prev,
+      currentPage: 'otp-verification',
+      otpData: {
+        identifier: user.email || user.phone || '',
+        mode: 'auth',
+        returnPage: 'home'
+      },
+      history: [...prev.history, prev.currentPage]
+    }));
+  };
+
+  const handleOtpVerified = () => {
+    // After OTP verification, set user and go to home
+    if (pendingAuthData) {
+      setAppState(prev => {
+        const returnPage = prev.authReturnTo || 'home';
+        return {
+          ...prev,
+          user: pendingAuthData,
+          currentPage: returnPage,
+          showAuth: false,
+          authReturnTo: undefined,
+          otpData: undefined
+        };
+      });
+      setPendingAuthData(null);
+    }
   };
 
   const handleLogout = () => {
-    // Clear user and return to landing
+    // Clear user and tokens from localStorage
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     setAppState({
       currentPage: 'landing',
       user: null,
@@ -259,11 +331,41 @@ export default function App() {
         return (
           <LandingPage
             onNavigate={navigateTo}
+            darkMode={darkMode}
+            isLoggedIn={!!appState.user}
           />
         );
 
       case 'auth':
         return (
+          <AuthPage
+            onAuth={handleAuth}
+            onBack={() => navigateTo('landing')}
+            onNavigate={navigateTo}
+          />
+        );
+
+      case 'otp-verification':
+        return appState.otpData ? (
+          <OTPVerificationPage
+            identifier={appState.otpData.identifier}
+            mode={appState.otpData.mode}
+            paymentMethod={appState.otpData.paymentMethod}
+            onVerified={(_code) => {
+              // After OTP verified
+              if (appState.otpData!.mode === 'auth') {
+                handleOtpVerified();
+              } else if (appState.otpData!.mode === 'payment') {
+                // Continue to return page for payment with preserved paymentMethod
+                navigateTo(appState.otpData!.returnPage, { 
+                  paymentMethod: appState.otpData!.paymentMethod 
+                });
+              }
+            }}
+            onBack={goBack}
+            darkMode={darkMode}
+          />
+        ) : (
           <AuthPage
             onAuth={handleAuth}
             onBack={() => navigateTo('landing')}
@@ -326,6 +428,7 @@ export default function App() {
         return appState.reservationData ? (
           <PaymentPage
             reservationData={appState.reservationData}
+            selectedPaymentMethod={appState.selectedPaymentMethod}
             onNavigate={navigateTo}
             onBack={goBack}
           />
@@ -462,8 +565,8 @@ export default function App() {
     }
   };
 
-  // Don't show navigation on landing, auth, payment, chat pages
-  const hideNavigation = ['landing', 'auth', 'payment', 'payment-success', 'chat'].includes(appState.currentPage);
+  // Don't show navigation on splash, landing, auth, payment, chat pages
+  const hideNavigation = ['landing', 'auth', 'otp-verification', 'payment', 'payment-success', 'chat'].includes(appState.currentPage);
 
   // Pages where ads should be displayed
   const pagesWithAds: Page[] = ['home', 'search-results', 'tickets', 'operators', 'nearby'];
@@ -473,6 +576,19 @@ export default function App() {
   const isNewUser = appState.user?.created_at 
     ? (Date.now() - new Date(appState.user.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000
     : false;
+
+  if (isInitializing) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? 'bg-gray-900' : 'bg-white'
+      }`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">

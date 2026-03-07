@@ -8,6 +8,7 @@ import PricingPage from './PricingPage';
 import StationsPage from './StationsPage';
 import ManagersPage from './ManagersPage';
 import StoriesPage from './StoriesPage';
+import PromotionsPage from './PromotionsPage';
 import ReviewsPage from './ReviewsPage';
 import IncidentsPage from './IncidentsPage';
 import AnalyticsPage from './AnalyticsPage';
@@ -62,6 +63,12 @@ export default function ResponsableDashboard() {
       <Route path="/stories" element={
         <DashboardLayout role="responsable" title="Stories & Marketing">
           <StoriesPage />
+        </DashboardLayout>
+      } />
+
+      <Route path="/promotions" element={
+        <DashboardLayout role="responsable" title="Promotions & Réductions">
+          <PromotionsPage />
         </DashboardLayout>
       } />
 

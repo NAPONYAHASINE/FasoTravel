@@ -185,6 +185,10 @@ export interface Trip {
   driverId?: string;
   driverName?: string;
   createdAt: string;
+  // PROMOTION FIELDS
+  promotion?: any; // Promotion object if trip has active promotion
+  promotedPrice?: number; // Discounted price if promotion active
+  discountPercentage?: number; // Discount percentage for display
 }
 
 // ============================================
@@ -323,6 +327,9 @@ export interface VehicleLocation {
   accuracy?: number;
   timestamp: string;
   updatedAt: string;
+  current_latitude?: number;
+  current_longitude?: number;
+  progress_percent?: number;
 }
 
 // ============================================

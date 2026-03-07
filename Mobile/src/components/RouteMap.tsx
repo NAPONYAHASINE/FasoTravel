@@ -21,7 +21,7 @@
 import './styles.css';
 
 import { MapPin } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface Waypoint {
   lat: number;
@@ -39,7 +39,7 @@ interface RouteMapProps {
 
 export function RouteMap({ waypoints = [], totalDistance = 0, className = '' }: RouteMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
+  // const [mapError, setMapError] = useState<string | null>(null);
 
   // PLACEHOLDER: Ici vous intégrerez Google Maps, Mapbox ou OpenStreetMap
   useEffect(() => {
@@ -153,13 +153,6 @@ export function RouteMap({ waypoints = [], totalDistance = 0, className = '' }: 
         </div>
       )}
 
-      {mapError && (
-        <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-800">
-          <p className="text-sm text-red-600 dark:text-red-400 text-center">
-            ⚠️ {mapError}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

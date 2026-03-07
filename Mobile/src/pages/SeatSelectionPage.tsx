@@ -61,7 +61,7 @@ export function SeatSelectionPage({
   const trip = TRIPS.find(t => t.trip_id === tripId);
   
   // ✅ BACKEND READY: Hook pour récupérer sièges + layout
-  const { seats: occupiedSeats, layout: seatLayout, isLoading: seatsLoading } = useSeats(tripId);
+  const { seats: occupiedSeats, layout: seatLayout } = useSeats(tripId);
   
   const [selectedSeats, setSelectedSeats] = useState<string[]>(Array(passengers).fill(''));
   const [currentPassengerIndex, setCurrentPassengerIndex] = useState(0);
@@ -270,19 +270,20 @@ export function SeatSelectionPage({
     : [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <BookingStepIndicator 
-        currentStep={currentBookingStep} 
-        completedSteps={completedBookingSteps}
-        isRoundTrip={isRoundTrip || isReturnLeg}
-      />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+      <div className="sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <BookingStepIndicator 
+          currentStep={currentBookingStep} 
+          completedSteps={completedBookingSteps}
+          isRoundTrip={isRoundTrip || isReturnLeg}
+        />
 
-      {/* Header */}
-      <motion.div 
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6 shadow-lg"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+        {/* Header */}
+        <motion.div 
+          className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 shadow-lg"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
         <div className="max-w-4xl mx-auto">
           <motion.button
             onClick={() => {
@@ -321,11 +322,12 @@ export function SeatSelectionPage({
             </p>
           </motion.div>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* Content */}
       <motion.div 
-        className="px-6 py-6 pb-24"
+        className="px-4 sm:px-6 py-6 pb-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}

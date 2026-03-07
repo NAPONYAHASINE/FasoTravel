@@ -19,7 +19,7 @@
  */
 import './styles.css';
 import type { Page } from '../App';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { X, ExternalLink, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
@@ -73,8 +73,6 @@ interface AdModalProps {
 export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalProps) {
   const [currentAd, setCurrentAd] = useState<Advertisement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const gradientRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadAndShowAd();
@@ -87,7 +85,6 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
     if (lastAdShown) {
       const timeSinceLastAd = Date.now() - Number(lastAdShown);
       if (timeSinceLastAd < ADS_CONFIG.MIN_FREQUENCY) {
-        setIsLoading(false);
         return; // Trop tôt pour afficher une pub
       }
     }
@@ -98,10 +95,6 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
     if (ad) {
       setCurrentAd(ad);
       
-      // Apply gradient background using ref when ad changes
-      if (ad.media_type === 'gradient' && gradientRef.current) {
-        gradientRef.current.style.background = ad.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-      }
       // Délai avant affichage (moins agressif)
       setTimeout(() => {
         setIsVisible(true);
@@ -109,8 +102,6 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
         localStorage.setItem('last_ad_shown', Date.now().toString());
       }, ADS_CONFIG.DISPLAY_DELAY);
     }
-    
-    setIsLoading(false);
   };
 
   const fetchTargetedAd = async (): Promise<Advertisement | null> => {
@@ -261,7 +252,7 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
             className="relative w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
@@ -292,8 +283,8 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
 
               {currentAd.media_type === 'gradient' && (
                 <div
-                  ref={gradientRef}
-                  className="relative w-full h-64 flex items-center justify-center ad-modal-gradient"
+                  style={{ background: currentAd.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                  className="relative w-full h-64 flex items-center justify-center"
                 >
                   {currentAd.emoji && (
                     <span className="text-8xl">{currentAd.emoji}</span>
@@ -375,8 +366,8 @@ function getMockAd(currentPage: string, isNewUser?: boolean): Advertisement | nu
       target_pages: ['home', 'tickets'],
       target_new_users: false,
       priority: 8,
-      start_date: '2025-01-01',
-      end_date: '2025-12-31',
+      start_date: '2026-01-01',
+      end_date: '2026-12-31',
       impressions_count: 245,
       clicks_count: 32,
       created_by: 'admin',
@@ -395,8 +386,8 @@ function getMockAd(currentPage: string, isNewUser?: boolean): Advertisement | nu
       target_pages: ['home', 'search-results'],
       target_new_users: true,
       priority: 6,
-      start_date: '2025-01-01',
-      end_date: '2025-12-31',
+      start_date: '2026-01-01',
+      end_date: '2026-12-31',
       impressions_count: 120,
       clicks_count: 18,
       created_by: 'admin',
@@ -415,8 +406,8 @@ function getMockAd(currentPage: string, isNewUser?: boolean): Advertisement | nu
       target_pages: ['tickets', 'profile'],
       target_new_users: false,
       priority: 5,
-      start_date: '2025-01-01',
-      end_date: '2025-12-31',
+      start_date: '2026-01-01',
+      end_date: '2026-12-31',
       impressions_count: 89,
       clicks_count: 12,
       created_by: 'admin',

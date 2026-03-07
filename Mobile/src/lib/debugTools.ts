@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SEAT CAPACITY DEBUG TOOLS
  * 

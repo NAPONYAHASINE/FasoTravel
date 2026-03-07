@@ -18,7 +18,7 @@ interface SupportPageProps {
   onNavigate?: (page: any, data?: any) => void;
 }
 
-export function SupportPage({ onBack, user, onNavigate }: SupportPageProps) {
+export function SupportPage({ onBack: _onBack, user: _user, onNavigate }: SupportPageProps) {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const faqs = [
@@ -49,10 +49,11 @@ export function SupportPage({ onBack, user, onNavigate }: SupportPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8 overflow-x-hidden">
       {/* Header */}
       <motion.div 
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 py-8 sm:py-12"
+        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 py-8 sm:py-12 sticky top-0 z-10"
+        style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -84,47 +85,47 @@ export function SupportPage({ onBack, user, onNavigate }: SupportPageProps) {
         >
           <a 
             href="tel:+22670000000" 
-            className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-3 border border-gray-100 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-3 border border-gray-100 dark:border-gray-700 min-w-0"
             onClick={() => feedback.tap()}
           >
-            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
               <Phone className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-gray-500 dark:text-gray-400">Appelez-nous</p>
-              <p className="text-sm text-gray-900 dark:text-white">+226 70 00 00 00</p>
+              <p className="text-sm text-gray-900 dark:text-white truncate">+226 70 00 00 00</p>
             </div>
           </a>
 
           <a 
             href="mailto:support@transportbf.com" 
-            className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-3 border border-gray-100 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-3 border border-gray-100 dark:border-gray-700 min-w-0"
             onClick={() => feedback.tap()}
           >
-            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center flex-shrink-0">
               <Mail className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-              <p className="text-sm text-gray-900 dark:text-white">support@transportbf.com</p>
+              <p className="text-sm text-gray-900 dark:text-white truncate">support@transportbf.com</p>
             </div>
           </a>
 
           <a 
             href="#chat" 
-            className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-3 border border-gray-100 dark:border-gray-700 cursor-pointer"
+            className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-3 border border-gray-100 dark:border-gray-700 cursor-pointer min-w-0"
             onClick={(e) => {
               e.preventDefault();
               feedback.tap();
               onNavigate?.('chat');
             }}
           >
-            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
               <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-gray-500 dark:text-gray-400">Chat</p>
-              <p className="text-sm text-gray-900 dark:text-white">Chat en direct</p>
+              <p className="text-sm text-gray-900 dark:text-white truncate">Chat en direct</p>
             </div>
           </a>
         </motion.div>

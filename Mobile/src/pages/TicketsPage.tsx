@@ -14,20 +14,20 @@ import { TicketCard } from '../components/TicketCard';
 import { Ticket } from '../data/models';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { t } from '../lib/i18n';
-import { Ticket as TicketIcon, Calendar, XCircle, Loader2, Search } from 'lucide-react';
+import { XCircle, Loader2, Search } from 'lucide-react';
 import { feedback } from '../lib/interactions';
 import { motion, AnimatePresence } from 'motion/react';
 import { useMyTickets } from '../lib/hooks';
 import { getLastSync } from '../lib/offlineTickets';
 import * as api from '../lib/api';
-import { saveTicketBlob, getTicketBlobUrl } from '../lib/offlineTickets';
+import { saveTicketBlob } from '../lib/offlineTickets';
 
 interface TicketsPageProps {
   onNavigate: (page: Page, ticketId?: string) => void;
 }
 
 export function TicketsPage({ onNavigate }: TicketsPageProps) {
-  const { tickets, isLoading, error, refetch, isOffline } = useMyTickets();
+  const { tickets, isLoading, refetch, isOffline } = useMyTickets();
   const lastSync = getLastSync();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,10 +155,11 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
       <motion.div 
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 pt-12 pb-8"
+        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 pb-8 sticky top-0 z-10"
+        style={{ paddingTop: 'max(3rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -176,7 +177,7 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
 
       {/* Search Bar */}
       <motion.div 
-        className="px-6 pt-6"
+        className="px-4 sm:px-6 pt-6"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -213,7 +214,7 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
 
       {/* Tabs */}
       <motion.div 
-        className="px-6 pb-24 pt-4"
+        className="px-4 sm:px-6 pb-24 pt-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
@@ -246,17 +247,17 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <TabsList className="w-full bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6">
-                <TabsTrigger value="active" className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:shadow-sm dark:text-gray-400">
+              <TabsList className="w-full bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6 overflow-x-auto flex-nowrap">
+                <TabsTrigger value="active" className="flex-1 min-w-0 text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:shadow-sm dark:text-gray-400 truncate">
                   {t('tickets.active')} ({activeTickets.length})
                 </TabsTrigger>
-                <TabsTrigger value="embarked" className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-green-600 dark:data-[state=active]:text-green-400 data-[state=active]:shadow-sm dark:text-gray-400">
+                <TabsTrigger value="embarked" className="flex-1 min-w-0 text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-green-600 dark:data-[state=active]:text-green-400 data-[state=active]:shadow-sm dark:text-gray-400 truncate">
                   {t('tickets.embarked')} ({embarkedTickets.length})
                 </TabsTrigger>
-                <TabsTrigger value="cancelled" className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm dark:text-gray-400">
+                <TabsTrigger value="cancelled" className="flex-1 min-w-0 text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm dark:text-gray-400 truncate">
                   {t('tickets.cancelled')} ({cancelledTickets.length})
                 </TabsTrigger>
-                <TabsTrigger value="expired" className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-400 data-[state=active]:shadow-sm dark:text-gray-400">
+                <TabsTrigger value="expired" className="flex-1 min-w-0 text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-400 data-[state=active]:shadow-sm dark:text-gray-400 truncate">
                   {t('tickets.expired')} ({expiredTickets.length})
                 </TabsTrigger>
               </TabsList>

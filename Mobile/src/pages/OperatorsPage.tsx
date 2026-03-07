@@ -54,10 +54,11 @@ export function OperatorsPage({ onNavigate, onBack }: OperatorsPageProps) {
   const selectedOperator = operators.find(op => op.operator_id === selectedOperatorForStories);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20 md:pb-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20 md:pb-8 overflow-x-hidden">
       {/* Header */}
       <motion.div 
         className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 py-6 sm:py-8 sticky top-0 z-10 shadow-lg"
+        style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -232,6 +233,7 @@ export function OperatorsPage({ onNavigate, onBack }: OperatorsPageProps) {
           stories={stories}
           onClose={handleCloseStories}
           onStoryView={handleStoryView}
+          onNavigate={onNavigate}
         />
       )}
     </div>

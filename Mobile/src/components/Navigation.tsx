@@ -9,7 +9,7 @@
  * - Design moderne avec fond blanc et accents colorés
  */
 
-import { Home, MapPin, Ticket, User, Navigation as NavigationIcon, Headphones } from 'lucide-react';
+import { Home, Ticket, User, Navigation as NavigationIcon, Headphones } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { feedback } from '../lib/interactions';
@@ -42,7 +42,8 @@ export function Navigation({ currentPage, onNavigate, userName }: NavigationProp
   if (isMobile) {
     return (
       <motion.nav 
-        className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4"
+        className="fixed bottom-0 left-0 right-0 z-50 px-4"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -50,7 +51,7 @@ export function Navigation({ currentPage, onNavigate, userName }: NavigationProp
         <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border-2 border-gray-100 dark:border-gray-800 px-4 py-2.5 relative">
           {/* Items de navigation */}
           <div className="flex items-center justify-around relative">
-            {navItems.map((item, index) => {
+            {navItems.map((item, _index) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
               const isCentral = item.isCentral;

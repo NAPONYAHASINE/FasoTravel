@@ -176,6 +176,9 @@ export interface Story {
   mediaType: 'image' | 'video';
   duration: number; // Durée d'affichage en secondes
   
+  // ✅ Lien optionnel vers une promotion (pour stories promo)
+  promo_id?: string;
+  
   // ✅ Ciblage amélioré (ligne, ville, ou tous)
   targeting: 'all' | 'route' | 'city' | 'station';
   targetValue?: string; // Nom de la ligne, ville, ou ID gare
@@ -189,10 +192,45 @@ export interface Story {
   endDate: string;
   views: number;
   clicks: number;
+  
+  // ✅ Statut de publication (timeline)
   status: 'active' | 'scheduled' | 'expired';
+  
+  // ✅ Statut de validation/approbation (workflow)
+  approval_status: 'draft' | 'pending_validation' | 'active' | 'rejected';
+  
   createdAt: string;
   createdBy?: string; // ID du responsable qui a créé la story
   createdByName?: string;
+}
+
+// ✅ PROMOTIONS - Réductions de prix (BACKEND READY)
+export interface Promotion {
+  promotion_id: string;
+  title: string;
+  description?: string;
+  discount_type: 'PERCENTAGE' | 'FIXED_AMOUNT'; // % ou montant fixe
+  discount_value: number; // 25 pour 25%, ou 5000 pour -5000 FCFA
+  trip_id?: string; // Null = promo globale à tous les trajets opérateur
+  start_date: string;
+  end_date: string;
+  max_uses?: number;
+  max_uses_per_user?: number; // ✅ NOUVEAU: Limite d'utilisation par utilisateur
+  current_uses: number;
+  status: 'draft' | 'active' | 'paused' | 'expired';
+  // ✅ NOUVEAU: Workflow d'approbation admin
+  approval_status: 'draft' | 'pending_validation' | 'active_approved' | 'rejected';
+  rejection_reason?: string;
+  approved_by?: string;
+  approved_at?: string;
+  // ✅ NOUVEAU: Tracking création
+  operator_id?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  // ✅ NOUVEAU: Media (image/vidéo) pour affichage dans Stories
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
 }
 
 export interface Review {
@@ -363,6 +401,14 @@ interface DataContextType {
   addStory: (story: Omit<Story, 'id' | 'views' | 'clicks' | 'createdAt'>) => void;
   updateStory: (id: string, updates: Partial<Story>) => void;
   deleteStory: (id: string) => void;
+
+  // Promotions
+  promotions: Promotion[];
+  addPromotion: (promotion: Omit<Promotion, 'promotion_id' | 'current_uses' | 'created_at' | 'updated_at' | 'created_by' | 'approval_status'>) => void;
+  updatePromotion: (id: string, updates: Partial<Promotion>) => void;
+  deletePromotion: (id: string) => void;
+  approvePromotion: (id: string, adminId: string) => void;  // ✅ NOUVEAU: Approbation admin
+  rejectPromotion: (id: string, reason: string, adminId: string) => void;  // ✅ NOUVEAU: Rejet admin
 
   // Reviews
   reviews: Review[];
@@ -1144,6 +1190,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
       createdByName: 'Admin TSR'
     },
   ]);
+  
+  // ✅ PROMOTIONS - Réductions de prix
+  const [promotions, setPromotions] = useState<Promotion[]>([
+    {
+      promotion_id: 'promo_1',
+      title: 'Réduction hiver 25%',
+      description: 'Réduction spéciale pour la saison hivernale 2026',
+      discount_type: 'PERCENTAGE',
+      discount_value: 25,
+      trip_id: undefined, // Appliquée à tous les trajets
+      start_date: '2026-02-01',
+      end_date: '2026-02-28',
+      max_uses: 1000,
+      current_uses: 0,
+      status: 'active',
+      created_by: 'resp_1',
+      created_at: '2026-02-01T08:00:00Z',
+      updated_at: new Date().toISOString()
+    },
+    {
+      promotion_id: 'promo_2',
+      title: 'Offre flash -2000 FCFA',
+      description: 'Réduction fixe sur trajet Ouaga-Bobo cette semaine',
+      discount_type: 'FIXED_AMOUNT',
+      discount_value: 2000,
+      trip_id: 'trip_006', // Trajet Ouaga-Bobo
+      start_date: '2026-02-27',
+      end_date: '2026-03-05',
+      max_uses: 100,
+      current_uses: 0,
+      status: 'draft',
+      created_by: 'resp_1',
+      created_at: '2026-02-20T14:00:00Z',
+      updated_at: new Date().toISOString()
+    }
+  ]);
+  
   const [reviews, setReviews] = useState<Review[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([
     {
@@ -1874,6 +1957,50 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setStories(stories.filter(s => s.id !== id));
   };
 
+  const addPromotion = (promotion: Omit<Promotion, 'promotion_id' | 'current_uses' | 'created_at' | 'updated_at' | 'created_by' | 'approval_status'>) => {
+    const newPromotion: Promotion = {
+      ...promotion,
+      promotion_id: generateId('promo'),
+      current_uses: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      created_by: user?.id,
+      operator_id: user?.operatorId,
+      approval_status: 'pending_validation' // ✅ Nouvelles promos en attente d'validation
+    };
+    setPromotions([...promotions, newPromotion]);
+  };
+
+  const updatePromotion = (id: string, updates: Partial<Promotion>) => {
+    setPromotions(promotions.map(p => p.promotion_id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
+  };
+
+  const deletePromotion = (id: string) => {
+    setPromotions(promotions.filter(p => p.promotion_id !== id));
+  };
+
+  // ✅ NOUVEAU: Fonctions d'approbation admin pour promotions
+  const approvePromotion = (id: string, adminId: string) => {
+    setPromotions(promotions.map(p => p.promotion_id === id ? {
+      ...p,
+      approval_status: 'active_approved',
+      approved_by: adminId,
+      approved_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } : p));
+  };
+
+  const rejectPromotion = (id: string, reason: string, adminId: string) => {
+    setPromotions(promotions.map(p => p.promotion_id === id ? {
+      ...p,
+      approval_status: 'rejected',
+      rejection_reason: reason,
+      approved_by: adminId,
+      approved_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } : p));
+  };
+
   const updateReview = (id: string, updates: Partial<Review>) => {
     setReviews(reviews.map(r => r.id === id ? { ...r, ...updates } : r));
   };
@@ -2043,6 +2170,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addStory,
         updateStory,
         deleteStory,
+        promotions,
+        addPromotion,
+        updatePromotion,
+        deletePromotion,
+        approvePromotion,
+        rejectPromotion,
         reviews,
         updateReview,
         respondToReview,

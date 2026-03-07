@@ -10,8 +10,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Paperclip, Send, ArrowLeft } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { feedback } from '../lib/interactions';
 
 interface ChatPageProps {
@@ -133,7 +132,7 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-900 flex flex-col z-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 py-3 flex items-center justify-between shadow-md">
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 flex items-center justify-between shadow-md" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))', paddingBottom: '0.75rem' }}>
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
@@ -212,8 +211,8 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
             <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded-2xl rounded-bl-none border border-gray-200 dark:border-gray-700">
               <div className="flex gap-1">
                 <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" />
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.1s' }} />
                 <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }} />
-                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }} />
               </div>
             </div>
           </motion.div>
@@ -224,8 +223,8 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
 
       {/* Input Area - Fixed at bottom */}
       <div
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        className="fixed left-0 right-0 bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 shadow-lg"
+        className="fixed left-0 right-0 bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-4 pt-3 shadow-lg chat-input-area"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       >
         <input
           ref={fileInputRef}

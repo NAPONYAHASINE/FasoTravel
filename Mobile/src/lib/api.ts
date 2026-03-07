@@ -43,6 +43,7 @@ export interface Story {
   gradient: string;
   category: 'PROMO' | 'NEW' | 'DESTINATION' | 'TIPS' | 'PARTNERS' | 'ANNOUNCEMENT';
   link_url?: string;
+  promo_id?: string;  // ✅ Link vers une promotion (si c'est une story promo)
   is_active: boolean;
   priority: number;
   created_by: string;
@@ -85,6 +86,10 @@ export interface Trip {
   has_live_tracking: boolean;
   available_seats: number;
   total_seats: number;
+  // PROMOTION FIELDS
+  promotion?: any; // Promotion object if trip has active promotion
+  promoted_price?: number; // Discounted price if promotion active
+  discount_percentage?: number; // Discount percentage for display
 }
 
 export interface Segment {
@@ -172,11 +177,12 @@ export async function getActiveStories(): Promise<Story[]> {
     return [
       {
         id: 'story_1',
-        title: 'Promotions',
-        description: '🎁 Profitez de -20% sur tous les trajets ce week-end !',
+        title: 'Réduction hiver 25%',
+        description: '🎁 Air Canada: -25% sur tous les trajets jusqu\'au 28-feb !',
         emoji: '🎉',
         gradient: 'from-red-500 to-amber-500',
         category: 'PROMO',
+        promo_id: 'PROMO_001',  // ✅ Link vers la promotion
         is_active: true,
         priority: 1,
         created_by: 'admin',
@@ -407,7 +413,11 @@ export async function getTrips(params: TripSearchParams): Promise<Trip[]> {
     amenities: trip.amenities,
     has_live_tracking: trip.hasLiveTracking,
     available_seats: trip.availableSeats,
-    total_seats: trip.totalSeats
+    total_seats: trip.totalSeats,
+    // PROMOTION FIELDS - Map from service results
+    ...(trip.promotion && { promotion: trip.promotion }),
+    ...(trip.promotedPrice && { promoted_price: trip.promotedPrice }),
+    ...(trip.discountPercentage && { discount_percentage: trip.discountPercentage })
   }));
 }
 
@@ -448,7 +458,11 @@ export async function getTripById(tripId: string): Promise<Trip> {
     amenities: result.amenities,
     has_live_tracking: result.hasLiveTracking,
     available_seats: result.availableSeats,
-    total_seats: result.totalSeats
+    total_seats: result.totalSeats,
+    // PROMOTION FIELDS - Map from service results
+    ...(result.promotion && { promotion: result.promotion }),
+    ...(result.promotedPrice && { promoted_price: result.promotedPrice }),
+    ...(result.discountPercentage && { discount_percentage: result.discountPercentage })
   };
 }
 
@@ -1069,6 +1083,9 @@ export interface VehicleLocation {
   current_stop?: string;
   next_stop?: string;
   estimated_arrival?: string;
+  current_latitude?: number;
+  current_longitude?: number;
+  progress_percent?: number;
 }
 
 /**

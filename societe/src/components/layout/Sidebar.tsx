@@ -1,4 +1,4 @@
-import { Bus, LayoutDashboard, Map, Ticket, Settings, Users, TrendingUp, Calendar, MessageSquare, HelpCircle, LogOut, ChevronLeft, ChevronRight, Building2, MapPin, DollarSign, BarChart3, Image, Star, Clock, Ban, AlertTriangle } from "lucide-react";
+import { Bus, LayoutDashboard, Map, Ticket, Settings, Users, TrendingUp, Calendar, MessageSquare, HelpCircle, LogOut, ChevronLeft, ChevronRight, Building2, MapPin, DollarSign, BarChart3, Image, Star, Clock, Ban, AlertTriangle, Gift } from "lucide-react";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
@@ -30,6 +30,7 @@ export default function Sidebar({ role }: SidebarProps) {
       { icon: Building2, label: 'Gares', path: '/responsable/gares' },
       { icon: Users, label: 'Managers', path: '/responsable/managers' },
       { icon: Image, label: 'Stories', path: '/responsable/stories' },
+      { icon: Gift, label: 'Promotions', path: '/responsable/promotions' },
       { icon: Star, label: 'Avis Clients', path: '/responsable/avis' },
       { icon: AlertTriangle, label: 'Incidents', path: '/responsable/incidents' },
       { icon: BarChart3, label: 'Analytics', path: '/responsable/analytics' },

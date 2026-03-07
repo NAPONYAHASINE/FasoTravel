@@ -41,13 +41,13 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
   } : null;
   
   // Load live vehicle tracking when EMBARKED
-  const { location: vehicleLocation, isLoading: isTrackingLoading } = useVehicleLiveTracking(
+  useVehicleLiveTracking(
     ticket?.status === 'EMBARKED' ? ticket?.trip_id : null,
     true
   );
 
   // Emit location when EMBARKED (collaboratif: un seul passager suffit)
-  const { isLoading: isEmittingLocation, error: emitError } = useEmitLocation(
+  useEmitLocation(
     ticket?.status === 'EMBARKED' ? ticket?.ticket_id : null,
     ticket?.trip_id || null,
     ticket?.status === 'EMBARKED' ? 'in_progress' : null,
@@ -170,9 +170,9 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6 shadow-lg">
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 shadow-lg sticky top-0 z-10" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}
@@ -193,7 +193,7 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
       </div>
 
       {/* Content */}
-      <div className="px-6 py-6 pb-24">
+      <div className="px-4 sm:px-6 py-6 pb-24">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* QR Code Card */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8">
@@ -207,7 +207,7 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
             {/* QR Code */}
             {showQR ? (
               <div className="mb-6">
-                <div className="w-64 h-64 mx-auto bg-white dark:bg-gray-700 border-4 border-amber-600 dark:border-amber-500 rounded-2xl p-4 flex items-center justify-center">
+                <div className="w-48 h-48 sm:w-64 sm:h-64 mx-auto bg-white dark:bg-gray-700 border-4 border-amber-600 dark:border-amber-500 rounded-2xl p-4 flex items-center justify-center">
                   {/* Simulated QR Code */}
                   <div className="w-full h-full bg-gradient-to-br from-amber-100 to-green-100 dark:from-amber-900/30 dark:to-green-900/30 rounded-lg flex items-center justify-center">
                     <div className="text-center">
@@ -221,14 +221,14 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
                 {/* Alphanumeric Code */}
                 <div className="mt-6 text-center">
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">Code de vérification</p>
-                  <p className="text-2xl sm:text-3xl tracking-wider text-amber-600 dark:text-amber-500 select-all">
+                  <p className="text-xl sm:text-3xl tracking-wider text-amber-600 dark:text-amber-500 select-all break-all">
                     {ticket.alphanumeric_code}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="mb-6 text-center">
-                <div className="w-64 h-64 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center">
+                <div className="w-48 h-48 sm:w-64 sm:h-64 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center">
                   <p className="text-gray-500">QR code masqué</p>
                 </div>
               </div>

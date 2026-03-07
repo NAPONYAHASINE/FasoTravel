@@ -30,7 +30,7 @@ interface TicketCardProps {
   onClick?: (ticketId: string) => void;
 }
 
-const TicketCardComponent = ({ ticket, onDownload, onTransfer, onCancel, onClick }: TicketCardProps) => {
+const TicketCardComponent = ({ ticket, onDownload, onCancel, onClick }: TicketCardProps) => {
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });

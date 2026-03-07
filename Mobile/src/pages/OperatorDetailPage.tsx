@@ -11,7 +11,7 @@ import type { Page } from '../App';
 import { useState } from 'react';
 import { 
   ArrowLeft, Star, MapPin, Wifi, Coffee, Usb, 
-  Droplet, CheckCircle2, XCircle, Clock, Phone, 
+  Droplet, CheckCircle2, Clock, Phone, 
   Mail, Shield, Calendar, Search, Users, Loader2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -162,9 +162,9 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 pt-6 pb-24 sm:pb-32 shadow-lg">
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 pt-6 pb-24 sm:pb-32 shadow-lg sticky top-0 z-10" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}
@@ -439,24 +439,24 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
           <h2 className="text-lg text-gray-900 dark:text-white mb-4">Contact</h2>
           <div className="space-y-3">
             {operator.phone_number && (
-              <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <a href={`tel:${operator.phone_number}`} className="text-sm text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors">
+              <div className="flex items-center gap-3 min-w-0">
+                <Phone className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                <a href={`tel:${operator.phone_number}`} className="text-sm text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors truncate">
                   {operator.phone_number}
                 </a>
               </div>
             )}
             {operator.email && (
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <a href={`mailto:${operator.email}`} className="text-sm text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors">
+              <div className="flex items-center gap-3 min-w-0">
+                <Mail className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                <a href={`mailto:${operator.email}`} className="text-sm text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors truncate">
                   {operator.email}
                 </a>
               </div>
             )}
-            <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <span className="text-sm text-gray-900 dark:text-white">{locationText}</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <MapPin className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+              <span className="text-sm text-gray-900 dark:text-white truncate">{locationText}</span>
             </div>
           </div>
         </div>
@@ -471,6 +471,7 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
           stories={stories}
           onClose={handleCloseStories}
           onStoryView={handleStoryView}
+          onNavigate={onNavigate}
         />
       )}
     </div>

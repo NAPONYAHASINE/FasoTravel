@@ -15,10 +15,11 @@
  */
 
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type MouseEvent } from 'react';
 import { X, ChevronLeft, ChevronRight, MapPin, Tag, Calendar } from 'lucide-react';
 import { feedback } from '../lib/interactions';
 import type { OperatorStory } from '../lib/api';
+import type { Page } from '../App';
 
 interface OperatorStoriesViewerProps {
   operatorId: string;
@@ -28,16 +29,18 @@ interface OperatorStoriesViewerProps {
   initialStoryIndex?: number;
   onClose: () => void;
   onStoryView?: (storyId: string) => void;
+  onNavigate?: (page: Page, data?: any) => void;  // ✅ Navigation interne
 }
 
 export function OperatorStoriesViewer({
-  operatorId,
+  operatorId: _operatorId,
   operatorName,
   operatorLogo,
   stories,
   initialStoryIndex = 0,
   onClose,
   onStoryView,
+  onNavigate,
 }: OperatorStoriesViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(initialStoryIndex);
   const [progress, setProgress] = useState(0);
@@ -172,7 +175,7 @@ export function OperatorStoriesViewer({
         onTouchEnd={() => setIsPaused(false)}
       >
         {/* Progress Bars */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2">
+        <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
           {stories.map((story, index) => (
             <div key={story.id} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
               <motion.div
@@ -188,7 +191,7 @@ export function OperatorStoriesViewer({
         </div>
 
         {/* Header */}
-        <div className="absolute top-4 left-0 right-0 z-20 px-4 pt-6">
+        <div className="absolute top-4 left-0 right-0 z-20 px-4" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl border-2 border-white/40">
@@ -288,21 +291,28 @@ export function OperatorStoriesViewer({
             )}
 
             {currentStory.cta_text && (
-              <motion.a
-                href={currentStory.cta_link || '#'}
-                className="inline-block px-8 py-4 bg-white text-gray-900 rounded-full hover:bg-gray-100 transition-all shadow-xl"
+              <motion.button
+                onClick={(e: MouseEvent) => {
+                  e.stopPropagation();
+                  feedback.tap();
+                  // Navigate to search results for this operator
+                  // Utilisateur peut voir tous les trajets de cette compagnie
+                  onNavigate?.('search-results', {
+                    filterOperator: operatorName,
+                    from: undefined,
+                    to: undefined
+                  });
+                  onClose();
+                }}
+                className="inline-block px-8 py-4 bg-white text-gray-900 rounded-full hover:bg-gray-100 transition-all shadow-xl cursor-pointer"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  feedback.tap();
-                }}
               >
                 {currentStory.cta_text}
-              </motion.a>
+              </motion.button>
             )}
           </div>
 

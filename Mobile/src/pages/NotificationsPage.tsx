@@ -3,7 +3,7 @@
  * 
  * DEV NOTES:
  * - Endpoint: GET /notifications
- * - Types: booking_reminder, payment_confirmed, trip_update, promotion
+ * - Types: BOOKING_CONFIRMED, TRIP_REMINDER, PRICE_DROP, OPERATOR_UPDATE, PROMO, TRIP_COMPLETED
  * - Mark as read: PUT /notifications/{id}/read
  * - Event: notification_opened, notification_dismissed
  */
@@ -11,71 +11,17 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Bell, Check, X, Clock, CreditCard, Bus, Gift, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
+import { Notification, MOCK_NOTIFICATIONS_LIST } from '../data/models';
 
 interface NotificationsPageProps {
   onBack: () => void;
 }
 
-interface Notification {
-  id: string;
-  type: 'booking_reminder' | 'payment_confirmed' | 'trip_update' | 'promotion' | 'cancellation';
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-  actionUrl?: string;
-}
-
-// Mock notifications
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'notif_1',
-    type: 'booking_reminder',
-    title: 'Départ dans 2 heures',
-    message: 'Votre bus Ouagadougou → Bobo-Dioulasso part à 14h00. N\'oubliez pas votre billet !',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
-    read: false
-  },
-  {
-    id: 'notif_2',
-    type: 'payment_confirmed',
-    title: 'Paiement confirmé',
-    message: 'Votre paiement de 8,500 FCFA a été confirmé. Billet #TBF-1234567',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2h ago
-    read: false
-  },
-  {
-    id: 'notif_3',
-    type: 'trip_update',
-    title: 'Mise à jour du trajet',
-    message: 'Le bus est en route ! Suivez votre trajet en temps réel.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5h ago
-    read: true
-  },
-  {
-    id: 'notif_4',
-    type: 'promotion',
-    title: '🎉 Promotion spéciale',
-    message: 'Profitez de -20% sur tous les trajets ce week-end. Code: WEEKEND20',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    read: true
-  },
-  {
-    id: 'notif_5',
-    type: 'cancellation',
-    title: 'Remboursement traité',
-    message: 'Votre remboursement de 5,000 FCFA a été traité et sera crédité sous 48h.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-    read: true
-  }
-];
-
 export function NotificationsPage({ onBack }: NotificationsPageProps) {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS_LIST);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   // Sync unreadCount to localStorage
   useEffect(() => {
@@ -84,35 +30,40 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
 
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
-      case 'booking_reminder':
+      case 'TRIP_REMINDER':
         return <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
-      case 'payment_confirmed':
+      case 'BOOKING_CONFIRMED':
         return <CreditCard className="w-5 h-5 text-green-600 dark:text-green-400" />;
-      case 'trip_update':
+      case 'OPERATOR_UPDATE':
         return <Bus className="w-5 h-5 text-red-600 dark:text-red-400" />;
-      case 'promotion':
+      case 'PROMO':
+      case 'PRICE_DROP':
         return <Gift className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
-      case 'cancellation':
+      case 'TRIP_COMPLETED':
+      case 'TRIP_COMPLETED_RATING':
         return <X className="w-5 h-5 text-orange-600 dark:text-orange-400" />;
     }
   };
 
   const getNotificationColor = (type: Notification['type']) => {
     switch (type) {
-      case 'booking_reminder':
+      case 'TRIP_REMINDER':
         return 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700';
-      case 'payment_confirmed':
+      case 'BOOKING_CONFIRMED':
         return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700';
-      case 'trip_update':
+      case 'OPERATOR_UPDATE':
         return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700';
-      case 'promotion':
+      case 'PROMO':
+      case 'PRICE_DROP':
         return 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700';
-      case 'cancellation':
+      case 'TRIP_COMPLETED':
+      case 'TRIP_COMPLETED_RATING':
         return 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700';
     }
   };
 
-  const formatTimestamp = (date: Date) => {
+  const formatTimestamp = (dateStr: string) => {
+    const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -134,26 +85,26 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
 
   const handleMarkAsRead = (id: string) => {
     setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
+      n.notification_id === id ? { ...n, is_read: true } : n
     ));
   };
 
   const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
   };
 
   const handleDelete = (id: string) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+    setNotifications(notifications.filter(n => n.notification_id !== id));
   };
 
   const filteredNotifications = filter === 'unread' 
-    ? notifications.filter(n => !n.read)
+    ? notifications.filter(n => !n.is_read)
     : notifications;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6 sticky top-0 z-10 shadow-lg">
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 sticky top-0 z-10 shadow-lg" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}
@@ -190,7 +141,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
       </div>
 
       {/* Content */}
-      <div className="px-6 py-6">
+      <div className="px-4 sm:px-6 py-6">
         <div className="max-w-4xl mx-auto space-y-4">
           {/* Filter Tabs */}
           <div className="flex gap-2">
@@ -232,9 +183,9 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
             <div className="space-y-3">
               {filteredNotifications.map((notification) => (
                 <div
-                  key={notification.id}
+                  key={notification.notification_id}
                   className={`bg-white dark:bg-gray-800 rounded-2xl p-4 transition-all ${
-                    !notification.read ? 'border-2 border-amber-200 dark:border-amber-800 shadow-sm' : 'border border-gray-200 dark:border-gray-700'
+                    !notification.is_read ? 'border-2 border-amber-200 dark:border-amber-800 shadow-sm' : 'border border-gray-200 dark:border-gray-700'
                   }`}
                 >
                   <div className="flex gap-4">
@@ -250,12 +201,12 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h3 className="text-sm text-gray-900 dark:text-white flex items-center gap-2">
                           {notification.title}
-                          {!notification.read && (
+                          {!notification.is_read && (
                             <span className="w-2 h-2 bg-amber-600 dark:bg-amber-500 rounded-full"></span>
                           )}
                         </h3>
                         <span className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                          {formatTimestamp(notification.timestamp)}
+                          {formatTimestamp(notification.created_at)}
                         </span>
                       </div>
                       
@@ -265,9 +216,9 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2">
-                        {!notification.read && (
+                        {!notification.is_read && (
                           <button
-                            onClick={() => handleMarkAsRead(notification.id)}
+                            onClick={() => handleMarkAsRead(notification.notification_id)}
                             className="text-[11px] sm:text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-1"
                           >
                             <Check className="w-3 h-3" />
@@ -275,7 +226,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(notification.id)}
+                          onClick={() => handleDelete(notification.notification_id)}
                           className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-1 ml-auto"
                         >
                           <Trash2 className="w-3 h-3" />

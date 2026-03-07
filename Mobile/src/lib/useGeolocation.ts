@@ -123,7 +123,6 @@ export function useGeolocation(): [GeolocationState, GeolocationActions] {
         setIsLoading(false);
         
         // Handle different error types
-        let logLevel: 'log' | 'warn' | 'error' = 'log';
         
         switch (error.code) {
           case error.PERMISSION_DENIED:
@@ -131,30 +130,25 @@ export function useGeolocation(): [GeolocationState, GeolocationActions] {
               if (error.message && error.message.includes('permissions policy')) {
               setErrorMessage('La géolocalisation est désactivée sur cette page. Utilisez la localisation par défaut ci-dessous pour continuer.');
               setIsGeolocationBlocked(true);
-              logLevel = 'log'; // Expected error, just info
               console.log('[Geolocation] ℹ️ Blocked by permissions policy (expected in some environments)');
               // Persist denied state
               saveConsent({ type: 'denied', ts: Date.now() });
             } else {
               setErrorMessage('Accès à la localisation refusé. Veuillez autoriser l\'accès dans les paramètres de votre navigateur, ou utilisez la localisation par défaut.');
-              logLevel = 'log'; // User choice, not an error
               console.log('[Geolocation] ℹ️ Permission denied by user');
               saveConsent({ type: 'denied', ts: Date.now() });
             }
             break;
           case error.POSITION_UNAVAILABLE:
             setErrorMessage('Position indisponible. Vérifiez que vos services de localisation sont activés, ou utilisez la localisation par défaut.');
-            logLevel = 'warn';
             console.warn('[Geolocation] ⚠️ Position unavailable');
             break;
           case error.TIMEOUT:
             setErrorMessage('Délai d\'attente dépassé. Utilisez la localisation par défaut pour continuer.');
-            logLevel = 'warn';
             console.warn('[Geolocation] ⚠️ Timeout');
             break;
           default:
             setErrorMessage('Une erreur s\'est produite lors de la récupération de votre position. Utilisez la localisation par défaut.');
-            logLevel = 'error';
             console.error('[Geolocation] ❌ Unexpected error:', error.message);
         }
       },

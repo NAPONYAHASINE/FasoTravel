@@ -1,0 +1,20 @@
+{
+  "appId": "com.fasotravel.app",
+  "appName": "FasoTravel",
+  "webDir": "build",
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#ffffff"
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK",
+      "backgroundColor": "#00000000"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    }
+  }
+}

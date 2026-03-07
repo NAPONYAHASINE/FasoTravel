@@ -13,8 +13,6 @@ import type {
   Trip as ModelTrip,
   Ticket as ModelTicket,
   Operator as ModelOperator,
-  OperatorStory as ModelOperatorStory,
-  VehicleEstimate as ModelVehicleEstimate
 } from '../data/models';
 import type { VehicleLocation } from '../services/types';
 import { liveLocationService } from '../services/api/liveLocation.service';

@@ -95,10 +95,11 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
       <motion.div 
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6"
+        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 sticky top-0 z-10"
+        style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -130,7 +131,7 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
 
       {/* Content */}
       <motion.div 
-        className="px-6 py-6 pb-24"
+        className="px-4 sm:px-6 py-6 pb-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -150,9 +151,9 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
               >
                 {userName.charAt(0).toUpperCase()}
               </motion.div>
-              <div>
-                <h2 className="text-lg sm:text-xl text-gray-900 dark:text-white">{userName}</h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{userEmail}</p>
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl text-gray-900 dark:text-white truncate">{userName}</h2>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">{userEmail}</p>
               </div>
             </div>
 

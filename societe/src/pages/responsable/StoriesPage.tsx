@@ -22,13 +22,28 @@ import { createLogger } from '../../utils/logger';
 const logger = createLogger('StoriesPage', 'general');
 
 export default function StoriesPage() {
-  const { stories, addStory, deleteStory } = useData();
+  const { stories, addStory, deleteStory, updateStory, promotions, addPromotion, trips } = useData();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false); // ✅ NOUVEAU: Dialog création promo
   const [selectedStory, setSelectedStory] = useState<typeof stories[0] | null>(null);
   const [uploadedFile, setUploadedFile] = useState<{ url: string; type: 'image' | 'video'; duration?: number } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // ✅ NOUVEAU: État pour formulaire création promo rapide
+  const [quickPromoData, setQuickPromoData] = useState({
+    title: '',
+    description: '',
+    discountType: 'PERCENTAGE' as 'PERCENTAGE' | 'FIXED_AMOUNT',
+    discountValue: 0,
+    tripId: '',
+    maxUses: '',
+    maxUsesPerUser: '',
+    startDate: '',
+    endDate: ''
+  });
+
   const [formData, setFormData] = useState({
     title: '',
     duration: '10',
@@ -37,8 +52,68 @@ export default function StoriesPage() {
     actionType: 'none' as 'none' | 'book_route' | 'view_company',
     actionLabel: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    promo_id: '' // ✅ NOUVEAU: Sélectionner une promotion
   });
+
+  // ✅ NOUVEAU: Handler créer promo rapide desde le formulaire story
+  const handleCreateQuickPromo = () => {
+    if (!quickPromoData.title.trim()) {
+      toast.error('Veuillez saisir un titre pour la promotion');
+      return;
+    }
+
+    if (quickPromoData.discountValue <= 0) {
+      toast.error('La réduction doit être supérieure à zéro');
+      return;
+    }
+
+    if (!quickPromoData.startDate || !quickPromoData.endDate) {
+      toast.error('Veuillez sélectionner les dates');
+      return;
+    }
+
+    if (new Date(quickPromoData.endDate) <= new Date(quickPromoData.startDate)) {
+      toast.error('La date de fin doit être après la date de début');
+      return;
+    }
+
+    try {
+      // Créer la promotion
+      addPromotion({
+        title: quickPromoData.title,
+        description: quickPromoData.description || undefined,
+        discount_type: quickPromoData.discountType,
+        discount_value: quickPromoData.discountValue,
+        trip_id: quickPromoData.tripId || undefined,
+        max_uses: quickPromoData.maxUses ? parseInt(quickPromoData.maxUses) : undefined,
+        max_uses_per_user: quickPromoData.maxUsesPerUser ? parseInt(quickPromoData.maxUsesPerUser) : undefined,
+        start_date: quickPromoData.startDate,
+        end_date: quickPromoData.endDate,
+        status: 'draft' // Nouvelles promos commencent en draft
+      });
+
+      logger.info('✅ Promotion créée rapidement', { title: quickPromoData.title });
+      toast.success('Promotion créée! Sélectionnez-la dans le formulaire');
+      
+      // Réinitialiser et fermer le dialog
+      setQuickPromoData({
+        title: '',
+        description: '',
+        discountType: 'PERCENTAGE',
+        discountValue: 0,
+        tripId: '',
+        maxUses: '',
+        maxUsesPerUser: '',
+        startDate: '',
+        endDate: ''
+      });
+      setIsPromoDialogOpen(false);
+    } catch (error) {
+      logger.error('❌ Erreur lors de la création de la promo', error);
+      toast.error('Erreur lors de la création de la promotion');
+    }
+  };
 
   const handleDelete = (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette story ?')) {
@@ -232,7 +307,9 @@ export default function StoriesPage() {
         actionLabel: formData.actionLabel || undefined,
         startDate: formData.startDate,
         endDate: formData.endDate,
-        status
+        status,
+        promo_id: formData.promo_id || undefined, // ✅ Ajouter promo_id si sélectionné
+        approval_status: 'pending_validation' // ✅ Nouvelle story en attente de validation
       });
 
       logger.info('✅ Story créée avec succès', { 
@@ -255,9 +332,10 @@ export default function StoriesPage() {
       targeting: 'all',
       targetValue: '',
       actionType: 'none',
-      actionLabel: '', // ✅ Réinitialiser le texte du bouton CTA
+      actionLabel: '',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      promo_id: '' // ✅ Réinitialiser promo_id
     });
     setUploadedFile(null);
   };
@@ -297,7 +375,7 @@ export default function StoriesPage() {
             Créez des stories publicitaires avec ciblage personnalisé
           </p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="tf-btn-primary">
+        <Button onClick={() => setIsDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white">
           <Plus size={20} className="mr-2" />
           Nouvelle story
         </Button>
@@ -356,6 +434,55 @@ export default function StoriesPage() {
         </Card>
       </div>
 
+      {/* 🎯 SECTION APPROBATION DES STORIES */}
+      {stories.some(s => s.approval_status === 'pending_validation') && (
+        <Card className="p-6 border-2 border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-yellow-200 dark:bg-yellow-700 rounded-full flex items-center justify-center">
+              <Clock size={16} className="text-yellow-700 dark:text-yellow-300" />
+            </div>
+            <h2 className="text-lg font-bold text-yellow-900 dark:text-yellow-200">
+              Stories en attente d'approbation ({stories.filter(s => s.approval_status === 'pending_validation').length})
+            </h2>
+          </div>
+          
+          <div className="space-y-3">
+            {stories
+              .filter(s => s.approval_status === 'pending_validation')
+              .map(story => (
+                <div key={story.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700/50">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{story.title}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {story.promo_id ? '🎁 Liée à une promotion' : '📱 Story classique'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        updateStory(story.id, { approval_status: 'active' });
+                        toast.success(`Story "${story.title}" approuvée ! ✅`);
+                      }}
+                      className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded transition"
+                    >
+                      ✓ Approuver
+                    </button>
+                    <button
+                      onClick={() => {
+                        updateStory(story.id, { approval_status: 'rejected' });
+                        toast.error(`Story "${story.title}" rejetée`);
+                      }}
+                      className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded transition"
+                    >
+                      ✕ Rejeter
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </Card>
+      )}
+
       {/* Grille des stories */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stories.map(story => (
@@ -371,13 +498,33 @@ export default function StoriesPage() {
                 />
               ) : (
                 <div 
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${story.mediaUrl})` }}
+                  className="w-full h-full bg-cover bg-center story-media-bg"
                 />
               )}
               
-              <div className="absolute top-3 right-3">
+              <div className="absolute top-3 right-3 flex flex-col gap-2">
                 {getStatusBadge(story.status)}
+                {/* 🎯 Badge d'approbation */}
+                {story.approval_status === 'pending_validation' && (
+                  <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+                    ⏳ En attente
+                  </Badge>
+                )}
+                {story.approval_status === 'active' && (
+                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                    ✓ Approuvée
+                  </Badge>
+                )}
+                {story.approval_status === 'rejected' && (
+                  <Badge className="bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+                    ✕ Rejetée
+                  </Badge>
+                )}
+                {story.approval_status === 'draft' && (
+                  <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                    📝 Brouillon
+                  </Badge>
+                )}
               </div>
               <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full">
                 <div className="flex items-center gap-2 text-white text-sm">
@@ -425,10 +572,10 @@ export default function StoriesPage() {
                   Voir
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="destructive"
                   size="sm"
                   onClick={() => handleDelete(story.id)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white"
                 >
                   <Trash2 size={16} />
                 </Button>
@@ -440,7 +587,7 @@ export default function StoriesPage() {
 
       {/* Dialog Création */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>Nouvelle story</DialogTitle>
             <DialogDescription>
@@ -448,8 +595,8 @@ export default function StoriesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden flex-1">
+            <div className="space-y-4 overflow-y-auto pr-4">
               <div>
                 <Label htmlFor="title">Titre de la story *</Label>
                 <Input
@@ -586,6 +733,39 @@ export default function StoriesPage() {
                 </div>
               )}
 
+              {/* ✅ NOUVEAU: Sélectionner une Promotion */}
+              <div>
+                <Label htmlFor="promo_id" className="font-medium text-gray-800 dark:text-gray-200">Promotion associée (optionnel)</Label>
+                <div className="flex gap-2 mt-1">
+                  <select
+                    id="promo_id"
+                    value={formData.promo_id}
+                    onChange={(e) => setFormData({ ...formData, promo_id: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    aria-label="Sélectionnez une promotion"
+                  >
+                    <option value="">Aucune promotion</option>
+                    {promotions?.map(promo => (
+                      <option key={promo.promotion_id} value={promo.promotion_id}>
+                        {promo.title} ({promo.discount_type === 'PERCENTAGE' ? `${promo.discount_value}%` : `${promo.discount_value} FCFA`})
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    onClick={() => setIsPromoDialogOpen(true)}
+                    className="gap-2 whitespace-nowrap"
+                    variant="outline"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Créer
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Si liée à une promotion, la story redirigera vers les trajets avec cette réduction
+                </p>
+              </div>
+
               {/* ✅ NOUVEAU: Section Call-to-Action */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -655,7 +835,7 @@ export default function StoriesPage() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex-shrink-0">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Annuler
               </Button>
@@ -688,7 +868,7 @@ export default function StoriesPage() {
                     className="w-full h-full object-cover"
                     preload="auto"
                     playsInline
-                    onError={() => console.error('Erreur de lecture vidéo:', selectedStory.mediaUrl)}
+                    onError={() => logger.error('Erreur de lecture vidéo', { url: selectedStory.mediaUrl })}
                   />
                 ) : (
                   <img 
@@ -735,8 +915,154 @@ export default function StoriesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ✅ Dialog Création Promo Rapide */}
+      <Dialog open={isPromoDialogOpen} onOpenChange={setIsPromoDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Créer une promotion</DialogTitle>
+            <DialogDescription>
+              Créez une promotion directement depuis la création de story
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={(e) => { e.preventDefault(); handleCreateQuickPromo(); }} className="flex flex-col overflow-hidden flex-1">
+            <div className="space-y-4 overflow-y-auto pr-4">
+            {/* Titre */}
+            <div>
+              <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Titre *</Label>
+              <Input
+                placeholder="ex: Réduction hiver 25%"
+                value={quickPromoData.title}
+                onChange={(e) => setQuickPromoData({ ...quickPromoData, title: e.target.value })}
+                className="mt-1 placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Description</Label>
+              <textarea
+                placeholder="Description courte..."
+                value={quickPromoData.description}
+                onChange={(e) => setQuickPromoData({ ...quickPromoData, description: e.target.value })}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={2}
+              />
+            </div>
+
+            {/* Réduction */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Type *</Label>
+                <select
+                  title="Sélectionner le type de réduction"
+                  aria-label="Type de réduction"
+                  value={quickPromoData.discountType}
+                  onChange={(e) => setQuickPromoData({ ...quickPromoData, discountType: e.target.value as any })}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="PERCENTAGE">Pourcentage %</option>
+                  <option value="FIXED_AMOUNT">Montant fixe FCFA</option>
+                </select>
+              </div>
+              <div>
+                <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Valeur *</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step={quickPromoData.discountType === 'PERCENTAGE' ? '1' : '100'}
+                  value={quickPromoData.discountValue}
+                  onChange={(e) => setQuickPromoData({ ...quickPromoData, discountValue: parseFloat(e.target.value) || 0 })}
+                  className="mt-1 placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Début *</Label>
+                <Input
+                  type="date"
+                  value={quickPromoData.startDate}
+                  onChange={(e) => setQuickPromoData({ ...quickPromoData, startDate: e.target.value })}
+                  className="mt-1 placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+              <div>
+                <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Fin *</Label>
+                <Input
+                  type="date"
+                  value={quickPromoData.endDate}
+                  onChange={(e) => setQuickPromoData({ ...quickPromoData, endDate: e.target.value })}
+                  className="mt-1 placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
+
+            {/* Trajet et Utilisations */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Trajet spécifique (optionnel)</Label>
+                <select
+                  aria-label="Sélectionner un trajet"
+                  value={quickPromoData.tripId}
+                  onChange={(e) => setQuickPromoData({ ...quickPromoData, tripId: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Global (tous les trajets)</option>
+                  {trips?.map(trip => (
+                    <option key={trip.id} value={trip.id}>
+                      {trip.departure} → {trip.arrival}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Utilisations totales (optionnel)</Label>
+                <Input
+                  type="number"
+                  placeholder="Illimité"
+                  min="1"
+                  value={quickPromoData.maxUses}
+                  onChange={(e) => setQuickPromoData({ ...quickPromoData, maxUses: e.target.value })}
+                  className="mt-1 placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="font-medium text-gray-800 dark:text-gray-200 text-sm">Utilisations par personne (optionnel)</Label>
+              <Input
+                type="number"
+                placeholder="Illimité"
+                min="1"
+                value={quickPromoData.maxUsesPerUser}
+                onChange={(e) => setQuickPromoData({ ...quickPromoData, maxUsesPerUser: e.target.value })}
+                className="mt-1 placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+              />
+            </div>
+
+            </div>
+
+            <DialogFooter className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex-shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsPromoDialogOpen(false)}
+              >
+                Annuler
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Créer la promo
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-

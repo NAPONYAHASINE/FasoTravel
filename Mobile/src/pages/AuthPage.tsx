@@ -10,7 +10,7 @@
 
 import type { Page } from '../App';
 import { useState, useEffect } from 'react';
-import { Mail, Lock, Phone, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Phone, User, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -25,10 +25,12 @@ interface AuthPageProps {
   onNavigate?: (page: Page) => void;
 }
 
-export function AuthPage({ onAuth, onBack, onNavigate }: AuthPageProps) {
+export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps) {
   // État global : 'choice' (choix connexion/inscription) ou 'form' (formulaire affiché)
   const [stage, setStage] = useState<'choice' | 'form'>('choice');
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [isLoading, setIsLoading] = useState(false); // Loading state for API calls
+  const [_globalError, setGlobalError] = useState<string>(''); // Global error message
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
   
@@ -86,6 +88,7 @@ export function AuthPage({ onAuth, onBack, onNavigate }: AuthPageProps) {
   };
 
   const handleLogin = () => {
+    setGlobalError('');
     const errors: { identifier?: string; password?: string } = {};
     
     if (loginMethod === 'phone') {
@@ -111,19 +114,27 @@ export function AuthPage({ onAuth, onBack, onNavigate }: AuthPageProps) {
     setLoginErrors(errors);
     
     if (Object.keys(errors).length === 0) {
-      const loginData = loginMethod === 'phone' 
-        ? { phone: loginPhone, password: loginPassword }
-        : { email: loginEmail, password: loginPassword };
+      setIsLoading(true);
+      feedback.tap();
       
-      console.log('[AUTH] Login:', loginData);
-      feedback.success();
-      
-      onAuth({
+      const userData = {
         name: 'NAPON Yahasine',
         email: loginMethod === 'email' ? loginEmail : 'yahasine@transportbf.bf',
         phone: loginMethod === 'phone' ? loginPhone : '70123456',
         isGuest: false
-      });
+      };
+      
+      // Simulate API call (remove when connecting real API)
+      setTimeout(() => {
+        setIsLoading(false);
+        feedback.success();
+        
+        // Persist user to localStorage
+        localStorage.setItem('auth_user', JSON.stringify(userData));
+        localStorage.setItem('auth_token', `token_${Date.now()}`);
+        
+        onAuth(userData);
+      }, 800);
     } else {
       feedback.error();
     }
@@ -165,19 +176,27 @@ export function AuthPage({ onAuth, onBack, onNavigate }: AuthPageProps) {
     setRegisterErrors(errors);
     
     if (Object.keys(errors).length === 0) {
-      console.log('[AUTH] Register:', { 
-        name: registerName, 
-        email: registerEmail, 
-        phone: registerPhone 
-      });
-      feedback.success();
+      setIsLoading(true);
+      feedback.tap();
       
-      onAuth({
+      const userData = {
         name: registerName,
         email: registerEmail || `${registerPhone.replace(/\s/g, '')}@transportbf.bf`,
         phone: registerPhone,
         isGuest: false
-      });
+      };
+      
+      // Simulate API call (remove when connecting real API)
+      setTimeout(() => {
+        setIsLoading(false);
+        feedback.success();
+        
+        // Persist user to localStorage
+        localStorage.setItem('auth_user', JSON.stringify(userData));
+        localStorage.setItem('auth_token', `token_${Date.now()}`);
+        
+        onAuth(userData);
+      }, 800);
     } else {
       feedback.error();
     }
@@ -188,33 +207,14 @@ export function AuthPage({ onAuth, onBack, onNavigate }: AuthPageProps) {
       {/* Background Image - Monuments de Ouagadougou */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url(${bgImage})`,
-        }}
+        style={{ backgroundImage: `url(${bgImage})` }}
       >
         {/* Overlay sombre pour lisibilité */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/70"></div>
       </div>
 
-      {/* Bouton retour - En haut à gauche */}
-      <div className="relative z-20 pt-6 px-6">
-        <motion.button
-          onClick={() => {
-            feedback.tap();
-            if (stage === 'form') {
-              handleBackToChoice();
-            } else {
-              onBack();
-            }
-          }}
-          className="text-white/90 hover:text-white flex items-center gap-2 backdrop-blur-sm bg-black/20 px-4 py-2 rounded-full"
-          whileHover={{ scale: 1.05, x: -5 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Retour
-        </motion.button>
-      </div>
+      {/* Bouton retour - Supprimé à la demande */}
+
 
       {/* STAGE 1: CHOIX - Connexion ou Inscription */}
       <AnimatePresence mode="wait">
@@ -442,9 +442,17 @@ export function AuthPage({ onAuth, onBack, onNavigate }: AuthPageProps) {
 
                       <Button
                         onClick={handleLogin}
-                        className="w-full bg-gradient-to-r from-red-600 via-amber-500 to-green-600 hover:from-red-700 hover:via-amber-600 hover:to-green-700 py-6"
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-red-600 via-amber-500 to-green-600 hover:from-red-700 hover:via-amber-600 hover:to-green-700 py-6 disabled:opacity-50"
                       >
-                        Se connecter
+                        {isLoading ? (
+                          <span className="flex items-center gap-2">
+                            <span className="animate-spin">⏳</span>
+                            Connexion...
+                          </span>
+                        ) : (
+                          'Se connecter'
+                        )}
                       </Button>
 
                       {/* Lien vers inscription */}
@@ -555,9 +563,17 @@ export function AuthPage({ onAuth, onBack, onNavigate }: AuthPageProps) {
 
                       <Button
                         onClick={handleRegister}
-                        className="w-full bg-gradient-to-r from-red-600 via-amber-500 to-green-600 hover:from-red-700 hover:via-amber-600 hover:to-green-700 py-6"
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-red-600 via-amber-500 to-green-600 hover:from-red-700 hover:via-amber-600 hover:to-green-700 py-6 disabled:opacity-50"
                       >
-                        Créer mon compte
+                        {isLoading ? (
+                          <span className="flex items-center gap-2">
+                            <span className="animate-spin">⏳</span>
+                            Création...
+                          </span>
+                        ) : (
+                          'Créer mon compte'
+                        )}
                       </Button>
 
                       {/* Lien vers connexion */}

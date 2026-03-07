@@ -10,8 +10,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Calendar, Navigation as NavigationIcon, Building2, Users } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Search, MapPin, Calendar, Building2, Users } from 'lucide-react';
 import { t } from '../lib/i18n';
 import type { Page } from '../App';
 import { ContextualHelp, HelpButton } from '../components/ContextualHelp';
@@ -36,6 +35,7 @@ export interface SearchParams {
   returnDate?: string;
   operator?: string;
   passengers?: number;
+  promo_id?: string;
 }
 
 export function HomePage({ userName, onSearch, onNavigate }: HomePageProps) {
@@ -107,10 +107,11 @@ export function HomePage({ userName, onSearch, onNavigate }: HomePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-24 md:pb-0 relative overflow-hidden">
-      {/* Logo */}
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-24 md:pb-0 relative overflow-x-hidden">
+      {/* Logo - sticky header with safe area */}
       <motion.div 
-        className="px-4 sm:px-6 pt-4 pb-2"
+        className="px-4 sm:px-6 pb-2 sticky top-0 z-30 bg-white dark:bg-gray-900"
+        style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -185,7 +186,7 @@ export function HomePage({ userName, onSearch, onNavigate }: HomePageProps) {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="max-w-4xl mx-auto">
-          <StoriesCircle />
+          <StoriesCircle onNavigate={onNavigate} />
         </div>
       </motion.div>
 

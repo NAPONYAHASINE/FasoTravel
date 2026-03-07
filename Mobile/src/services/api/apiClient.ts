@@ -48,7 +48,7 @@ class ApiClient {
   private maxRetries: number;
   private getToken: () => string | null;
   private getHeaders: () => Record<string, string>;
-  private logger: ApiClientConfig['logger'];
+  private logger: NonNullable<ApiClientConfig['logger']>;
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl;

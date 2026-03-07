@@ -91,10 +91,11 @@ export function EditProfilePage({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
       <motion.div
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6"
+        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 sticky top-0 z-10"
+        style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -126,7 +127,7 @@ export function EditProfilePage({
 
       {/* Content */}
       <motion.div
-        className="px-6 py-6 pb-24"
+        className="px-4 sm:px-6 py-6 pb-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}

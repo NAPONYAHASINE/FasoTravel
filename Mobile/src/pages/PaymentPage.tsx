@@ -11,7 +11,7 @@ import type { Page } from '../App';
  * - Show processing spinner + redirect simulation
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, CreditCard, Smartphone, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '../components/ui/button';
@@ -22,22 +22,21 @@ import { usePaymentMethods } from '../lib/hooks';
 
 interface PaymentPageProps {
   reservationData: any;
+  selectedPaymentMethod?: string;
   onNavigate: (page: Page, data?: any) => void;
   onBack: () => void;
 }
 
-export function PaymentPage({ reservationData, onNavigate, onBack }: PaymentPageProps) {
+export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate, onBack }: PaymentPageProps) {
   const { methods: paymentMethods, isLoading: methodsLoading } = usePaymentMethods();
-  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(selectedPaymentMethod || null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null);
+  const [, setIsWaitingOtp] = useState(false);
 
-  const handlePayment = () => {
-    if (!paymentMethod) {
-      feedback.error();
-      alert('Veuillez sélectionner un mode de paiement');
-      return;
-    }
+  // Process payment after OTP verification
+  const handlePaymentProcess = () => {
+    if (!paymentMethod) return;
 
     setIsProcessing(true);
     setPaymentStatus('pending');
@@ -58,8 +57,38 @@ export function PaymentPage({ reservationData, onNavigate, onBack }: PaymentPage
         setPaymentStatus('failed');
         feedback.error();
         setIsProcessing(false);
+        setIsWaitingOtp(false);
       }
     }, 3000);
+  };
+
+  // Auto-process payment after returning from OTP
+  useEffect(() => {
+    // If we've just returned from OTP verification with paymentMethod set, auto-process
+    if (selectedPaymentMethod && paymentMethod && !isProcessing && paymentStatus === null) {
+      handlePaymentProcess();
+    }
+  }, [selectedPaymentMethod]);
+
+  // Handle payment - navigate to OTP verification first
+  const handlePayment = () => {
+    if (!paymentMethod) {
+      feedback.error();
+      alert('Veuillez sélectionner un mode de paiement');
+      return;
+    }
+
+    // Request OTP verification before payment
+    setIsWaitingOtp(true);
+    feedback.tap();
+    
+    // Navigate to OTP verification with payment mode
+    onNavigate('otp-verification', {
+      identifier: reservationData?.userPhone || reservationData?.phone || '',
+      mode: 'payment',
+      returnPage: 'payment',
+      paymentMethod: paymentMethod
+    });
   };
 
   const handleRetry = () => {
@@ -79,9 +108,9 @@ export function PaymentPage({ reservationData, onNavigate, onBack }: PaymentPage
           <h2 className="text-2xl text-gray-900 dark:text-white mb-2">Traitement du paiement</h2>
           <p className="text-gray-600 dark:text-gray-400">Veuillez patienter...</p>
           <div className="mt-6 flex items-center justify-center gap-1">
-            <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-red-600 dark:bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-red-600 dark:bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Ne fermez pas cette page</p>
         </div>
@@ -180,7 +209,7 @@ export function PaymentPage({ reservationData, onNavigate, onBack }: PaymentPage
 
   if (paymentStatus === 'failed') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 sm:px-6">
         <div className="max-w-md w-full text-center">
           <XCircle className="w-24 h-24 text-red-600 dark:text-red-400 mx-auto mb-4" />
           <h2 className="text-3xl text-gray-900 dark:text-white mb-2">Paiement échoué</h2>
@@ -211,15 +240,16 @@ export function PaymentPage({ reservationData, onNavigate, onBack }: PaymentPage
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-  <BookingStepIndicator currentStep="payment" completedSteps={['search', 'outbound-seat']} />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+      <div className="sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <BookingStepIndicator currentStep="payment" completedSteps={['search', 'outbound-seat']} />
 
-      {/* Header */}
-      <motion.div 
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+        {/* Header */}
+        <motion.div 
+          className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
         <div className="max-w-4xl mx-auto">
           <motion.button
             onClick={() => {
@@ -244,11 +274,12 @@ export function PaymentPage({ reservationData, onNavigate, onBack }: PaymentPage
             <p className="text-sm opacity-90">Choisissez votre mode de paiement</p>
           </motion.div>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* Content */}
       <motion.div 
-        className="px-6 py-6 pb-24"
+        className="px-4 sm:px-6 py-6 pb-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}

@@ -9,7 +9,7 @@
  * 3. Support du dark mode
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { cn } from './ui/utils';
 
 interface OperatorLogoProps {

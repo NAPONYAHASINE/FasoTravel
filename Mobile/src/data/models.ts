@@ -199,13 +199,13 @@ export interface Trip {
   operator_id: string;
   operator_name: string;
   operator_logo?: string;
-  vehicle_id: string;
+  vehicle_id?: string;
   vehicle_type: string;
   departure_time: string;
   arrival_time: string;
   duration_minutes: number;
   base_price: number;
-  currency: string;
+  currency?: string;
   from_stop_id: string;
   to_stop_id: string;
   from_stop_name: string;
@@ -215,19 +215,19 @@ export interface Trip {
   has_live_tracking: boolean;
   available_seats: number;
   total_seats: number;
-  is_cancelled: boolean;
+  is_cancelled?: boolean;
   cancellation_reason?: string;
   // PROMOTION FIELDS - Backend sends these, frontend displays strikethrough price + new price
   promotion?: Promotion; // Active promotion for this trip (if any)
   promoted_price?: number; // Discounted price (if promotion active)
   discount_percentage?: number; // For UI display: (base_price - promoted_price) / base_price * 100
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Segment {
   segment_id: string;
-  trip_id: string;
+  trip_id?: string;
   from_stop_id: string;
   to_stop_id: string;
   from_stop_name: string;
@@ -237,10 +237,10 @@ export interface Segment {
   distance_km: number;
   available_seats: number;
   total_seats: number;
-  sequence_number: number;
-  base_price: number;
-  created_at: string;
-  updated_at: string;
+  sequence_number?: number;
+  base_price?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // ============================================
@@ -251,15 +251,16 @@ export interface Promotion {
   promotion_id: string;
   operator_id: string;
   trip_id?: string; // If null, promotion applies to all operator trips
-  promotion_name: string;
+  title: string; // Promotion name/title
   description?: string;
   discount_type: 'PERCENTAGE' | 'FIXED_AMOUNT'; // PERCENTAGE = 20% off, FIXED_AMOUNT = -2000 FCFA
   discount_value: number; // 20 for 20%, or 2000 for 2000 FCFA
   start_date: string; // ISO 8601
   end_date: string; // ISO 8601
   max_uses?: number; // Total uses allowed
-  uses_count?: number; // Current usage count
-  is_active: boolean;
+  current_uses: number; // Current usage count
+  status: 'draft' | 'active' | 'paused' | 'expired'; // Promotion status
+  created_by?: string; // User ID who created this promotion
   created_at: string;
   updated_at: string;
 }
@@ -490,6 +491,63 @@ export interface UserDevice {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================
+// MOCK NOTIFICATIONS
+// ============================================
+
+export const MOCK_NOTIFICATIONS_LIST: Notification[] = [
+  {
+    notification_id: 'NOTIF_001',
+    user_id: 'USER_001',
+    type: 'BOOKING_CONFIRMED',
+    title: 'Réservation confirmée',
+    message: 'Votre billet Ouagadougou → Bobo-Dioulasso du 10 mars est confirmé.',
+    is_read: false,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    metadata: { trip_id: 'TRIP_001', ticket_id: 'TK_001' }
+  },
+  {
+    notification_id: 'NOTIF_002',
+    user_id: 'USER_001',
+    type: 'TRIP_REMINDER',
+    title: 'Rappel de voyage',
+    message: 'Votre départ est prévu demain à 07h00. Préparez-vous !',
+    is_read: false,
+    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    metadata: { trip_id: 'TRIP_001' }
+  },
+  {
+    notification_id: 'NOTIF_003',
+    user_id: 'USER_001',
+    type: 'PROMO',
+    title: 'Promotion -25%',
+    message: 'Air Canada Bus offre -25% sur Ouaga → Bobo ce week-end !',
+    is_read: true,
+    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    metadata: { operator_id: 'AIR_CANADA' }
+  },
+  {
+    notification_id: 'NOTIF_004',
+    user_id: 'USER_001',
+    type: 'PRICE_DROP',
+    title: 'Baisse de prix',
+    message: 'Le trajet Ouaga → Koudougou est maintenant à 3500 FCFA.',
+    is_read: true,
+    created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+    metadata: { trip_id: 'TRIP_003' }
+  },
+  {
+    notification_id: 'NOTIF_005',
+    user_id: 'USER_001',
+    type: 'TRIP_COMPLETED',
+    title: 'Voyage terminé',
+    message: 'Votre voyage Ouaga → Bobo est terminé. Notez votre expérience !',
+    is_read: true,
+    created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+    metadata: { trip_id: 'TRIP_001', ticket_id: 'TK_001' }
+  }
+];
 
 export interface AnalyticsEvent {
   event_id: string;
@@ -967,8 +1025,53 @@ export const TRIPS: Trip[] = [
  * Les services importent et filtrent ces données
  */
 
+// ============================================
+// MOCK PROMOTIONS (Données centralisées)
+// ============================================
+
+export const MOCK_PROMOTIONS: Promotion[] = [
+  {
+    promotion_id: 'PROMO_001',
+    operator_id: 'AIR_CANADA',
+    trip_id: undefined,
+    title: 'Réduction hiver 25%',
+    description: 'Réduction spéciale du 1er au 28 février 2026',
+    discount_type: 'PERCENTAGE',
+    discount_value: 25,
+    start_date: '2026-02-01',
+    end_date: '2026-02-28',
+    max_uses: 1000,
+    current_uses: 0,
+    status: 'active',
+    created_by: 'admin_air_canada',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    promotion_id: 'PROMO_002',
+    operator_id: 'SCOOT',
+    trip_id: 'TRIP_002',
+    title: 'Offre flash -15%',
+    description: 'Limite à 100 places seulement',
+    discount_type: 'PERCENTAGE',
+    discount_value: 15,
+    start_date: '2026-02-27',
+    end_date: '2026-03-05',
+    max_uses: 100,
+    current_uses: 0,
+    status: 'active',
+    created_by: 'admin_scoot',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+// ============================================
+// HELPER: Calculate promotion price
+// ============================================
+
 export const MOCK_TRIPS: Trip[] = [
-  // OUAGA → BOBO (Aller)
+  // OUAGA → BOBO (Aller) - ✅ Avec promotion Air Canada
   {
     trip_id: 'TRIP_001',
     operator_id: 'AIR_CANADA',
@@ -979,6 +1082,9 @@ export const MOCK_TRIPS: Trip[] = [
     arrival_time: '2025-11-04T13:00:00',
     duration_minutes: 360,
     base_price: 8500,
+    promotion: MOCK_PROMOTIONS[0],
+    promoted_price: 6375,
+    discount_percentage: 25,
     from_stop_id: 'OUAGA_CENTRE',
     to_stop_id: 'BOBO_CENTRE',
     from_stop_name: 'Ouagadougou',
@@ -1024,6 +1130,9 @@ export const MOCK_TRIPS: Trip[] = [
     arrival_time: '2025-11-04T15:00:00',
     duration_minutes: 360,
     base_price: 7000,
+    promotion: MOCK_PROMOTIONS[1],
+    promoted_price: 5950,
+    discount_percentage: 15,
     from_stop_id: 'OUAGA_CENTRE',
     to_stop_id: 'BOBO_CENTRE',
     from_stop_name: 'Ouagadougou',
@@ -1296,6 +1405,232 @@ export const MOCK_TICKETS: Ticket[] = [
     last_sync_at: '2025-10-10T11:30:00',
     can_cancel: false,
     can_transfer: false
+  },
+
+  // 🎁 BILLETS PROMO - Air Canada TRIP_001 (Promo 25%)
+  {
+    ticket_id: 'AC7H851941',
+    trip_id: 'TRIP_001',
+    booking_id: 'BKG_AC7H851941',
+    operator_id: 'AIR_CANADA',
+    operator_name: 'Air Canada Bus',
+    from_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_id: 'BOBO_CENTRE',
+    to_stop_name: 'Bobo-Dioulasso',
+    departure_time: '2025-11-04T07:05:00',
+    arrival_time: '2025-11-04T13:05:00',
+    passenger_name: 'TRAORE Mamadou',
+    passenger_phone: '+22671234567',
+    passenger_email: 'traore@example.com',
+    seat_number: 'A08',
+    status: 'AVAILABLE',
+    qr_code: 'QR_AC7H851941',
+    alphanumeric_code: 'AC7H851941',
+    price: 6375, // 8500 with 25% discount
+    currency: 'XOF',
+    payment_method: 'ORANGE_MONEY',
+    payment_id: 'PAY_AC7H851941',
+    created_at: '2025-10-22T14:30:00',
+    updated_at: '2025-10-22T14:30:00',
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: '2025-10-22T14:30:00',
+    can_cancel: true,
+    can_transfer: true
+  },
+
+  {
+    ticket_id: 'AC7H851942',
+    trip_id: 'TRIP_001',
+    booking_id: 'BKG_AC7H851942',
+    operator_id: 'AIR_CANADA',
+    operator_name: 'Air Canada Bus',
+    from_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_id: 'BOBO_CENTRE',
+    to_stop_name: 'Bobo-Dioulasso',
+    departure_time: '2025-11-04T07:05:00',
+    arrival_time: '2025-11-04T13:05:00',
+    passenger_name: 'DIALLO Fatoumata',
+    passenger_phone: '+22672345678',
+    passenger_email: 'diallo@example.com',
+    seat_number: 'A10',
+    status: 'HOLD',
+    qr_code: 'QR_AC7H851942',
+    alphanumeric_code: 'AC7H851942',
+    price: 6375, // 8500 with 25% discount
+    currency: 'XOF',
+    payment_method: 'MOOV_MONEY',
+    payment_id: 'PAY_AC7H851942',
+    created_at: '2025-10-22T15:00:00',
+    updated_at: '2025-10-22T15:00:00',
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: '2025-10-22T15:00:00',
+    can_cancel: true,
+    can_transfer: true
+  },
+
+  {
+    ticket_id: 'AC7H851943',
+    trip_id: 'TRIP_001',
+    booking_id: 'BKG_AC7H851943',
+    operator_id: 'AIR_CANADA',
+    operator_name: 'Air Canada Bus',
+    from_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_id: 'BOBO_CENTRE',
+    to_stop_name: 'Bobo-Dioulasso',
+    departure_time: '2025-11-04T07:05:00',
+    arrival_time: '2025-11-04T13:05:00',
+    passenger_name: 'KONE Ibrahim',
+    passenger_phone: '+22673456789',
+    passenger_email: 'kone@example.com',
+    seat_number: 'A15',
+    status: 'AVAILABLE',
+    qr_code: 'QR_AC7H851943',
+    alphanumeric_code: 'AC7H851943',
+    price: 6375, // 8500 with 25% discount
+    currency: 'XOF',
+    payment_method: 'CARTE_BANCAIRE',
+    payment_id: 'PAY_AC7H851943',
+    created_at: '2025-10-22T15:30:00',
+    updated_at: '2025-10-22T15:30:00',
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: '2025-10-22T15:30:00',
+    can_cancel: true,
+    can_transfer: true
+  },
+
+  {
+    ticket_id: 'AC7H851944',
+    trip_id: 'TRIP_001',
+    booking_id: 'BKG_AC7H851944',
+    operator_id: 'AIR_CANADA',
+    operator_name: 'Air Canada Bus',
+    from_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_id: 'BOBO_CENTRE',
+    to_stop_name: 'Bobo-Dioulasso',
+    departure_time: '2025-11-04T07:05:00',
+    arrival_time: '2025-11-04T13:05:00',
+    passenger_name: 'SAWADOGO Antoine',
+    passenger_phone: '+22674567890',
+    passenger_email: 'sawadogo@example.com',
+    seat_number: 'B02',
+    status: 'AVAILABLE',
+    qr_code: 'QR_AC7H851944',
+    alphanumeric_code: 'AC7H851944',
+    price: 6375, // 8500 with 25% discount
+    currency: 'XOF',
+    payment_method: 'ORANGE_MONEY',
+    payment_id: 'PAY_AC7H851944',
+    created_at: '2025-10-22T16:00:00',
+    updated_at: '2025-10-22T16:00:00',
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: '2025-10-22T16:00:00',
+    can_cancel: true,
+    can_transfer: true
+  },
+
+  // 🎁 BILLETS PROMO - Scoot TRIP_002 (Promo 15%)
+  {
+    ticket_id: 'SC9K1234AC',
+    trip_id: 'TRIP_002',
+    booking_id: 'BKG_SC9K1234AC',
+    operator_id: 'SCOOT',
+    operator_name: 'Scoot Express',
+    from_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_id: 'BOBO_CENTRE',
+    to_stop_name: 'Bobo-Dioulasso',
+    departure_time: '2025-11-04T09:05:00',
+    arrival_time: '2025-11-04T14:55:00',
+    passenger_name: 'OUEDRAOGO Sophie',
+    passenger_phone: '+22675678901',
+    passenger_email: 'ouedraogo@example.com',
+    seat_number: 'A05',
+    status: 'AVAILABLE',
+    qr_code: 'QR_SC9K1234AC',
+    alphanumeric_code: 'SC9K1234AC',
+    price: 5950, // 7000 with 15% discount
+    currency: 'XOF',
+    payment_method: 'MOOV_MONEY',
+    payment_id: 'PAY_SC9K1234AC',
+    created_at: '2025-10-22T16:30:00',
+    updated_at: '2025-10-22T16:30:00',
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: '2025-10-22T16:30:00',
+    can_cancel: true,
+    can_transfer: true
+  },
+
+  {
+    ticket_id: 'SC9K1234AD',
+    trip_id: 'TRIP_002',
+    booking_id: 'BKG_SC9K1234AD',
+    operator_id: 'SCOOT',
+    operator_name: 'Scoot Express',
+    from_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_id: 'BOBO_CENTRE',
+    to_stop_name: 'Bobo-Dioulasso',
+    departure_time: '2025-11-04T09:05:00',
+    arrival_time: '2025-11-04T14:55:00',
+    passenger_name: 'GNING Charles',
+    passenger_phone: '+22676789012',
+    passenger_email: 'gning@example.com',
+    seat_number: 'A08',
+    status: 'AVAILABLE',
+    qr_code: 'QR_SC9K1234AD',
+    alphanumeric_code: 'SC9K1234AD',
+    price: 5950, // 7000 with 15% discount
+    currency: 'XOF',
+    payment_method: 'ORANGE_MONEY',
+    payment_id: 'PAY_SC9K1234AD',
+    created_at: '2025-10-22T17:00:00',
+    updated_at: '2025-10-22T17:00:00',
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: '2025-10-22T17:00:00',
+    can_cancel: true,
+    can_transfer: true
+  },
+
+  {
+    ticket_id: 'SC9K1234AE',
+    trip_id: 'TRIP_002',
+    booking_id: 'BKG_SC9K1234AE',
+    operator_id: 'SCOOT',
+    operator_name: 'Scoot Express',
+    from_stop_id: 'OUAGA_CENTRE',
+    from_stop_name: 'Ouagadougou',
+    to_stop_id: 'BOBO_CENTRE',
+    to_stop_name: 'Bobo-Dioulasso',
+    departure_time: '2025-11-04T09:05:00',
+    arrival_time: '2025-11-04T14:55:00',
+    passenger_name: 'ZERBO Karim',
+    passenger_phone: '+22677890123',
+    passenger_email: 'zerbo@example.com',
+    seat_number: 'B03',
+    status: 'HOLD',
+    qr_code: 'QR_SC9K1234AE',
+    alphanumeric_code: 'SC9K1234AE',
+    price: 5950, // 7000 with 15% discount
+    currency: 'XOF',
+    payment_method: 'CARTE_BANCAIRE',
+    payment_id: 'PAY_SC9K1234AE',
+    created_at: '2025-10-22T17:30:00',
+    updated_at: '2025-10-22T17:30:00',
+    holder_downloaded: false,
+    holder_presented: false,
+    last_sync_at: '2025-10-22T17:30:00',
+    can_cancel: true,
+    can_transfer: true
   }
 ];
 

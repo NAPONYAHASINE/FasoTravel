@@ -16,7 +16,6 @@
 import { memo } from 'react';
 import { Clock, MapPin, Users, Wifi, Wind } from 'lucide-react';
 import { Trip } from '../data/models';
-import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { AnimatedCard } from './AnimatedCard';
 import { AnimatedButton } from './AnimatedButton';
@@ -139,7 +138,21 @@ const TripCardComponent = ({ trip, onSelect }: TripCardProps) => {
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <div className="text-left sm:text-right flex-1 sm:flex-initial">
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">À partir de</p>
-            <p className="text-base sm:text-lg md:text-xl text-green-600 dark:text-green-400">{trip.base_price.toLocaleString()} FCFA</p>
+            {trip.promoted_price && trip.promoted_price < trip.base_price ? (
+              // ✅ Afficher avec réduction
+              <div className="flex gap-2 items-center">
+                <p className="text-xs sm:text-sm line-through text-gray-400 dark:text-gray-500">{trip.base_price.toLocaleString()} FCFA</p>
+                <p className="text-base sm:text-lg md:text-xl text-green-600 dark:text-green-400 font-semibold">{trip.promoted_price.toLocaleString()} FCFA</p>
+                {trip.discount_percentage && (
+                  <span className="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full font-semibold">
+                    -{trip.discount_percentage}%
+                  </span>
+                )}
+              </div>
+            ) : (
+              // Afficher prix normal
+              <p className="text-base sm:text-lg md:text-xl text-green-600 dark:text-green-400">{trip.base_price.toLocaleString()} FCFA</p>
+            )}
           </div>
           <AnimatedButton
             onClick={(e) => {

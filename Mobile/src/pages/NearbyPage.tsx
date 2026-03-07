@@ -48,10 +48,10 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
   const { tickets } = useMyTickets();
   const embarkedTicket = tickets.find(t => t.status === 'EMBARKED') || null;
   const autoTripId = trackingTripId || embarkedTicket?.trip_id || null;
-  const { location: vehicleLocation, isLoading: trackingLoading, error: trackingError } = useVehicleLiveTracking(autoTripId, !!autoTripId);
+  const { location: vehicleLocation } = useVehicleLiveTracking(autoTripId, !!autoTripId);
 
   // Fetch nearby stations from API
-  const { nearbyStations, isLoading: stationsLoading, error: stationsError } = useNearbyStations(
+  const { nearbyStations, isLoading: stationsLoading } = useNearbyStations(
     userPosition?.lat || null,
     userPosition?.lon || null,
     5 // 5km radius
@@ -62,7 +62,7 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
   const { shareLocation, isLoading: sharingLocation, error: locationShareError } = useShareLocation();
 
   // Emit location when EMBARKED (collaboratif)
-  const { isLoading: isEmittingLocation, error: emitError } = useEmitLocation(
+  useEmitLocation(
     embarkedTicket?.status === 'EMBARKED' ? embarkedTicket?.ticket_id : null,
     autoTripId,
     embarkedTicket?.status === 'EMBARKED' ? 'in_progress' : null,

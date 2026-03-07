@@ -89,10 +89,11 @@ export function TripDetailPage({ tripId, isRoundTrip = false, returnDate, passen
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
       <motion.div 
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6"
+        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 sticky top-0 z-10"
+        style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -124,7 +125,7 @@ export function TripDetailPage({ tripId, isRoundTrip = false, returnDate, passen
 
       {/* Content */}
       <motion.div 
-        className="px-6 py-6 pb-24"
+        className="px-4 sm:px-6 py-6 pb-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -214,7 +215,7 @@ export function TripDetailPage({ tripId, isRoundTrip = false, returnDate, passen
               </div>
 
               {/* Intermediate stops */}
-              {trip.segments.slice(0, -1).map((segment, index) => (
+              {trip.segments.slice(0, -1).map((segment, _index) => (
                 <div key={segment.segment_id} className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className="w-3 h-3 rounded-full bg-amber-400 dark:bg-amber-500"></div>

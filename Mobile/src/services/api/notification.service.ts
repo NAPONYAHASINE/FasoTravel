@@ -1,4 +1,4 @@
-import { storageService } from '../storage/localStorage.service';
+﻿import { storageService } from '../storage/localStorage.service';
 import { apiClient } from './apiClient';
 import { isDevelopment } from '../../lib/config';
 import type { Notification } from '../../data/models';
@@ -33,11 +33,11 @@ class NotificationService {
   }
 
   /**
-   * Récupère toutes les notifications
+   * RÃ©cupÃ¨re toutes les notifications
    */
   async getNotifications(): Promise<Notification[]> {
     try {
-      if (isDevelopment()) {
+      if (isDevelopment) {
         return this.mockGetNotifications();
       }
 
@@ -52,11 +52,11 @@ class NotificationService {
   }
 
   /**
-   * Récupère une notification spécifique
+   * RÃ©cupÃ¨re une notification spÃ©cifique
    */
   async getNotification(id: string): Promise<Notification | null> {
     try {
-      if (isDevelopment()) {
+      if (isDevelopment) {
         return this.mockGetNotification(id);
       }
 
@@ -70,11 +70,11 @@ class NotificationService {
   }
 
   /**
-   * Crée une nouvelle notification (admin/backend only)
+   * CrÃ©e une nouvelle notification (admin/backend only)
    */
   async createNotification(params: CreateNotificationParams): Promise<Notification | null> {
     try {
-      if (isDevelopment()) {
+      if (isDevelopment) {
         return this.mockCreateNotification(params);
       }
 
@@ -92,7 +92,7 @@ class NotificationService {
    */
   async markAsRead(id: string): Promise<boolean> {
     try {
-      if (isDevelopment()) {
+      if (isDevelopment) {
         return this.mockMarkAsRead(id);
       }
 
@@ -110,7 +110,7 @@ class NotificationService {
    */
   async markAllAsRead(): Promise<boolean> {
     try {
-      if (isDevelopment()) {
+      if (isDevelopment) {
         return this.mockMarkAllAsRead();
       }
 
@@ -128,7 +128,7 @@ class NotificationService {
    */
   async deleteNotification(id: string): Promise<boolean> {
     try {
-      if (isDevelopment()) {
+      if (isDevelopment) {
         return this.mockDeleteNotification(id);
       }
 
@@ -142,11 +142,11 @@ class NotificationService {
   }
 
   /**
-   * Récupère le nombre de notifications non lues
+   * RÃ©cupÃ¨re le nombre de notifications non lues
    */
   async getUnreadCount(): Promise<number> {
     try {
-      if (isDevelopment()) {
+      if (isDevelopment) {
         const notifications = this.mockGetNotifications();
         return notifications.filter(n => !n.is_read).length;
       }

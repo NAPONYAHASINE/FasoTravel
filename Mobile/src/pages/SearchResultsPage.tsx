@@ -9,10 +9,9 @@ import type { Page } from '../App';
  * - Event: search_result_viewed, filter_applied, trip_selected
  */
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Filter, SlidersHorizontal, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { TripCard } from '../components/TripCard';
-import { Trip } from '../data/models';
 import { SearchParams } from './HomePage';
 import { Button } from '../components/ui/button';
 import { BookingStepIndicator } from '../components/BookingStepIndicator';
@@ -36,6 +35,7 @@ interface SearchResultsPageProps {
 export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchResultsPageProps) {
   const [sortBy, setSortBy] = useState<'price' | 'time' | 'duration'>('time');
   const [showFilters, setShowFilters] = useState(false);
+  const [showPromosOnly, setShowPromosOnly] = useState(false);
   
   const isReturnSelection = searchParams.isReturnSelection || false;
   const filterOperator = searchParams.filterOperator;
@@ -48,11 +48,20 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
     date: searchParams.date
   });
 
-  // Filter by operator if filterOperator is specified
-  // This applies to both: return selection (same operator) AND operator detail page search
-  const filteredTrips = filterOperator
+  // ✅ Filter by operator if filterOperator is specified
+  let filteredTrips = filterOperator
     ? trips.filter(trip => trip.operator_name === filterOperator)
     : trips;
+
+  // ✅ Filter by promotions if showPromosOnly is true
+  if (showPromosOnly) {
+    filteredTrips = filteredTrips.filter(trip => trip.promotion !== undefined);
+  }
+
+  // Handle promo_id in search params (from StoriesCircle navigation)
+  if (searchParams.promo_id) {
+    filteredTrips = filteredTrips.filter(trip => trip.promotion?.promotion_id === searchParams.promo_id);
+  }
 
   // Sort trips
   const sortedTrips = [...filteredTrips].sort((a, b) => {
@@ -87,20 +96,21 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Step Indicator */}
-      {isReturnSelection ? (
-        <BookingStepIndicator currentStep="return-seat" completedSteps={['outbound-seat']} isRoundTrip={true} />
-      ) : (
-        <BookingStepIndicator currentStep="search" />
-      )}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+      <div className="sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        {/* Step Indicator */}
+        {isReturnSelection ? (
+          <BookingStepIndicator currentStep="return-seat" completedSteps={['outbound-seat']} isRoundTrip={true} />
+        ) : (
+          <BookingStepIndicator currentStep="search" />
+        )}
 
-      {/* Header */}
-      <motion.div 
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+        {/* Header */}
+        <motion.div 
+          className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
         <div className="max-w-4xl mx-auto">
           <motion.button
             onClick={() => {
@@ -169,6 +179,24 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
                 size="sm"
                 onClick={() => {
                   feedback.tap();
+                  setShowPromosOnly(!showPromosOnly);
+                }}
+                className={`${
+                  showPromosOnly 
+                    ? 'bg-white text-green-600' 
+                    : 'bg-white/20 border-white/40 text-white hover:bg-white/30'
+                }`}
+              >
+                🎁 Promos
+              </Button>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  feedback.tap();
                   setSortBy('price');
                 }}
                 className={`${
@@ -218,11 +246,12 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
             </motion.div>
           </motion.div>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* Results */}
       <motion.div 
-        className="px-6 py-6 pb-24"
+        className="px-4 sm:px-6 py-6 pb-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}

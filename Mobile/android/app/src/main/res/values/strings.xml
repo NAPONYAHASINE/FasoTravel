@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FasoTravel</string>
+    <string name="title_activity_main">FasoTravel</string>
+    <string name="package_name">com.fasotravel.app</string>
+    <string name="custom_url_scheme">com.fasotravel.app</string>
+</resources>

@@ -130,7 +130,7 @@ export function ProgressBar({ progress }: { progress: number }) {
       aria-label={`Progression: ${normalizedProgress}%`}
     >
       <div
-        className="h-full bg-gradient-to-r from-green-600 to-green-500 transition-all duration-500 ease-out"
+        className="h-full bg-gradient-to-r from-green-600 to-green-500 transition-all duration-500 ease-out progress-bar-fill"
         style={{ width: `${normalizedProgress}%` }}
       />
     </div>

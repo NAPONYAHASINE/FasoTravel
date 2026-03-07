@@ -10,7 +10,6 @@ import type { Page } from '../App';
 
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '../components/ui/button';
 import { motion } from 'motion/react';
 import { feedback } from '../lib/interactions';
 
@@ -21,7 +20,7 @@ interface TermsConditionsPageProps {
 
 type TabType = 'terms' | 'privacy';
 
-export function TermsConditionsPage({ onNavigate, onBack }: TermsConditionsPageProps) {
+export function TermsConditionsPage({ onNavigate: _onNavigate, onBack }: TermsConditionsPageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('terms');
 
   const handleTabChange = (tab: TabType) => {
@@ -30,10 +29,11 @@ export function TermsConditionsPage({ onNavigate, onBack }: TermsConditionsPageP
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
       <motion.div
-        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-6 py-6"
+        className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 sticky top-0 z-10"
+        style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -70,7 +70,7 @@ export function TermsConditionsPage({ onNavigate, onBack }: TermsConditionsPageP
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        <div className="max-w-4xl mx-auto px-6 py-0">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-0">
           <div className="flex gap-0">
             <button
               onClick={() => handleTabChange('terms')}
@@ -98,7 +98,7 @@ export function TermsConditionsPage({ onNavigate, onBack }: TermsConditionsPageP
 
       {/* Content */}
       <motion.div
-        className="px-6 py-8 pb-24"
+        className="px-4 sm:px-6 py-8 pb-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
