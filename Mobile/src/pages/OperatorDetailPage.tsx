@@ -163,8 +163,8 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8 overflow-x-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 pt-6 pb-24 sm:pb-32 shadow-lg sticky top-0 z-10" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
+      {/* Sticky Header (compact) */}
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 pt-6 pb-6 shadow-lg sticky top-0 z-30" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}
@@ -229,8 +229,11 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
         </div>
       </div>
 
+      {/* Spacer */}
+      <div className="h-4" />
+
       {/* Quick Search Card */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-20 mb-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6">
           <h2 className="text-lg mb-4 text-gray-900 dark:text-white">
             Réserver avec {operator.name}

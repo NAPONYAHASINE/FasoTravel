@@ -26,8 +26,9 @@
  */
 
 // Configuration
+import { isDevelopment as _isDevelopmentFn } from '../shared/config/deployment';
+const isDevelopment = _isDevelopmentFn();
 const _meta: any = typeof import.meta !== 'undefined' ? (import.meta as any) : {};
-const isDevelopment = (_meta.env && _meta.env.MODE === 'development') || true; // Toujours en dev pour l'instant
 const BASE_URL = (_meta.env && _meta.env.VITE_API_URL) || 'http://localhost:3000/api';
 
 // Import canonical types from models to avoid duplicate/contradictory interfaces

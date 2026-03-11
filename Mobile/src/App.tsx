@@ -108,6 +108,7 @@ interface User {
   phone: string;
   isGuest: boolean;
   created_at?: string;
+  loginIdentifier?: string;
 }
 
 interface AppState {
@@ -263,7 +264,7 @@ export default function App() {
       ...prev,
       currentPage: 'otp-verification',
       otpData: {
-        identifier: user.email || user.phone || '',
+        identifier: user.loginIdentifier || user.phone || user.email || '',
         mode: 'auth',
         returnPage: 'home'
       },

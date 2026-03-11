@@ -20,7 +20,7 @@ import bgDay from 'figma:asset/bcca83482c8b3b02fad6bfe11da57e59506831e5.png';
 import bgNight from 'figma:asset/b9ee1e83da37e8d99fdb6bc684feefadda356498.png';
 
 interface AuthPageProps {
-  onAuth: (user: { name: string; email: string; phone: string; isGuest: boolean }) => void;
+  onAuth: (user: { name: string; email: string; phone: string; isGuest: boolean; loginIdentifier?: string }) => void;
   onBack: () => void;
   onNavigate?: (page: Page) => void;
 }
@@ -121,7 +121,8 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
         name: 'NAPON Yahasine',
         email: loginMethod === 'email' ? loginEmail : 'yahasine@transportbf.bf',
         phone: loginMethod === 'phone' ? loginPhone : '70123456',
-        isGuest: false
+        isGuest: false,
+        loginIdentifier: loginMethod === 'phone' ? loginPhone : loginEmail
       };
       
       // Simulate API call (remove when connecting real API)
@@ -183,7 +184,8 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
         name: registerName,
         email: registerEmail || `${registerPhone.replace(/\s/g, '')}@transportbf.bf`,
         phone: registerPhone,
-        isGuest: false
+        isGuest: false,
+        loginIdentifier: registerPhone
       };
       
       // Simulate API call (remove when connecting real API)

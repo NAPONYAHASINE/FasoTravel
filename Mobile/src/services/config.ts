@@ -4,21 +4,21 @@
  * ✅ Coordinée avec Societe
  */
 
+import { isDevelopment as _isDev } from '../shared/config/deployment';
+
 // ============================================
-// ENVIRONMENT
+// ENVIRONMENT (ré-exporté depuis deployment.ts)
 // ============================================
 
-const _meta: any = typeof import.meta !== 'undefined' ? (import.meta as any) : {};
-
-export const isDevelopment = () => {
-  return (_meta.env && _meta.env.MODE === 'development') || false;
-};
+export const isDevelopment = _isDev;
 
 export const isProduction = () => !isDevelopment();
 
 // ============================================
 // API CONFIGURATION
 // ============================================
+
+const _meta: any = typeof import.meta !== 'undefined' ? (import.meta as any) : {};
 
 export const API_CONFIG = {
   /** Base URL de l'API backend */

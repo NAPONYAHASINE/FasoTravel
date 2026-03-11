@@ -1,0 +1,25 @@
+{
+  "name": "@fasotravel/shared",
+  "version": "1.0.0",
+  "description": "Shared code between Mobile and Societe apps - FasoTravel",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "fasotravel",
+    "shared",
+    "types",
+    "api-client"
+  ],
+  "author": "FasoTravel Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
