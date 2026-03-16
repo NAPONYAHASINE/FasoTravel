@@ -16,7 +16,7 @@ import { SeatMap } from '../components/SeatMap';
 import { TTLTimer } from '../components/TTLTimer';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { TRIPS } from '../data/models';
+import { MOCK_TRIPS } from '../data/models';
 import { BookingStepIndicator } from '../components/BookingStepIndicator';
 import { motion } from 'motion/react';
 import { feedback } from '../lib/interactions';
@@ -58,7 +58,35 @@ export function SeatSelectionPage({
   onBack 
 }: SeatSelectionPageProps) {
   const isReturnLeg = !!outboundTripData;
-  const trip = TRIPS.find(t => t.trip_id === tripId);
+  const trip = MOCK_TRIPS.find(t => t.trip_id === tripId);
+
+  const resolvedUserName = (() => {
+    const fromProp = (userName || '').trim();
+    if (fromProp) return fromProp;
+
+    try {
+      const raw = localStorage.getItem('auth_user');
+      if (!raw) return '';
+      const parsed = JSON.parse(raw);
+      return (parsed.name || [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') || '').trim();
+    } catch {
+      return '';
+    }
+  })();
+
+  const resolvedUserPhone = (() => {
+    const fromProp = (userPhone || '').trim();
+    if (fromProp) return fromProp;
+
+    try {
+      const raw = localStorage.getItem('auth_user');
+      if (!raw) return '';
+      const parsed = JSON.parse(raw);
+      return (parsed.phone || '').trim();
+    } catch {
+      return '';
+    }
+  })();
   
   // ✅ BACKEND READY: Hook pour récupérer sièges + layout
   const { seats: occupiedSeats, layout: seatLayout } = useSeats(tripId);
@@ -91,11 +119,13 @@ export function SeatSelectionPage({
   const handleBookingForChoice = (choice: 'self' | 'other') => {
     feedback.tap();
     const updatedPassengers = [...passengersInfo];
+    const autoName = choice === 'self' ? resolvedUserName : '';
+    const autoPhone = choice === 'self' ? resolvedUserPhone : '';
     updatedPassengers[currentPassengerIndex] = {
       ...updatedPassengers[currentPassengerIndex],
       bookingFor: choice,
-      name: choice === 'self' ? (userName || '') : '',
-      phone: choice === 'self' ? (userPhone || '') : ''
+      name: autoName,
+      phone: autoPhone
     };
     setPassengersInfo(updatedPassengers);
 
@@ -186,8 +216,19 @@ export function SeatSelectionPage({
       return;
     }
 
+    const normalizedPassengersInfo = passengersInfo.map((passenger) => {
+      if (passenger.bookingFor === 'self' && !passenger.name.trim()) {
+        return {
+          ...passenger,
+          name: resolvedUserName || 'Passager FasoTravel',
+          phone: passenger.phone || resolvedUserPhone,
+        };
+      }
+      return passenger;
+    });
+
     for (let i = 0; i < passengers; i++) {
-      const passenger = passengersInfo[i];
+      const passenger = normalizedPassengersInfo[i];
       if (!passenger.name) {
         feedback.error();
         alert(`Veuillez renseigner le nom du passager ${i + 1}`);
@@ -223,7 +264,7 @@ export function SeatSelectionPage({
           outbound: isReturnLeg && outboundTripData ? {
             trip_id: outboundTripData.tripId,
             seats: outboundTripData.seats,
-            trip: TRIPS.find(t => t.trip_id === outboundTripData.tripId)
+            trip: MOCK_TRIPS.find(t => t.trip_id === outboundTripData.tripId)
           } : {
             trip_id: tripId,
             seats: validSeats,
@@ -234,10 +275,15 @@ export function SeatSelectionPage({
             seats: validSeats,
             trip: trip
           } : null,
-          passengers: passengersInfo,
-          total_price: isReturnLeg && outboundTripData 
-            ? (TRIPS.find(t => t.trip_id === outboundTripData.tripId)?.base_price || 0) * passengers + trip.base_price * passengers
-            : trip.base_price * passengers,
+          passengers: normalizedPassengersInfo,
+          total_price: (() => {
+            const getEffectivePrice = (t: typeof trip) => t.promoted_price ?? t.base_price;
+            if (isReturnLeg && outboundTripData) {
+              const outboundTrip = MOCK_TRIPS.find(t => t.trip_id === outboundTripData.tripId);
+              return (getEffectivePrice(outboundTrip || trip) * passengers) + (getEffectivePrice(trip) * passengers);
+            }
+            return getEffectivePrice(trip) * passengers;
+          })(),
           hold_id: `HOLD_${Date.now()}`,
           expires_at: holdExpiresAt,
           is_round_trip: isRoundTrip || isReturnLeg
@@ -271,7 +317,7 @@ export function SeatSelectionPage({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <div className="sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="sticky top-0 z-10 pt-safe-area">
         <BookingStepIndicator 
           currentStep={currentBookingStep} 
           completedSteps={completedBookingSteps}
@@ -526,9 +572,20 @@ export function SeatSelectionPage({
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-600 dark:text-gray-400">Prix</p>
-                      <p className="text-2xl text-gray-900 dark:text-white">
-                        {trip.base_price.toLocaleString()} FCFA
-                      </p>
+                      {trip.promoted_price && trip.promoted_price < trip.base_price ? (
+                        <>
+                          <p className="text-sm line-through text-gray-400 dark:text-gray-500">
+                            {trip.base_price.toLocaleString()} FCFA
+                          </p>
+                          <p className="text-2xl text-green-600 dark:text-green-400">
+                            {trip.promoted_price.toLocaleString()} FCFA
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-2xl text-gray-900 dark:text-white">
+                          {trip.base_price.toLocaleString()} FCFA
+                        </p>
+                      )}
                     </div>
                   </div>
                   
@@ -551,7 +608,7 @@ export function SeatSelectionPage({
                           Total ce trajet
                         </span>
                         <span className="text-xl text-gray-900 dark:text-white">
-                          {(trip.base_price * selectedSeats.filter(s => s !== '').length).toLocaleString()} FCFA
+                          {((trip.promoted_price ?? trip.base_price) * selectedSeats.filter(s => s !== '').length).toLocaleString()} FCFA
                         </span>
                       </div>
                       {(isRoundTrip || isReturnLeg) && (
@@ -561,7 +618,7 @@ export function SeatSelectionPage({
                           </span>
                           <span className="text-green-600 dark:text-green-400">
                             {isReturnLeg && outboundTripData
-                              ? ((TRIPS.find(t => t.trip_id === outboundTripData.tripId)?.base_price || 0) * passengers + trip.base_price * passengers).toLocaleString() + ' FCFA'
+                              ? (((MOCK_TRIPS.find(t => t.trip_id === outboundTripData.tripId)?.promoted_price ?? MOCK_TRIPS.find(t => t.trip_id === outboundTripData.tripId)?.base_price ?? 0) * passengers) + ((trip.promoted_price ?? trip.base_price) * passengers)).toLocaleString() + ' FCFA'
                               : '—'
                             }
                           </span>

@@ -83,7 +83,7 @@ class PolicyService {
       const response = await apiService.get<OperatorPolicy[]>(
         ENDPOINTS.policies.operatorList()
       );
-      cachedOperatorPolicies = response as OperatorPolicy[];
+      cachedOperatorPolicies = response.data!;
       cacheTimestamp = Date.now();
       return { success: true, data: cachedOperatorPolicies };
     } catch (err) {
@@ -123,7 +123,7 @@ class PolicyService {
         { complianceStatus: status, complianceNote: note }
       );
       invalidateCache();
-      return { success: true, data: response as OperatorPolicy };
+      return { success: true, data: response.data! };
     } catch (err) {
       return {
         success: false,
@@ -154,7 +154,7 @@ class PolicyService {
         ENDPOINTS.policies.operatorToggleStatus(policyId)
       );
       invalidateCache();
-      return { success: true, data: response as OperatorPolicy };
+      return { success: true, data: response.data! };
     } catch (err) {
       return {
         success: false,
@@ -195,7 +195,7 @@ class PolicyService {
         data
       );
       invalidateCache();
-      return { success: true, data: response as OperatorPolicy };
+      return { success: true, data: response.data! };
     } catch (err) {
       return {
         success: false,
@@ -253,7 +253,7 @@ class PolicyService {
       const response = await apiService.get<PlatformPolicy[]>(
         ENDPOINTS.policies.platformList()
       );
-      cachedPlatformPolicies = response as PlatformPolicy[];
+      cachedPlatformPolicies = response.data!;
       cacheTimestamp = Date.now();
       return { success: true, data: cachedPlatformPolicies };
     } catch (err) {
@@ -307,7 +307,7 @@ class PolicyService {
         ? await apiService.put<PlatformPolicy>(ENDPOINTS.policies.platformUpdate(data.id!), data)
         : await apiService.post<PlatformPolicy>(ENDPOINTS.policies.platformCreate(), data);
       invalidateCache();
-      return { success: true, data: response as PlatformPolicy };
+      return { success: true, data: response.data! };
     } catch (err) {
       return {
         success: false,
@@ -344,7 +344,7 @@ class PolicyService {
         ENDPOINTS.policies.platformPublish(policyId)
       );
       invalidateCache();
-      return { success: true, data: response as PlatformPolicy };
+      return { success: true, data: response.data! };
     } catch (err) {
       return {
         success: false,
@@ -375,7 +375,7 @@ class PolicyService {
         ENDPOINTS.policies.platformArchive(policyId)
       );
       invalidateCache();
-      return { success: true, data: response as PlatformPolicy };
+      return { success: true, data: response.data! };
     } catch (err) {
       return {
         success: false,

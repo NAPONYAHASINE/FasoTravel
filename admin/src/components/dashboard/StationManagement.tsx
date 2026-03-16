@@ -21,7 +21,6 @@ import { formatNumber, formatCurrency } from '../../lib/utils';
 import { CreateStationModal } from '../modals/CreateStationModal';
 import { useStations, useStationStatsMap } from '../../hooks/useStations';
 import { StationStatusUtils } from '../../lib/stationStatusUtils';
-import type { Station } from '../../types';
 
 /**
  * StationManagement - Admin Version
@@ -35,7 +34,7 @@ export function StationManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // 🔥 HOOKS BACKEND-READY - Toute la logique métier externalisée
-  const { stationStats, globalStats, loading, error } = useStations({ loadGlobalStats: true });
+  const { stationStats: _stationStats, globalStats, loading: _loading, error: _error } = useStations({ loadGlobalStats: true });
   const statsMap = useStationStatsMap();
 
   const handleCreateStation = (data: any) => {
@@ -165,6 +164,7 @@ export function StationManagement() {
             />
           </div>
           <select
+            aria-label="Filtrer par statut"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
             className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
@@ -175,15 +175,11 @@ export function StationManagement() {
           </select>
         </div>
       }
-      actions={
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-3 rounded-lg bg-green-200 dark:bg-green-900/30 text-green-900 dark:text-green-300 hover:bg-green-300 dark:hover:bg-green-900/50 border border-green-400 dark:border-green-700 transition-colors font-medium text-sm"
-        >
-          <Plus size={16} className="inline mr-2" />
-          Ajouter une gare
-        </button>
-      }
+      actions={[{
+        label: 'Ajouter une gare',
+        icon: Plus,
+        onClick: () => setShowCreateModal(true),
+      }]}
     >
       {/* Stations Grid */}
       <div className={PAGE_CLASSES.contentGrid}>

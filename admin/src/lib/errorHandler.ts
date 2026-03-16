@@ -279,7 +279,7 @@ function reportErrorToSentry(error: AppError) {
   logger.info('[Sentry] Error would be reported:', error.message);
 }
 
-function getSentryLevel(severity: ErrorSeverity): 'error' | 'warning' | 'info' {
+export function getSentryLevel(severity: ErrorSeverity): 'error' | 'warning' | 'info' {
   switch (severity) {
     case ErrorSeverity.CRITICAL:
     case ErrorSeverity.HIGH:

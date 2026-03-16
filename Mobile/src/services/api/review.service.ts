@@ -117,7 +117,7 @@ class ReviewService {
         rating: 3 + Math.floor(Math.random() * 3),
         comment: comments[i],
         createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-        status: 'APPROVED',
+        status: 'approved',
       });
     }
 
@@ -133,7 +133,7 @@ class ReviewService {
       rating: params.rating,
       comment: params.comment,
       createdAt: new Date().toISOString(),
-      status: 'PENDING',
+      status: 'pending',
     };
 
     const reviews = storageService.get<Review[]>('user_reviews') || [];

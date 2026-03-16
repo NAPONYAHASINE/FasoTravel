@@ -35,7 +35,7 @@ export default function TicketSalePage() {
   const [currentName, setCurrentName] = useState('');
   const [currentPhone, setCurrentPhone] = useState('');
   
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mobile_money' | 'card'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card'>('cash');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -208,7 +208,7 @@ export default function TicketSalePage() {
           commission: undefined,
           paymentMethod: paymentMethod,
           salesChannel: 'counter',
-          status: 'valid',
+          status: 'active',
           purchaseDate: getCurrentDate().toISOString(),
           cashierId: user.id,
           cashierName: user.name,
@@ -537,7 +537,7 @@ export default function TicketSalePage() {
                       <div className="grid grid-cols-1 gap-2">
                         {[
                           { value: 'cash', label: 'Espèces', icon: CreditCard },
-                          { value: 'mobile_money', label: 'Mobile Money', icon: CreditCard },
+                          { value: 'orange_money', label: 'Orange Money', icon: CreditCard },
                           { value: 'card', label: 'Carte bancaire', icon: CreditCard },
                         ].map((method: any) => (
                           <button

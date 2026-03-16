@@ -23,10 +23,10 @@ export function useOperatorStats(companies: TransportCompany[]) {
 
 export function useTicketStats(tickets: Ticket[]) {
   return useMemo(() => {
-    const actif = tickets.filter(t => t.status === 'ACTIF').length;
-    const embarque = tickets.filter(t => t.status === 'EMBARQUÉ').length;
-    const expire = tickets.filter(t => t.status === 'EXPIRÉ').length;
-    const annule = tickets.filter(t => t.status === 'ANNULÉ').length;
+    const actif = tickets.filter(t => t.status === 'active').length;
+    const embarque = tickets.filter(t => t.status === 'boarded').length;
+    const expire = tickets.filter(t => t.status === 'expired').length;
+    const annule = tickets.filter(t => t.status === 'cancelled').length;
 
     return {
       total: tickets.length,
@@ -36,10 +36,10 @@ export function useTicketStats(tickets: Ticket[]) {
       annule,
       active: actif + embarque,
       by_status: {
-        ACTIF: actif,
-        EMBARQUÉ: embarque,
-        EXPIRÉ: expire,
-        ANNULÉ: annule
+        active: actif,
+        boarded: embarque,
+        expired: expire,
+        cancelled: annule
       }
     };
   }, [tickets]);

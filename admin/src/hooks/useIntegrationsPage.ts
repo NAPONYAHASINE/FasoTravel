@@ -19,7 +19,7 @@ import { infobipService } from '../services/infobipService';
 import { awsStorageService } from '../services/awsStorageService';
 import { alertsService } from '../services/alertsService';
 import type {
-  Integration, FeatureFlag,
+  Integration,
   IntegrationAlertRule, IntegrationAlert,
   InfobipAccountInfo, AwsHealthReport,
 } from '../shared/types/standardized';

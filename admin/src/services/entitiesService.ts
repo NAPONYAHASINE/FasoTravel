@@ -1387,6 +1387,16 @@ class OperatorServicesService {
     }
     return await apiService.get('/admin/operator-services');
   }
+  async getById(id: string): Promise<ApiResponse<OperatorService>> {
+    if (AppConfig.isMock) {
+      const service = this.mockData.find(s => s.id === id);
+      if (service) {
+        return { success: true, data: service };
+      }
+      return { success: false, error: 'Service non trouvé' };
+    }
+    return await apiService.get(`/admin/operator-services/${id}`);
+  }
   async create(data: Partial<OperatorService>): Promise<ApiResponse<OperatorService>> {
     if (AppConfig.isMock) {
       const newService: OperatorService = {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { 
   LayoutDashboard, 
@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   FileText,
   Users,
-  UserCheck,
   Ticket,
   Calendar,
   CreditCard,
@@ -235,7 +234,7 @@ export function Sidebar() {
                 <span className="text-white text-lg">👤</span>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">{currentUser?.full_name || 'Admin User'}</div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">{currentUser?.fullName || currentUser?.name || 'Admin User'}</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{currentUser?.email || 'admin@fasotravel.bf'}</div>
               </div>
             </div>

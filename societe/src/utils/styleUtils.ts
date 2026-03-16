@@ -49,10 +49,12 @@ export const getTripStatusBadgeInfo = (status: Trip['status']): { color: string;
  */
 export const getTicketStatusBadgeClass = (status: Ticket['status']): string => {
   switch (status) {
-    case 'valid':
+    case 'active':
       return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-    case 'used':
+    case 'boarded':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+    case 'expired':
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
     case 'refunded':
       return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
     case 'cancelled':
@@ -83,7 +85,7 @@ export const getPaymentMethodBadgeClass = (method: Ticket['paymentMethod']): str
   switch (method) {
     case 'cash':
       return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-    case 'mobile_money':
+    case 'orange_money':
       return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400';
     case 'card':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';

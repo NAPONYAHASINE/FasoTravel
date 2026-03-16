@@ -11,10 +11,13 @@
 
 import { buildApiUrl, getDefaultHeaders, API_CONFIG } from '../config';
 import { logger } from '../../utils/logger';
+import { STORAGE_AUTH_TOKEN, STORAGE_REFRESH_TOKEN, clearAuthStorage } from '../../shared/constants/storage';
+import { storageService } from '../storage/localStorage.service';
 
 export interface ApiClientOptions extends RequestInit {
   retry?: number;
   timeout?: number;
+  _isRetryAfterRefresh?: boolean;
 }
 
 export class ApiError extends Error {
@@ -33,6 +36,9 @@ export interface ApiClientConfig {
   timeout?: number;
   maxRetries?: number;
   getToken?: () => string | null;
+  getRefreshToken?: () => string | null;
+  onTokenRefresh?: (newToken: string) => void;
+  onAuthFailure?: () => void;
   getHeaders?: () => Record<string, string>;
   logger?: {
     error: (msg: string, data?: any) => void;
@@ -42,19 +48,21 @@ export interface ApiClientConfig {
 }
 
 class ApiClient {
-  private baseUrl: string;
   private timeout: number;
   private maxRetries: number;
   private getToken: () => string | null;
-  private getHeaders: () => Record<string, string>;
-  private logger: ApiClientConfig['logger'];
+  private onTokenRefresh: ((newToken: string) => void) | undefined;
+  private onAuthFailure: (() => void) | undefined;
+  private logger: NonNullable<ApiClientConfig['logger']>;
+  private isRefreshing = false;
+  private refreshPromise: Promise<string> | null = null;
 
   constructor(config: ApiClientConfig) {
-    this.baseUrl = config.baseUrl;
     this.timeout = config.timeout || 30000;
     this.maxRetries = config.maxRetries || 3;
     this.getToken = config.getToken || (() => null);
-    this.getHeaders = config.getHeaders || (() => ({}));
+    this.onTokenRefresh = config.onTokenRefresh;
+    this.onAuthFailure = config.onAuthFailure;
     this.logger = config.logger || {
       error: () => {},
       warn: () => {},
@@ -148,6 +156,16 @@ class ApiClient {
 
       // Gestion des erreurs HTTP
       if (!response.ok) {
+        // Intercepter 401 pour tenter le refresh token
+        if (response.status === 401 && !options._isRetryAfterRefresh) {
+          try {
+            await this.handleTokenRefresh();
+            return this.request<T>(url, { ...options, _isRetryAfterRefresh: true });
+          } catch {
+            this.onAuthFailure?.();
+            this.handleErrorResponse(response);
+          }
+        }
         this.handleErrorResponse(response);
       }
 
@@ -181,6 +199,30 @@ class ApiClient {
   }
 
   /**
+   * Gère le rafraîchissement du token avec déduplication
+   */
+  private async handleTokenRefresh(): Promise<string> {
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = (async () => {
+      try {
+        const { authService } = await import('./auth.service');
+        const newToken = await authService.refreshToken();
+        this.onTokenRefresh?.(newToken);
+        return newToken;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
+  }
+
+  /**
    * Détermine si on doit retry la requête
    */
   private shouldRetry(error: any): boolean {
@@ -199,7 +241,7 @@ class ApiClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      ...getDefaultHeaders(),
+      ...(getDefaultHeaders() as Record<string, string>),
       ...customHeaders,
     };
 
@@ -235,15 +277,19 @@ export const apiClient = new ApiClient({
   baseUrl: '', // buildApiUrl() inclut déjà le domaine complet
   timeout: API_CONFIG.timeout || 30000,
   maxRetries: 3,
-  getToken: () => {
-    // TODO: récupérer depuis auth context ou localStorage
-    return null;
+  getToken: () => storageService.get(STORAGE_AUTH_TOKEN) || null,
+  getRefreshToken: () => storageService.get(STORAGE_REFRESH_TOKEN) || null,
+  onTokenRefresh: (newToken: string) => {
+    storageService.set(STORAGE_AUTH_TOKEN, newToken);
   },
-  getHeaders: getDefaultHeaders,
+  onAuthFailure: () => {
+    clearAuthStorage();
+    window.location.href = '/login';
+  },
   logger: {
     error: (msg, data) => logger.error(`[API] ${msg}`, data),
     warn: (msg, data) => logger.warn(`[API] ${msg}`, data),
-    debug: (msg, data) => logger.debug?.(`[API] ${msg}`, data) || console.debug(`[API] ${msg}`, data),
+    debug: (msg, data) => { logger.debug?.(`[API] ${msg}`, data); },
   },
 });
 

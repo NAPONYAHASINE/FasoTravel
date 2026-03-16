@@ -14,12 +14,12 @@ export const API_CONFIG = {
 // ============= STORAGE KEYS =============
 
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'transportbf_auth_token',
-  REFRESH_TOKEN: 'transportbf_refresh_token',
-  USER_ID: 'transportbf_user_id',
-  USER_ROLE: 'transportbf_user_role',
-  THEME: 'transportbf_theme',
-  LANGUAGE: 'transportbf_language'
+  AUTH_TOKEN: 'auth_token',
+  REFRESH_TOKEN: 'refresh_token',
+  USER_ID: 'user_id',
+  USER_ROLE: 'user_role',
+  THEME: 'theme',
+  LANGUAGE: 'language'
 } as const;
 
 // ============= PAGINATION =============
@@ -127,6 +127,9 @@ export const BOOKING_LIMITS = {
 
 export const TRIP_STATUSES = {
   SCHEDULED: 'scheduled',
+  BOARDING: 'boarding',
+  DEPARTED: 'departed',
+  ARRIVED: 'arrived',
   IN_PROGRESS: 'in-progress',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled'
@@ -142,8 +145,9 @@ export const TICKET_STATUSES = {
 
 export const PAYMENT_STATUSES = {
   PENDING: 'pending',
-  PAID: 'paid',
-  FAILED: 'failed'
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  REFUNDED: 'refunded'
 } as const;
 
 export const INCIDENT_STATUSES = {

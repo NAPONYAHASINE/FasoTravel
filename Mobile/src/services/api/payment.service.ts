@@ -60,7 +60,7 @@ class PaymentService {
     if (isDevelopment()) {
       const payment = storageService.get<Payment>(`payment_${paymentId}`);
       if (!payment) throw new Error(`Payment not found`);
-      payment.status = code === '0000' ? 'COMPLETED' : 'FAILED';
+      payment.status = code === '0000' ? 'completed' : 'failed';
       storageService.set(`payment_${paymentId}`, payment);
       return payment;
     }
@@ -83,7 +83,7 @@ class PaymentService {
       amount,
       currency: 'XOF',
       method,
-      status: 'PENDING',
+      status: 'pending',
       transactionId: `TX${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
@@ -94,10 +94,11 @@ class PaymentService {
 
   private mockGetPaymentMethods(): PaymentMethod[] {
     return [
-      'ORANGE_MONEY',
-      'MOOV_MONEY',
-      'CARTE_BANCAIRE',
-      'CASH',
+      'orange_money',
+      'moov_money',
+      'wave',
+      'card',
+      'cash',
     ];
   }
 }

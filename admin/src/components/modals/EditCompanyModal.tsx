@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Building2, Mail, Phone, MapPin, Percent, User, FileText, Hash, Upload, ImageIcon, Coffee, Wifi, Snowflake, Plug, Tv, ShieldCheck, Armchair, Luggage, Lock, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { X, Building2, Mail, Phone, MapPin, Percent, User, FileText, Hash, Upload, Coffee, Wifi, Snowflake, Plug, Tv, Armchair, Luggage, Lock, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { TransportCompany } from '../../shared/types/standardized';
-import { transportCompaniesService } from '../../services/entitiesService';
-import { AppConfig } from '../../config/app.config';
 
 interface EditCompanyModalProps {
   isOpen: boolean;
@@ -113,8 +111,7 @@ export function EditCompanyModal({ isOpen, onClose, onSubmit, loading = false, c
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            >
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"              title="Fermer"            >
               <X size={20} />
             </button>
           </div>

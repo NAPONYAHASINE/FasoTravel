@@ -102,7 +102,7 @@ class SupportService {
       const incident = incidents.find(i => i.id === incidentId);
       if (!incident) throw new Error(`Incident ${incidentId} not found`);
 
-      incident.status = 'RESOLVED';
+      incident.status = 'resolved';
       storageService.set('user_incidents', incidents);
       return incident;
     }
@@ -142,7 +142,7 @@ class SupportService {
       userId: 'current_user',
       type: (params.type as 'delay' | 'accident' | 'missing_passenger' | 'vehicle_issue' | 'other'),
       description: params.description,
-      status: 'OPEN',
+      status: 'open',
       createdAt: new Date().toISOString(),
     };
 

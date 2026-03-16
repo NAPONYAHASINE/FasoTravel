@@ -18,7 +18,7 @@
  */
 
 import { AppConfig } from '../config/app.config';
-import { apiService, type ApiResponse } from './apiService';
+import { apiService } from './apiService';
 import { ENDPOINTS } from './endpoints';
 import { MOCK_USER_SESSIONS } from '../lib/adminMockData';
 import type { UserSession } from '../shared/types/standardized';
@@ -484,7 +484,7 @@ class SessionService {
    * Mode MOCK: Génère le CSV côté client
    * Mode PRODUCTION: Appel GET /api/admin/sessions/export
    */
-  async exportSessions(sessions: UserSession[], format: 'csv' = 'csv'): Promise<void> {
+  async exportSessions(sessions: UserSession[], _format: 'csv' = 'csv'): Promise<void> {
     const csvContent = sessionsToCSV(sessions);
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

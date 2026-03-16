@@ -21,17 +21,32 @@ function mapTicketFromModel(modelTicket: any): Ticket {
     id: modelTicket.ticket_id,
     bookingId: modelTicket.booking_id,
     tripId: modelTicket.trip_id,
-    userId: 'USER_001', // Hardcoded current user for mock
+    userId: 'USER_001',
+    operatorId: modelTicket.operator_id,
+    operatorName: modelTicket.operator_name,
+    fromStopId: modelTicket.from_stop_id,
+    fromStopName: modelTicket.from_stop_name,
+    toStopId: modelTicket.to_stop_id,
+    toStopName: modelTicket.to_stop_name,
     passengerName: modelTicket.passenger_name,
     passengerPhone: modelTicket.passenger_phone,
+    passengerEmail: modelTicket.passenger_email,
     seatNumber: modelTicket.seat_number,
     price: modelTicket.price,
+    currency: modelTicket.currency,
     paymentMethod: modelTicket.payment_method,
+    paymentId: modelTicket.payment_id,
     status: modelTicket.status,
     qrCode: modelTicket.qr_code,
+    alphanumericCode: modelTicket.alphanumeric_code,
     embarkationTime: modelTicket.departure_time,
+    arrivalTime: modelTicket.arrival_time,
     createdAt: modelTicket.created_at,
-    updatedAt: modelTicket.updated_at
+    updatedAt: modelTicket.updated_at,
+    holderDownloaded: modelTicket.holder_downloaded,
+    holderPresented: modelTicket.holder_presented,
+    canCancel: modelTicket.can_cancel,
+    canTransfer: modelTicket.can_transfer
   };
 }
 

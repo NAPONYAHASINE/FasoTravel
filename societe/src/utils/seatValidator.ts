@@ -34,7 +34,7 @@ export function validateSeatSelection(
   const soldSeats = tickets
     .filter(t => 
       t.tripId === tripId && 
-      (t.status === 'valid' || t.status === 'used')
+      (t.status === 'active' || t.status === 'boarded')
     )
     .map(t => t.seatNumber);
   

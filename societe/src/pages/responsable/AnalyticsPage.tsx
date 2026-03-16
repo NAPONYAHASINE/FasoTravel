@@ -52,11 +52,12 @@ export default function AnalyticsPage() {
         );
 
         const revenus = calculateTicketsRevenue(dayTickets);
+        const commission = dayTickets.reduce((sum, t) => sum + (t.commission || 0), 0);
 
         data.push({
           name: getDayShortLabel(dayDate.getDay()),
           revenus,
-          depenses: Math.round(revenus * 0.65)
+          depenses: commission
         });
       }
     } else if (period === 'month') {
@@ -77,11 +78,12 @@ export default function AnalyticsPage() {
         );
 
         const revenus = calculateTicketsRevenue(weekTickets);
+        const commission = weekTickets.reduce((sum, t) => sum + (t.commission || 0), 0);
 
         data.push({
           name: `S${4 - i}`,
           revenus,
-          depenses: Math.round(revenus * 0.65)
+          depenses: commission
         });
       }
     } else {
@@ -98,11 +100,12 @@ export default function AnalyticsPage() {
         );
 
         const revenus = calculateTicketsRevenue(monthTickets);
+        const commission = monthTickets.reduce((sum, t) => sum + (t.commission || 0), 0);
 
         data.push({
           name: formatMonthShort(monthDate),
           revenus,
-          depenses: Math.round(revenus * 0.65)
+          depenses: commission
         });
       }
     }
@@ -126,7 +129,7 @@ export default function AnalyticsPage() {
         const purchaseDate = new Date(t.purchaseDate);
         return purchaseDate >= dayDate && 
                purchaseDate < nextDay &&
-               (t.status === 'valid' || t.status === 'used');
+               (t.status === 'active' || t.status === 'boarded');
       });
 
       const dayName = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][dayDate.getDay()];

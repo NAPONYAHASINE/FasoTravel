@@ -26,7 +26,7 @@ import { toast } from 'sonner@2.0.3';
 export default function CompanyDetailPage() {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
-  const { company, loading, error, approve, suspend } = useCompanyDetail(companyId);
+  const { company, error, approve, suspend } = useCompanyDetail(companyId);
 
   const handleApprove = async () => {
     const result = await approve();
@@ -36,6 +36,8 @@ export default function CompanyDetailPage() {
       toast.error(result.error || 'Erreur lors de l\'approbation');
     }
   };
+
+  void handleApprove; // Kept for future "Approve" button integration
 
   const handleSuspend = async () => {
     const reason = prompt('Raison de la suspension:');

@@ -56,6 +56,31 @@ class AuthService {
   }
 
   /**
+   * Vérifie un code OTP
+   */
+  async verifyOtp(identifier: string, code: string, mode: string): Promise<boolean> {
+    if (isDevelopment()) {
+      // Mock: accepter tout code de 6 chiffres
+      return code.length === 6;
+    }
+
+    await apiClient.post(API_ENDPOINTS.auth.verifyOtp, { identifier, code, mode });
+    return true;
+  }
+
+  /**
+   * Renvoyer un code OTP
+   */
+  async resendOtp(identifier: string, mode: string): Promise<void> {
+    if (isDevelopment()) {
+      // Mock: simule un délai
+      return;
+    }
+
+    await apiClient.post(API_ENDPOINTS.auth.resendOtp, { identifier, mode });
+  }
+
+  /**
    * Logout utilisateur
    */
   async logout(): Promise<void> {

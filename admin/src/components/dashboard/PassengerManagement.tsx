@@ -13,8 +13,6 @@ import { useState } from 'react';
 import {
   Users,
   Search,
-  Filter,
-  MoreVertical,
   CheckCircle,
   XCircle,
   Phone,
@@ -32,7 +30,7 @@ import {
 import { useAdminApp } from '../../context/AdminAppContext';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { PassengerUser } from '../../shared/types/standardized';
 import { ConfirmWrapper } from '../modals/ConfirmWrapper';
 import { EditPassengerModal } from '../modals/EditPassengerModal';
@@ -324,24 +322,28 @@ export function PassengerManagement() {
                           </Button>
                         )}
                         <button
+                          aria-label="Voir détails"
                           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           onClick={() => setViewPassenger(passenger)}
                         >
                           <Eye className="w-4 h-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" />
                         </button>
                         <button
+                          aria-label="Modifier"
                           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           onClick={() => setEditPassenger(passenger)}
                         >
                           <Edit className="w-4 h-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" />
                         </button>
                         <button
+                          aria-label="Réinitialiser mot de passe"
                           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           onClick={() => setResetPasswordPassenger(passenger)}
                         >
                           <Key className="w-4 h-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" />
                         </button>
                         <button
+                          aria-label="Supprimer"
                           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           onClick={() => setConfirmDialog({ show: true, action: 'delete', passengerId: passenger.id })}
                         >

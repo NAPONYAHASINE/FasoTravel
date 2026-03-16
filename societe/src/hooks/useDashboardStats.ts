@@ -138,7 +138,7 @@ export function useTripStats(trips: Trip[], upcomingHours: number = 6) {
 export function useTodayTicketsCount(tickets: Ticket[]) {
   return useMemo(() => {
     const todayTickets = filterByToday(tickets, 'purchaseDate');
-    return todayTickets.filter(t => t.status === 'valid' || t.status === 'used').length;
+    return todayTickets.filter(t => t.status === 'active' || t.status === 'boarded').length;
   }, [tickets]);
 }
 
@@ -159,7 +159,7 @@ export function useLast7DaysSales(tickets: Ticket[]) {
 
       const dayTickets = tickets.filter(t => {
         const purchaseDate = new Date(t.purchaseDate);
-        return purchaseDate >= date && purchaseDate <= dateEnd && (t.status === 'valid' || t.status === 'used');
+        return purchaseDate >= date && purchaseDate <= dateEnd && (t.status === 'active' || t.status === 'boarded');
       });
 
       const online = dayTickets.filter(t => t.salesChannel === 'online').length;

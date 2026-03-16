@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Calendar, Edit, History } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -17,184 +17,79 @@ import {
 import { toast } from 'sonner';
 import { formatCurrency } from '../../utils/formatters';
 import { formatDate } from '../../utils/dateUtils';
+import { useData } from '../../contexts/DataContext';
+import type { PricingSegment } from '../../services/types';
+import { pricingService } from '../../services/api/pricing.service';
 
-interface PriceSegment {
-  id: string;
-  route: string;
-  from: string;
-  to: string;
-  currentPrice: number;
-  previousPrice?: number;
-  lastUpdate: string;
-  season?: 'normal' | 'high' | 'low';
-}
+// Default pricing segments seeded when context is empty
+const DEFAULT_SEGMENTS: PricingSegment[] = [
+  { id: '1', route: 'Ouagadougou - Bobo-Dioulasso', from: 'Ouagadougou', to: 'Bobo-Dioulasso', currentPrice: 5000, previousPrice: 4500, lastUpdate: '2024-12-01', season: 'normal' },
+  { id: '2', route: 'Ouagadougou - Koudougou', from: 'Ouagadougou', to: 'Koudougou', currentPrice: 2000, previousPrice: 2000, lastUpdate: '2024-11-15', season: 'normal' },
+  { id: '3', route: 'Koudougou - Bobo-Dioulasso', from: 'Koudougou', to: 'Bobo-Dioulasso', currentPrice: 3000, previousPrice: 2500, lastUpdate: '2024-12-01', season: 'normal' },
+  { id: '4', route: 'Ouagadougou - Fada N\'Gourma', from: 'Ouagadougou', to: 'Fada N\'Gourma', currentPrice: 3500, previousPrice: 3500, lastUpdate: '2024-10-20', season: 'normal' },
+  { id: '5', route: 'Ouagadougou - Ouahigouya', from: 'Ouagadougou', to: 'Ouahigouya', currentPrice: 3000, previousPrice: 2800, lastUpdate: '2024-11-25', season: 'high' },
+];
 
-interface PriceHistory {
+interface PriceHistoryEntry {
   date: string;
   price: number;
   reason: string;
 }
 
 export default function PricingPage() {
-  // 🚀 BACKEND-READY: Charger les segments depuis votre API NestJS
-  // useEffect(() => {
-  //   const fetchSegments = async () => {
-  //     const response = await fetch('/api/price-segments?orderBy=route');
-  //
-  //     if (!response.ok) {
-  //       toast.error('Erreur lors du chargement des tarifs');
-  //       return;
-  //     }
-  //
-  //     const data = await response.json();
-  //     setSegments(data);
-  //   };
-  //
-  //   fetchSegments();
-  // }, []);
+  const { pricingRules: segments, updatePricingRule, addPricingRule } = useData();
 
-  const [segments, setSegments] = useState<PriceSegment[]>([
-    {
-      id: '1',
-      route: 'Ouagadougou - Bobo-Dioulasso',
-      from: 'Ouagadougou',
-      to: 'Bobo-Dioulasso',
-      currentPrice: 5000,
-      previousPrice: 4500,
-      lastUpdate: '2024-12-01',
-      season: 'normal'
-    },
-    {
-      id: '2',
-      route: 'Ouagadougou - Bobo-Dioulasso',
-      from: 'Ouagadougou',
-      to: 'Koudougou',
-      currentPrice: 2000,
-      previousPrice: 2000,
-      lastUpdate: '2024-11-15',
-      season: 'normal'
-    },
-    {
-      id: '3',
-      route: 'Ouagadougou - Bobo-Dioulasso',
-      from: 'Koudougou',
-      to: 'Bobo-Dioulasso',
-      currentPrice: 3000,
-      previousPrice: 2500,
-      lastUpdate: '2024-12-01',
-      season: 'normal'
-    },
-    {
-      id: '4',
-      route: 'Ouagadougou - Fada N\'Gourma',
-      from: 'Ouagadougou',
-      to: 'Fada N\'Gourma',
-      currentPrice: 3500,
-      previousPrice: 3500,
-      lastUpdate: '2024-10-20',
-      season: 'normal'
-    },
-    {
-      id: '5',
-      route: 'Ouagadougou - Ouahigouya',
-      from: 'Ouagadougou',
-      to: 'Ouahigouya',
-      currentPrice: 3000,
-      previousPrice: 2800,
-      lastUpdate: '2024-11-25',
-      season: 'high'
+  // Seed default segments if context is empty (first visit)
+  useEffect(() => {
+    if (segments.length === 0) {
+      DEFAULT_SEGMENTS.forEach(seg => addPricingRule(seg as any));
     }
-  ]);
+  }, [segments.length, addPricingRule]);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
-  const [editingSegment, setEditingSegment] = useState<PriceSegment | null>(null);
+  const [editingSegment, setEditingSegment] = useState<PricingSegment | null>(null);
   const [newPrice, setNewPrice] = useState('');
   const [priceReason, setPriceReason] = useState('');
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
 
-  // 🚀 BACKEND-READY: Charger l'historique depuis votre API NestJS
-  // const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
-  //
-  // useEffect(() => {
-  //   const fetchPriceHistory = async () => {
-  //     if (!editingSegment) return;
-  //
-  //     const response = await fetch(`/api/price-history?segmentId=${editingSegment.id}&orderBy=date&order=desc`);
-  //
-  //     if (!response.ok) {
-  //       console.error('Erreur lors du chargement de l\'historique');
-  //       return;
-  //     }
-  //
-  //     const data = await response.json();
-  //     setPriceHistory(data);
-  //   };
-  //
-  //   fetchPriceHistory();
-  // }, [editingSegment]);
+  const handleShowHistory = async () => {
+    try {
+      const allHistory = await Promise.all(
+        segments.map(s => pricingService.getHistory(s.id))
+      );
+      const flatHistory = allHistory.flat().sort((a, b) => b.date.localeCompare(a.date));
+      setPriceHistory(flatHistory.map(h => ({ date: h.date, price: h.price, reason: h.reason })));
+    } catch {
+      setPriceHistory([]);
+    }
+    setIsHistoryDialogOpen(true);
+  };
 
-  const priceHistory: PriceHistory[] = [
-    { date: '2024-12-01', price: 5000, reason: 'Hausse du carburant' },
-    { date: '2024-09-15', price: 4500, reason: 'Ajustement saisonnier' },
-    { date: '2024-06-01', price: 4500, reason: 'Prix initial' }
-  ];
-
-  const handleEditPrice = (segment: PriceSegment) => {
+  const handleEditPrice = (segment: PricingSegment) => {
     setEditingSegment(segment);
     setNewPrice(segment.currentPrice.toString());
     setPriceReason('');
     setIsEditDialogOpen(true);
   };
 
-  const handleSavePrice = () => {
+  const handleSavePrice = async () => {
     if (editingSegment && newPrice) {
-      // 🚀 BACKEND-READY: Mettre à jour le prix via votre API NestJS
-      // const response = await fetch(`/api/price-segments/${editingSegment.id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     previousPrice: editingSegment.currentPrice,
-      //     currentPrice: parseInt(newPrice),
-      //     lastUpdate: new Date().toISOString().split('T')[0]
-      //   })
-      // });
-      //
-      // if (!response.ok) {
-      //   toast.error('Erreur lors de la mise à jour du prix');
-      //   return;
-      // }
-      //
-      // // Enregistrer dans l'historique si une raison est fournie
-      // if (priceReason.trim()) {
-      //   const historyResponse = await fetch('/api/price-history', {
-      //     method: 'POST',
-      //     headers: { 'Content-Type': 'application/json' },
-      //     body: JSON.stringify({
-      //       segmentId: editingSegment.id,
-      //       price: parseInt(newPrice),
-      //       previousPrice: editingSegment.currentPrice,
-      //       reason: priceReason,
-      //       date: new Date().toISOString().split('T')[0]
-      //     })
-      //   });
-      //
-      //   if (!historyResponse.ok) {
-      //     console.error('Erreur lors de l\'enregistrement dans l\'historique');
-      //   }
-      // }
-
-      setSegments(segments.map(s =>
-        s.id === editingSegment.id
-          ? {
-              ...s,
-              previousPrice: s.currentPrice,
-              currentPrice: parseInt(newPrice),
-              lastUpdate: new Date().toISOString().split('T')[0]
-            }
-          : s
-      ));
-      
-      toast.success('Prix mis à jour avec succès');
+      try {
+        await pricingService.updatePrice(editingSegment.id, {
+          currentPrice: parseInt(newPrice),
+          reason: priceReason.trim() || undefined,
+        });
+        // Also update DataContext for immediate UI refresh
+        updatePricingRule(editingSegment.id, {
+          currentPrice: parseInt(newPrice),
+          previousPrice: editingSegment.currentPrice,
+          lastUpdate: new Date().toISOString().split('T')[0],
+        } as any);
+        toast.success('Prix mis à jour avec succès');
+      } catch {
+        toast.error('Erreur lors de la mise à jour du prix');
+      }
       setIsEditDialogOpen(false);
       setEditingSegment(null);
       setNewPrice('');
@@ -202,7 +97,7 @@ export default function PricingPage() {
     }
   };
 
-  const getPriceChange = (segment: PriceSegment) => {
+  const getPriceChange = (segment: PricingSegment) => {
     if (!segment.previousPrice) return null;
     const change = segment.currentPrice - segment.previousPrice;
     const percentChange = (change / segment.previousPrice) * 100;
@@ -286,7 +181,7 @@ export default function PricingPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsHistoryDialogOpen(true)}
+            onClick={handleShowHistory}
           >
             <History size={16} className="mr-2" />
             Historique

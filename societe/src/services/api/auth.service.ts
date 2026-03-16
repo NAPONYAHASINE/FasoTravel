@@ -9,7 +9,7 @@ import { API_ENDPOINTS } from '../config';
 import { apiClient } from './apiClient';
 import { storageService } from '../storage/localStorage.service';
 import { logger } from '../../utils/logger';
-import { STORAGE_AUTH_TOKEN, STORAGE_CURRENT_USER, STORAGE_MANAGERS, STORAGE_CASHIERS } from '../../shared/constants/storage';
+import { STORAGE_AUTH_TOKEN, STORAGE_REFRESH_TOKEN, STORAGE_CURRENT_USER, STORAGE_MANAGERS, STORAGE_CASHIERS } from '../../shared/constants/storage';
 import type { AuthResponse, OperatorUser } from '../../shared/types/common';
 import type { LoginDto, RegisterDto, ResetPasswordDto } from '../types';
 
@@ -69,6 +69,9 @@ class AuthService {
       // Sauvegarder la session
       storageService.set(STORAGE_AUTH_TOKEN, authResponse.token);
       storageService.set(STORAGE_CURRENT_USER, authResponse.user);
+      if (authResponse.refreshToken) {
+        storageService.set(STORAGE_REFRESH_TOKEN, authResponse.refreshToken);
+      }
 
 logger.info('✅ Connexion réussie (API)', {
         user: authResponse.user.email,
@@ -107,6 +110,7 @@ logger.info('✅ Connexion réussie (API)', {
       await apiClient.post(API_ENDPOINTS.auth.logout, {});
 
       storageService.remove(STORAGE_AUTH_TOKEN);
+      storageService.remove(STORAGE_REFRESH_TOKEN);
       storageService.remove(STORAGE_CURRENT_USER);
       logger.info('✅ Déconnexion (API)');
     }
@@ -147,6 +151,25 @@ logger.info('✅ Connexion réussie (API)', {
       await apiClient.post(API_ENDPOINTS.auth.resetPassword, data);
       logger.info('✅ Email de réinitialisation envoyé');
     }
+  }
+
+  /**
+   * Rafraîchir le token d'authentification
+   */
+  async refreshToken(): Promise<string> {
+    const refreshToken = storageService.get(STORAGE_REFRESH_TOKEN);
+    if (!refreshToken) {
+      throw new Error('Aucun refresh token disponible');
+    }
+
+    const response = await apiClient.post<{ token: string }>(
+      API_ENDPOINTS.auth.refreshToken,
+      { refreshToken },
+    );
+
+    storageService.set(STORAGE_AUTH_TOKEN, response.token);
+    logger.info('🔄 Token rafraîchi');
+    return response.token;
   }
 
   /**

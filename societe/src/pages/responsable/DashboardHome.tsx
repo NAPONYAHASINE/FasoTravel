@@ -66,7 +66,7 @@ export default function DashboardHome() {
     return stations.map(station => {
       const stationTickets = tickets.filter(t => {
         const purchaseDate = new Date(t.purchaseDate);
-        return t.gareId === station.id && purchaseDate >= today && (t.status === 'valid' || t.status === 'used');
+        return t.gareId === station.id && purchaseDate >= today && (t.status === 'active' || t.status === 'boarded');
       });
 
       // ✅ Utilise la fonction centralisée pour cohérence avec dashboard Manager

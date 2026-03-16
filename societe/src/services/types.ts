@@ -59,7 +59,7 @@ export interface CreateTicketDto {
   seatNumber: string;
   price: number;
   salesChannel: 'online' | 'counter';
-  paymentMethod: 'cash' | 'mobile_money' | 'card';
+  paymentMethod: 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card';
   sellerId: string;
   sellerName: string;
   sellerRole: 'manager' | 'cashier';
@@ -255,9 +255,12 @@ export interface UpdateScheduleTemplateDto {
 export interface PricingSegment {
   id: string;
   route: string;
+  from: string;
+  to: string;
   currentPrice: number;
   previousPrice: number;
   lastUpdate: string;
+  season?: 'normal' | 'high' | 'low';
 }
 
 export interface UpdatePriceDto {
@@ -288,6 +291,17 @@ export interface CreateStoryDto {
   startDate: string;
   endDate: string;
   status: 'active' | 'inactive';
+}
+
+export interface VehicleLocation {
+  tripId: string;
+  latitude: number;
+  longitude: number;
+  heading?: number;
+  speed?: number;
+  accuracy?: number;
+  timestamp: string;
+  updatedAt?: string;
 }
 
 export interface UpdateStoryDto {

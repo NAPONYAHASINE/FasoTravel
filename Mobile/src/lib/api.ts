@@ -117,7 +117,7 @@ export interface Ticket {
   arrival_time: string;
   passenger_name: string;
   seat_number?: string;
-  status: 'AVAILABLE' | 'HOLD' | 'PAID' | 'EMBARKED' | 'CANCELLED';
+  status: 'active' | 'boarded' | 'expired' | 'cancelled' | 'refunded';
   qr_code: string;
   alphanumeric_code: string;
   price: number;
@@ -498,7 +498,7 @@ export async function createHoldBooking(params: CreateHoldBookingParams): Promis
 
 export interface ConfirmBookingParams {
   ticket_id: string;
-  payment_method: 'ORANGE_MONEY' | 'MOOV_MONEY' | 'CARD';
+  payment_method: 'orange_money' | 'moov_money' | 'card' | 'wave' | 'cash';
   payment_details: {
     phone_number?: string;
     card_token?: string;
@@ -537,33 +537,33 @@ export async function getMyTickets(): Promise<ModelTicket[]> {
   return results.map(ticket => ({
     ticket_id: ticket.id,
     trip_id: ticket.tripId,
-    operator_id: '', // Not in service Ticket type
-    operator_name: '', // Not in service Ticket type
-    from_stop_id: '', // Not in service Ticket type
-    from_stop_name: '', // Not in service Ticket type
-    to_stop_id: '', // Not in service Ticket type
-    to_stop_name: '', // Not in service Ticket type
+    booking_id: ticket.bookingId || '',
+    operator_id: ticket.operatorId || '',
+    operator_name: ticket.operatorName || '',
+    from_stop_id: ticket.fromStopId || '',
+    from_stop_name: ticket.fromStopName || '',
+    to_stop_id: ticket.toStopId || '',
+    to_stop_name: ticket.toStopName || '',
     departure_time: ticket.embarkationTime || '',
-    arrival_time: ticket.embarkationTime || '', // Use same as departure
+    arrival_time: ticket.arrivalTime || '',
     passenger_name: ticket.passengerName,
     passenger_phone: ticket.passengerPhone,
-    passenger_email: '', // Not in service Ticket type
+    passenger_email: ticket.passengerEmail || '',
     seat_number: ticket.seatNumber,
     status: ticket.status as any,
     qr_code: ticket.qrCode || '',
-    alphanumeric_code: ticket.id,
+    alphanumeric_code: ticket.alphanumericCode || ticket.id,
     price: ticket.price,
-    currency: 'XOF',
+    currency: ticket.currency || 'XOF',
     payment_method: ticket.paymentMethod,
-    payment_id: '',
-    booking_id: '',
+    payment_id: ticket.paymentId || '',
     created_at: ticket.createdAt,
     updated_at: ticket.updatedAt,
-    holder_downloaded: false,
-    holder_presented: false,
+    holder_downloaded: ticket.holderDownloaded ?? false,
+    holder_presented: ticket.holderPresented ?? false,
     last_sync_at: new Date().toISOString(),
-    can_cancel: false,
-    can_transfer: false
+    can_cancel: ticket.canCancel ?? false,
+    can_transfer: ticket.canTransfer ?? false
   } as any));
 }
 

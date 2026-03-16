@@ -117,7 +117,7 @@ export default function DeparturesPage() {
   // ✅ Compter les VRAIS tickets pour les départs d'aujourd'hui
   const todayTripIds = new Set(todayTrips.map(t => t.id));
   const totalPassengers = tickets.filter(t => 
-    todayTripIds.has(t.tripId) && (t.status === 'valid' || t.status === 'used')
+    todayTripIds.has(t.tripId) && (t.status === 'active' || t.status === 'boarded')
   ).length;
 
   const totalCapacity = todayTrips.reduce((acc: any, trip: any) => acc + trip.totalSeats, 0);

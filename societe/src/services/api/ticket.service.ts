@@ -26,7 +26,7 @@ class TicketService {
       const newTicket: Ticket = {
         ...data,
         id: generateId(),
-        status: 'valid',
+        status: 'active',
         purchaseDate: new Date().toISOString().split('T')[0],
       } as unknown as Ticket;
 
@@ -216,7 +216,7 @@ class TicketService {
       stats.byStatus[ticket.status] = (stats.byStatus[ticket.status] || 0) + 1;
       
       // Revenu total
-      if (ticket.status === 'valid' || ticket.status === 'used') {
+      if (ticket.status === 'active' || ticket.status === 'boarded') {
         stats.totalRevenue += ticket.price;
       }
     });

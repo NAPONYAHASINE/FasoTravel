@@ -110,6 +110,7 @@ function EditableValue({
     return (
       <div className="flex items-center gap-2">
         <input
+          aria-label={label}
           type="number"
           value={draft}
           onChange={(e) => setDraft(parseFloat(e.target.value) || 0)}
@@ -121,10 +122,10 @@ function EditableValue({
           onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') handleCancel(); }}
         />
         <span className="text-lg text-gray-500">{suffix}</span>
-        <button onClick={handleSave} className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors">
+        <button aria-label="Sauvegarder" onClick={handleSave} className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors">
           <Check size={16} />
         </button>
-        <button onClick={handleCancel} className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+        <button aria-label="Annuler" onClick={handleCancel} className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
           <X size={16} />
         </button>
       </div>
@@ -772,7 +773,7 @@ export function FinancialFlow() {
   const {
     data,
     period,
-    loading,
+    loading: _loading,
     error,
     model,
     actions,

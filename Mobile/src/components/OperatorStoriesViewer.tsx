@@ -175,7 +175,7 @@ export function OperatorStoriesViewer({
         onTouchEnd={() => setIsPaused(false)}
       >
         {/* Progress Bars */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
+        <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2 pt-safe-area-2">
           {stories.map((story, index) => (
             <div key={story.id} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
               <motion.div
@@ -191,7 +191,7 @@ export function OperatorStoriesViewer({
         </div>
 
         {/* Header */}
-        <div className="absolute top-4 left-0 right-0 z-20 px-4" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
+        <div className="absolute top-4 left-0 right-0 z-20 px-4 pt-safe-area-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl border-2 border-white/40">

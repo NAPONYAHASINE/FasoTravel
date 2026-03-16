@@ -104,16 +104,17 @@ export const STATUS_LABELS = {
     'parked': 'Garé'
   },
   booking: {
-    'EN_ATTENTE': 'En Attente',
-    'CONFIRMÉ': 'Confirmé',
-    'ANNULÉ': 'Annulé',
-    'TERMINÉ': 'Terminé'
+    'pending': 'En Attente',
+    'confirmed': 'Confirmé',
+    'cancelled': 'Annulé',
+    'completed': 'Terminé'
   },
   ticket: {
-    'ACTIF': 'Actif',
-    'EMBARQUÉ': 'Embarqué',
-    'EXPIRÉ': 'Expiré',
-    'ANNULÉ': 'Annulé'
+    'active': 'Actif',
+    'boarded': 'Embarqué',
+    'expired': 'Expiré',
+    'cancelled': 'Annulé',
+    'refunded': 'Remboursé'
   },
   supportTicket: {
     'open': 'Ouvert',
@@ -145,12 +146,14 @@ export const STATUS_LABELS = {
 } as const;
 
 // ==================== PAYMENT METHOD LABELS ====================
-// Clés alignées sur les valeurs mock de adminMockData.ts (mobile_money, card, cash)
+// Aligned with standardized.ts PaymentMethod enum values
 
 export const PAYMENT_METHOD_LABELS = {
-  'mobile_money': 'Mobile Money',
+  'orange_money': 'Orange Money',
+  'moov_money': 'Moov Money',
+  'wave': 'Wave',
   'card': 'Carte Bancaire',
-  'cash': 'Espèces'
+  'cash': 'Espèces',
 } as const;
 
 // ==================== USER ROLE LABELS ====================
@@ -177,7 +180,8 @@ export const PRIORITY_LABELS = {
   'medium': 'Moyenne',
   'high': 'Élevée',
   'urgent': 'Urgent',
-  'critical': 'Critique'
+  'critical': 'Critique',
+  'normal': 'Normale'
 } as const;
 
 // ==================== CURRENCY ====================

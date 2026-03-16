@@ -1,13 +1,11 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { 
-  Building2, 
-  Users,
   AlertCircle,
   MapPin,
   Clock,
   Activity,
 } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAdminApp } from '../../context/AdminAppContext';
 import { getRelativeTime } from '../../lib/utils';
 import { useFinancialMetrics } from '../../hooks/useFinancialMetrics';
@@ -24,29 +22,25 @@ import { PAGE_CLASSES } from '../../lib/design-system';
  * Version 5.0 - Backend-ready avec architecture propre et ZÉRO duplication + ZÉRO données hardcodées
  */
 export function DashboardHome() {
-  const { auditLogs, transportCompanies, stations, passengers, supportTickets, theme } = useAdminApp();
+  const { auditLogs, transportCompanies, passengers, theme } = useAdminApp();
 
   // 🔥 HOOKS BACKEND-READY - Toute la logique métier externalisée
-  const { kpis, metrics, loading: financialLoading, error: financialError } = useFinancialMetrics({
+  const { kpis, metrics, error: financialError } = useFinancialMetrics({
     period: TimePeriod.WEEK,
   });
 
   const { 
     weeklyRegistrations, 
     stationActivities, 
-    loading: platformLoading, 
     error: platformError 
   } = usePlatformAnalytics();
 
   // Protected data with defaults
   const safeCompanies = transportCompanies || [];
-  const safeStations = stations || [];
   const safePassengers = passengers || [];
-  const safeSupportTickets = supportTickets || [];
   const safeLogs = auditLogs || [];
 
   // Loading global
-  const loading = financialLoading || platformLoading;
   const error = financialError || platformError;
 
   // KPIs non-financiers (sociétés et passagers)
@@ -84,7 +78,7 @@ export function DashboardHome() {
       .sort((a, b) => (b.vehicleCount || 0) - (a.vehicleCount || 0))
       .slice(0, 5)
       .map((c, index) => ({
-        id: c.operator_id || `company-${index}`,
+        id: c.operatorId || c.id || `company-${index}`,
         name: c.name,
         value: c.vehicleCount || 0
       }));

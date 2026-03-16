@@ -74,22 +74,33 @@ class BookingService {
   // ============================================
 
   private mockCreateHoldBooking(params: CreateHoldBookingParams): Booking {
+    const basePrice = params.unitPrice ?? 5000;
+    const totalSeats = params.numSeats || 1;
     const booking: Booking = {
       id: `booking_${Date.now()}`,
       userId: 'current_user',
       tripId: params.tripId,
-      numSeats: 1,
-      status: 'HOLD',
+      numSeats: totalSeats,
+      status: 'pending',
       holdExpiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min
-      basePrice: 5000,
+      basePrice,
       servicesPrice: params.selectedServices?.length ? 1500 : 0,
-      totalPrice: 5000 + (params.selectedServices?.length ? 1500 : 0),
+      totalPrice: (basePrice * totalSeats) + (params.selectedServices?.length ? 1500 : 0),
       selectedServices: params.selectedServices,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     storageService.set(`booking_${booking.id}`, booking);
+
+    // Sauvegarder les infos passager pour les réutiliser lors de la confirmation
+    if (params.passengerName) {
+      storageService.set(`booking_passenger_${booking.id}`, {
+        name: params.passengerName,
+        phone: params.passengerPhone || ''
+      });
+    }
+
     return booking;
   }
 
@@ -97,24 +108,27 @@ class BookingService {
     const booking = storageService.get<Booking>(`booking_${params.bookingId}`);
     if (!booking) throw new Error(`Booking ${params.bookingId} not found`);
 
+    // Récupérer les infos passager sauvegardées au lieu de hardcoder
+    const passengerInfo = storageService.get<{ name: string; phone: string }>(`booking_passenger_${params.bookingId}`);
+
     const ticket: Ticket = {
       id: `ticket_${Date.now()}`,
       bookingId: params.bookingId,
       tripId: booking.tripId,
       userId: 'current_user',
-      passengerName: 'John Doe',
-      passengerPhone: '+226 70 11 22 33',
+      passengerName: passengerInfo?.name || 'Passager',
+      passengerPhone: passengerInfo?.phone || '',
       seatNumber: 'A1',
       price: booking.totalPrice,
       paymentMethod: params.paymentMethod,
-      status: 'PAID',
+      status: 'active',
       qrCode: `QR_${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     // Mettre à jour booking status
-    booking.status = 'CONFIRMED';
+    booking.status = 'confirmed';
     storageService.set(`booking_${params.bookingId}`, booking);
 
     // Sauvegarder le ticket

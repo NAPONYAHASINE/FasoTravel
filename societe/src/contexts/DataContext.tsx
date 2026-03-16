@@ -141,9 +141,9 @@ export interface Ticket {
   seatNumber: string;
   price: number;
   commission?: number; // Commission prélevée si vente en ligne
-  paymentMethod: 'cash' | 'mobile_money' | 'card'; // ✅ CORRIGÉ: supprimé 'online'
+  paymentMethod: 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card'; // ✅ CORRIGÉ: supprimé 'online'
   salesChannel: 'online' | 'counter'; // CRITIQUE: online = app mobile, counter = guichet
-  status: 'valid' | 'used' | 'refunded' | 'cancelled';
+  status: 'active' | 'boarded' | 'expired' | 'refunded' | 'cancelled';
   purchaseDate: string;
   cashierId: string; // Pour counter, ID caissier. Pour online, peut être "online_system"
   cashierName: string; // Pour counter, nom caissier. Pour online, "Vente en ligne"
@@ -157,7 +157,7 @@ export interface CashTransaction {
   id: string;
   type: 'sale' | 'refund' | 'deposit' | 'withdrawal';
   amount: number;
-  method: 'cash' | 'mobile_money' | 'card';
+  method: 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card';
   description: string;
   ticketId?: string; // Pour compatibilité
   ticketIds?: string[]; // Plusieurs billets pour une transaction groupée
@@ -758,9 +758,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `A${i + 1}`,
       price: 5000,
-      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.7 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: yesterday.toISOString(),
       cashierId: 'cash_1',
       cashierName: 'Ibrahim Sawadogo',
@@ -781,9 +781,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `B${i + 1}`,
       price: 2000,
-      paymentMethod: (Math.random() > 0.6 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.6 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.7 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 30).toISOString(),
       cashierId: 'cash_2',
       cashierName: 'Fatou Diallo',
@@ -806,9 +806,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `V${i + 1}`,
       price: 7500,
-      paymentMethod: (Math.random() > 0.5 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.5 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.6 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 10, 0).toISOString(),
       cashierId: 'cash_1',
       cashierName: 'Ibrahim Sawadogo',
@@ -826,9 +826,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `C${i + 1}`,
       price: 3500,
-      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.7 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.75 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 16, 0).toISOString(),
       cashierId: 'cash_2',
       cashierName: 'Fatou Diallo',
@@ -846,9 +846,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `D${i + 1}`,
       price: 5000,
-      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.7 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 30).toISOString(),
       cashierId: 'cash_1',
       cashierName: 'Ibrahim Sawadogo',
@@ -866,9 +866,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `K${i + 1}`,
       price: 5000,
-      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.7 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 0).toISOString(),
       cashierId: 'cash_1',
       cashierName: 'Ibrahim Sawadogo',
@@ -886,9 +886,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `E${i + 1}`,
       price: 7500,
-      paymentMethod: (Math.random() > 0.6 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.6 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.7 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 9, 0).toISOString(),
       cashierId: 'cash_3',
       cashierName: 'Aminata Traoré',
@@ -906,9 +906,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `F${i + 1}`,
       price: 5000,
-      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.7 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 15, 0).toISOString(),
       cashierId: 'cash_3',
       cashierName: 'Aminata Traoré',
@@ -926,9 +926,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `G${i + 1}`,
       price: 5000,
-      paymentMethod: (Math.random() > 0.7 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.7 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.8 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString(),
       cashierId: 'cash_3',
       cashierName: 'Aminata Traoré',
@@ -947,9 +947,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `R${i + 1}`,
       price: 5000,
-      paymentMethod: (Math.random() > 0.5 ? 'mobile_money' : 'cash') as 'cash' | 'mobile_money' | 'card',
+      paymentMethod: (Math.random() > 0.5 ? 'orange_money' : 'cash') as Ticket['paymentMethod'],
       salesChannel: Math.random() > 0.6 ? 'online' : 'counter',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 13, 30).toISOString(), // ✅ Acheté AUJOURD'HUI
       cashierId: 'cash_1',
       cashierName: 'Ousmane Kaboré',
@@ -967,9 +967,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `S${i + 1}`,
       price: 3500,
-      paymentMethod: 'mobile_money',
+      paymentMethod: 'orange_money',
       salesChannel: 'online', // Ces réservations anticipées viennent surtout de l'app mobile
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 45).toISOString(), // ✅ Acheté AUJOURD'HUI
       cashierId: 'online_system',
       cashierName: 'Vente en ligne',
@@ -988,9 +988,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       passengerPhone: `+226 70 ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))} ${String(Math.floor(Math.random() * 90 + 10))}`,
       seatNumber: `OLD${i + 1}`,
       price: 5000,
-      paymentMethod: 'mobile_money',
+      paymentMethod: 'orange_money',
       salesChannel: 'online',
-      status: 'valid',
+      status: 'active',
       purchaseDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 4, 18, 0).toISOString(), // ✅ Acheté IL Y A 4 JOURS
       cashierId: 'online_system',
       cashierName: 'Vente en ligne',
@@ -1050,7 +1050,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       id: 'cash_sale_trip3',
       type: 'sale',
       amount: 225000,
-      method: 'mobile_money',
+      method: 'orange_money',
       description: 'Vente de 30 billets VIP - Ouaga → Bobo 14h',
       cashierId: 'cash_1',
       cashierName: 'Ibrahim Sawadogo',
@@ -1152,6 +1152,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       views: 1245,
       clicks: 89,
       status: 'active',
+      approval_status: 'active',
       createdAt: '2024-12-01T08:00:00Z',
       createdBy: 'resp_1',
       createdByName: 'Admin TSR'
@@ -1169,6 +1170,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       views: 856,
       clicks: 54,
       status: 'active',
+      approval_status: 'active',
       createdAt: '2024-12-10T10:30:00Z',
       createdBy: 'resp_1',
       createdByName: 'Admin TSR'
@@ -1185,6 +1187,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       views: 0,
       clicks: 0,
       status: 'scheduled',
+      approval_status: 'draft',
       createdAt: '2024-12-15T14:00:00Z',
       createdBy: 'resp_1',
       createdByName: 'Admin TSR'
@@ -1205,6 +1208,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       max_uses: 1000,
       current_uses: 0,
       status: 'active',
+      approval_status: 'active_approved',
       created_by: 'resp_1',
       created_at: '2026-02-01T08:00:00Z',
       updated_at: new Date().toISOString()
@@ -1221,6 +1225,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       max_uses: 100,
       current_uses: 0,
       status: 'draft',
+      approval_status: 'draft',
       created_by: 'resp_1',
       created_at: '2026-02-20T14:00:00Z',
       updated_at: new Date().toISOString()
@@ -1776,11 +1781,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         let paymentMethod: Ticket['paymentMethod'];
         if (salesChannel === 'online') {
           // App mobile : seulement paiement électronique (pas de cash)
-          const onlineMethods: ('mobile_money' | 'card')[] = ['mobile_money', 'card'];
+          const onlineMethods: Ticket['paymentMethod'][] = ['orange_money', 'moov_money', 'wave', 'card'];
           paymentMethod = onlineMethods[Math.floor(Math.random() * onlineMethods.length)];
         } else {
           // Guichet : tous moyens de paiement possibles
-          const counterMethods: Ticket['paymentMethod'][] = ['cash', 'mobile_money', 'card'];
+          const counterMethods: Ticket['paymentMethod'][] = ['cash', 'orange_money', 'card'];
           paymentMethod = counterMethods[Math.floor(Math.random() * counterMethods.length)];
         }
         
@@ -1802,7 +1807,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           commission,
           paymentMethod,
           salesChannel,
-          status: trip.status === 'arrived' ? 'used' : 'valid',
+          status: trip.status === 'arrived' ? 'boarded' : 'active',
           purchaseDate: purchaseDate.toISOString(),
           cashierId: salesChannel === 'online' ? 'online_system' : cashier.id,
           cashierName: salesChannel === 'online' ? 'Vente en ligne' : cashier.name,
@@ -1818,7 +1823,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             id: generateId('trans'),
             type: 'sale',
             amount: trip.price,
-            method: paymentMethod === 'mobile_money' ? 'mobile_money' : paymentMethod === 'card' ? 'card' : 'cash',
+            method: paymentMethod === 'orange_money' ? 'orange_money' : paymentMethod === 'card' ? 'card' : 'cash',
             description: `Vente billet ${trip.departure} → ${trip.arrival}`,
             ticketId: ticketId,
             cashierId: cashier.id,
@@ -1919,7 +1924,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addCashTransaction({
           type: 'refund',
           amount: ticket.price,
-          method: ticket.paymentMethod === 'mobile_money' ? 'mobile_money' : 'cash',
+          method: ticket.paymentMethod === 'orange_money' ? 'orange_money' : 'cash',
           description: `Remboursement billet ${ticket.departure} → ${ticket.arrival}`,
           ticketId: id,
           cashierId: user.id,
@@ -1965,7 +1970,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       created_by: user?.id,
-      operator_id: user?.operatorId,
+      operator_id: (user as any)?.companyId,
       approval_status: 'pending_validation' // ✅ Nouvelles promos en attente d'validation
     };
     setPromotions([...promotions, newPromotion]);

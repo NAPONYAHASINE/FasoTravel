@@ -50,7 +50,7 @@ export function usePromotions(
 
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [stats, setStats] = useState<PromotionStats | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, _setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loadedRef = useRef(false);
 

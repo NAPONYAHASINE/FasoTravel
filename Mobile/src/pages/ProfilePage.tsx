@@ -28,9 +28,18 @@ interface ProfilePageProps {
 }
 
 export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, onToggleDarkMode, updatedUserData }: ProfilePageProps) {
-  const [userName, setUserName] = useState(updatedUserData?.name || 'NAPON Yahasine');
-  const [userEmail, setUserEmail] = useState(updatedUserData?.email || 'yahasine@transportbf.bf');
-  const [userPhone, setUserPhone] = useState(updatedUserData?.phone || '+226 70 12 34 56');
+  // Load user data from localStorage, falling back to prop data, then defaults
+  const storedUser = (() => {
+    try {
+      const raw = localStorage.getItem('auth_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+
+  const storedUserName = storedUser?.name || [storedUser?.firstName, storedUser?.lastName].filter(Boolean).join(' ');
+  const [userName, setUserName] = useState(updatedUserData?.name || storedUserName || 'Utilisateur');
+  const [userEmail, setUserEmail] = useState(updatedUserData?.email || storedUser?.email || '');
+  const [userPhone, setUserPhone] = useState(updatedUserData?.phone || storedUser?.phone || '');
   
   const [language, setLang] = useState<Language>('fr');
   const [geoConsent, setGeoConsent] = useState(true);
@@ -48,14 +57,6 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
   const handleEditProfile = () => {
     feedback.tap();
     onNavigate('edit-profile');
-  };
-
-  const handleUpdateUser = (userData: { name: string; email: string; phone: string }) => {
-    setUserName(userData.name);
-    setUserEmail(userData.email);
-    setUserPhone(userData.phone);
-    console.log('User data updated:', userData);
-    // PATCH /users/me { name, email, phone }
   };
 
   const handleLanguageChange = (newLang: Language) => {
@@ -88,9 +89,7 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
 
   const handleLogout = () => {
     if (window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-      console.log('Logout');
-      // POST /auth/logout
-      onLogout(); // This will clear user and redirect to landing
+      onLogout();
     }
   };
 

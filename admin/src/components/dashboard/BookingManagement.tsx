@@ -9,14 +9,13 @@ import {
   CheckCircle2, 
   XCircle, 
   Plane, 
-  CalendarX,
   AlertCircle 
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { useAdminApp } from '../../context/AdminAppContext';
 import { exportToCSV } from '../../lib/utils';
-import { PAGE_CLASSES, COMPONENTS } from '../../lib/design-system';
+import { COMPONENTS } from '../../lib/design-system';
 import { toast } from 'sonner@2.0.3';
 import { useBookings } from '../../hooks/useBookings';
 import type { BookingStatus } from '../../shared/types/standardized';
@@ -28,21 +27,21 @@ import type { BookingStatus } from '../../shared/types/standardized';
  * Note: L'Admin supervise les réservations mais ne les gère pas directement
  */
 export function BookingManagement() {
-  const { passengers } = useAdminApp();
+  const { passengers: _passengers } = useAdminApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // 🔥 HOOK BACKEND-READY - Toute la logique métier externalisée
-  const { bookings, stats, loading, error } = useBookings({ loadStats: true });
+  const { bookings, stats, loading: _loading, error: _error } = useBookings({ loadStats: true });
 
   const getStatusLabel = (status: BookingStatus) => {
     switch (status) {
-      case 'EN_ATTENTE': return 'En attente';
-      case 'CONFIRMÉ': return 'Confirmé';
-      case 'TERMINÉ': return 'Terminé';
-      case 'ANNULÉ': return 'Annulé';
+      case 'pending': return 'En attente';
+      case 'confirmed': return 'Confirmé';
+      case 'completed': return 'Terminé';
+      case 'cancelled': return 'Annulé';
     }
   };
 
@@ -97,10 +96,10 @@ export function BookingManagement() {
 
   const getStatusBadgeColor = (status: BookingStatus) => {
     switch (status) {
-      case 'EN_ATTENTE': return 'bg-yellow-200 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 border border-yellow-400 dark:border-yellow-700';
-      case 'CONFIRMÉ': return 'bg-green-200 dark:bg-green-900/30 text-green-900 dark:text-green-300 border border-green-400 dark:border-green-700';
-      case 'TERMINÉ': return 'bg-gray-200 dark:bg-gray-900/30 text-gray-900 dark:text-gray-300 border border-gray-400 dark:border-gray-700';
-      case 'ANNULÉ': return 'bg-red-200 dark:bg-red-900/30 text-red-900 dark:text-red-300 border border-red-400 dark:border-red-700';
+      case 'pending': return 'bg-yellow-200 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 border border-yellow-400 dark:border-yellow-700';
+      case 'confirmed': return 'bg-green-200 dark:bg-green-900/30 text-green-900 dark:text-green-300 border border-green-400 dark:border-green-700';
+      case 'completed': return 'bg-gray-200 dark:bg-gray-900/30 text-gray-900 dark:text-gray-300 border border-gray-400 dark:border-gray-700';
+      case 'cancelled': return 'bg-red-200 dark:bg-red-900/30 text-red-900 dark:text-red-300 border border-red-400 dark:border-red-700';
     }
   };
 
@@ -135,7 +134,7 @@ export function BookingManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {(stats.enAttente ?? 0).toLocaleString()}
+                {(stats.pending ?? 0).toLocaleString()}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 En attente de paiement
@@ -152,7 +151,7 @@ export function BookingManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {(stats.confirmé ?? 0).toLocaleString()}
+                {(stats.confirmed ?? 0).toLocaleString()}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Payées et confirmées
@@ -169,7 +168,7 @@ export function BookingManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
-                {(stats.terminé ?? 0).toLocaleString()}
+                {(stats.completed ?? 0).toLocaleString()}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Voyages terminés
@@ -186,10 +185,10 @@ export function BookingManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {(stats.annulé ?? 0).toLocaleString()}
+                {(stats.cancelled ?? 0).toLocaleString()}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {(stats.total ?? 0) > 0 ? (((stats.annulé ?? 0) / (stats.total ?? 1)) * 100).toFixed(1) : '0.0'}% du total
+                {(stats.total ?? 0) > 0 ? (((stats.cancelled ?? 0) / (stats.total ?? 1)) * 100).toFixed(1) : '0.0'}% du total
               </p>
             </CardContent>
           </Card>
@@ -220,15 +219,16 @@ export function BookingManagement() {
               <div className="relative">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <select
+                  aria-label="Filtrer par statut"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
                   className="pl-10 pr-8 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 dark:text-white appearance-none transition-colors"
                 >
                   <option value="all">Tous les statuts</option>
-                  <option value="EN_ATTENTE">En attente</option>
-                  <option value="CONFIRMÉ">Confirmé</option>
-                  <option value="TERMINÉ">Terminé</option>
-                  <option value="ANNULÉ">Annulé</option>
+                  <option value="pending">En attente</option>
+                  <option value="confirmed">Confirmé</option>
+                  <option value="completed">Terminé</option>
+                  <option value="cancelled">Annulé</option>
                 </select>
               </div>
 
@@ -390,7 +390,7 @@ export function BookingManagement() {
                         </td>
                         
                         <td className="px-6 py-4 text-right">
-                          <button className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" onClick={() => handleViewDetails(booking)}>
+                          <button aria-label="Voir détails" className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" onClick={() => handleViewDetails(booking)}>
                             <Eye size={18} />
                           </button>
                         </td>

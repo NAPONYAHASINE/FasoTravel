@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { X, Building2, Mail, Phone, MapPin, Percent, User, FileText, Hash, Upload, ImageIcon, Coffee, Wifi, Snowflake, Plug, Tv, ShieldCheck, Armchair, Luggage, Lock, KeyRound, Eye, EyeOff } from 'lucide-react';
-import { transportCompaniesService } from '../../services/entitiesService';
-import { AppConfig } from '../../config/app.config';
+import { X, Building2, Mail, Phone, MapPin, Percent, User, FileText, Hash, Upload, Coffee, Wifi, Snowflake, Plug, Tv, Armchair, Luggage, Lock, KeyRound, Eye, EyeOff } from 'lucide-react';
 
 interface CreateCompanyModalProps {
   isOpen: boolean;
@@ -108,6 +106,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              title="Fermer"
             >
               <X size={20} />
             </button>

@@ -3,7 +3,7 @@
  * @description Utility functions for formatting data
  */
 
-import { CURRENCY, DATE_FORMATS } from '../services/constants';
+import { CURRENCY } from '../services/constants';
 
 // ============= DATE & TIME FORMATTING =============
 
@@ -267,6 +267,9 @@ export function getStatusClass(status: string): string {
     inactive: 'status-inactive',
     suspended: 'status-suspended',
     scheduled: 'status-scheduled',
+    boarding: 'status-in-progress',
+    departed: 'status-active',
+    arrived: 'status-completed',
     'in-progress': 'status-in-progress',
     completed: 'status-completed',
     cancelled: 'status-cancelled',

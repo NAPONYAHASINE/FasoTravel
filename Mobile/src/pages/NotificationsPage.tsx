@@ -8,18 +8,28 @@
  * - Event: notification_opened, notification_dismissed
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Bell, Check, X, Clock, CreditCard, Bus, Gift, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Notification, MOCK_NOTIFICATIONS_LIST } from '../data/models';
+import type { Notification } from '../data/models';
+import { notificationService } from '../services/api/notification.service';
 
 interface NotificationsPageProps {
   onBack: () => void;
 }
 
 export function NotificationsPage({ onBack }: NotificationsPageProps) {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS_LIST);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+
+  const loadNotifications = useCallback(async () => {
+    const data = await notificationService.getNotifications();
+    setNotifications(data);
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -83,18 +93,21 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
     }
   };
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(notifications.map(n => 
+  const handleMarkAsRead = async (id: string) => {
+    await notificationService.markAsRead(id);
+    setNotifications(prev => prev.map(n => 
       n.notification_id === id ? { ...n, is_read: true } : n
     ));
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+  const handleMarkAllAsRead = async () => {
+    await notificationService.markAllAsRead();
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
   };
 
-  const handleDelete = (id: string) => {
-    setNotifications(notifications.filter(n => n.notification_id !== id));
+  const handleDelete = async (id: string) => {
+    await notificationService.deleteNotification(id);
+    setNotifications(prev => prev.filter(n => n.notification_id !== id));
   };
 
   const filteredNotifications = filter === 'unread' 
@@ -104,7 +117,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 sticky top-0 z-10 shadow-lg" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 sticky top-0 z-10 shadow-lg pt-safe-area-6">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}

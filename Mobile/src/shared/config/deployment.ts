@@ -9,8 +9,7 @@
  * ✅ FONCTION UNIFIÉE pour Mobile & Societe
  */
 export const isDevelopment = (): boolean => {
-  // TODO: Remettre !import.meta.env.PROD quand le backend sera connecté
-  return true;
+  return !import.meta.env.PROD;
 };
 
 /**

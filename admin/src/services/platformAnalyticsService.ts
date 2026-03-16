@@ -69,7 +69,7 @@ class PlatformAnalyticsService {
   async getPlatformGrowthMetrics(
     companies: TransportCompany[],
     passengers: PassengerUser[],
-    stations: Station[]
+    _stations: Station[]
   ): Promise<PlatformGrowthMetrics> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
@@ -102,15 +102,15 @@ class PlatformAnalyticsService {
       throw new Error(response.error || 'Erreur lors de la récupération des analytics');
     }
     
-    return response.data;
+    return response.data!;
   }
   
   /**
    * Récupère uniquement les inscriptions hebdomadaires
    */
   async getWeeklyRegistrations(
-    companies: TransportCompany[],
-    passengers: PassengerUser[]
+    _companies: TransportCompany[],
+    _passengers: PassengerUser[]
   ): Promise<WeeklyRegistration[]> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
@@ -125,13 +125,13 @@ class PlatformAnalyticsService {
       throw new Error(response.error || 'Erreur lors de la récupération des inscriptions');
     }
     
-    return response.data;
+    return response.data!;
   }
   
   /**
    * Récupère uniquement l'activité des stations
    */
-  async getStationActivities(stations: Station[]): Promise<StationActivity[]> {
+  async getStationActivities(_stations: Station[]): Promise<StationActivity[]> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
       return MOCK_STATION_ACTIVITIES;
@@ -145,7 +145,7 @@ class PlatformAnalyticsService {
       throw new Error(response.error || 'Erreur lors de la récupération de l\'activité des stations');
     }
     
-    return response.data;
+    return response.data!;
   }
 
   /**
@@ -164,7 +164,7 @@ class PlatformAnalyticsService {
     if (!response.success) {
       throw new Error(response.error || 'Erreur lors de la récupération des stats dashboard');
     }
-    return response.data;
+    return response.data!;
   }
 }
 

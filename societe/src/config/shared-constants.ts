@@ -53,13 +53,13 @@ export const SHARED_BUSINESS_RULES = {
    * Moyens de paiement autorisés pour ventes ONLINE (app mobile)
    * ⚠️ CASH interdit pour online (pas de paiement physique possible)
    */
-  ONLINE_PAYMENT_METHODS: ['mobile_money', 'card'] as const,
+  ONLINE_PAYMENT_METHODS: ['orange_money', 'moov_money', 'wave', 'card'] as const,
   
   /**
    * Moyens de paiement autorisés pour ventes COUNTER (guichet)
    * Cash autorisé car paiement physique au guichet
    */
-  COUNTER_PAYMENT_METHODS: ['cash', 'mobile_money', 'card'] as const,
+  COUNTER_PAYMENT_METHODS: ['cash', 'orange_money', 'moov_money', 'wave', 'card'] as const,
   
   // ========================================
   // DONNÉES & PRIVACY
@@ -115,8 +115,9 @@ export const SHARED_BUSINESS_RULES = {
    * Statuts possibles pour un billet
    */
   TICKET_STATUSES: [
-    'valid',      // Valide (acheté, pas encore utilisé)
-    'used',       // Utilisé (voyage effectué)
+    'active',      // Actif (acheté, pas encore utilisé)
+    'boarded',     // Embarqué (voyage en cours/effectué)
+    'expired',     // Expiré
     'refunded',   // Remboursé
     'cancelled'   // Annulé
   ] as const,
@@ -181,8 +182,8 @@ export type CounterPaymentMethod = typeof SHARED_BUSINESS_RULES.COUNTER_PAYMENT_
 export const BUSINESS_LOGIC_RULES = {
   /**
    * Règle 1: Séparation stricte online/counter
-   * - salesChannel='online' → SEULEMENT mobile_money ou card
-   * - salesChannel='counter' → cash, mobile_money, ou card
+   * - salesChannel='online' → orange_money, moov_money, wave ou card
+   * - salesChannel='counter' → cash, orange_money, moov_money, wave, ou card
    */
   validatePaymentMethod(
     salesChannel: SalesChannel, 

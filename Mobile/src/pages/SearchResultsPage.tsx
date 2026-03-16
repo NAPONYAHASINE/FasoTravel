@@ -21,6 +21,7 @@ import { Frown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
 import { useTrips } from '../lib/hooks';
+import { STATIONS } from '../data/models';
 
 interface SearchResultsPageProps {
   searchParams: SearchParams & {
@@ -40,6 +41,10 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
   const isReturnSelection = searchParams.isReturnSelection || false;
   const filterOperator = searchParams.filterOperator;
   const outboundTripData = searchParams.outboundTripData;
+  
+  // Resolve station IDs to city names for display
+  const fromCity = STATIONS.find(s => s.id === searchParams.from)?.city || searchParams.from;
+  const toCity = STATIONS.find(s => s.id === searchParams.to)?.city || searchParams.to;
   
   // Use API hook for trips
   const { trips, isLoading, error } = useTrips({
@@ -97,7 +102,7 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <div className="sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="sticky top-0 z-10 pt-safe-area">
         {/* Step Indicator */}
         {isReturnSelection ? (
           <BookingStepIndicator currentStep="return-seat" completedSteps={['outbound-seat']} isRoundTrip={true} />
@@ -141,7 +146,7 @@ export function SearchResultsPage({ searchParams, onNavigate, onBack }: SearchRe
               {isReturnSelection ? 'Sélectionnez votre trajet Retour' : 'Trajets disponibles'}
             </h1>
             <p className="text-sm opacity-90">
-              {searchParams.from} → {searchParams.to}
+              {fromCity} → {toCity}
               {searchParams.date && ` • ${new Date(searchParams.date).toLocaleDateString('fr-FR')}`}
             </p>
             {filterOperator && (

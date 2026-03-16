@@ -31,7 +31,7 @@ export async function fetchPassengers(): Promise<PassengerUser[]> {
   }
 
   // Mode Production
-  const response = await apiService.get<PassengerUser[]>('/api/admin/passengers');
+  const response = await apiService.get<PassengerUser[]>('/admin/passengers');
   if (!response.success || !response.data) {
     throw new Error(response.error || 'Erreur lors de la récupération des passagers');
   }
@@ -53,7 +53,7 @@ export async function fetchPassengerById(id: string): Promise<PassengerUser> {
   }
 
   // Mode Production
-  const response = await apiService.get<PassengerUser>(`/api/admin/passengers/${id}`);
+  const response = await apiService.get<PassengerUser>(`/admin/passengers/${id}`);
   if (!response.success || !response.data) {
     throw new Error(response.error || 'Passager non trouvé');
   }
@@ -82,7 +82,7 @@ export async function updatePassenger(
   }
 
   // Mode Production
-  const response = await apiService.patch<PassengerUser>(`/api/admin/passengers/${id}`, updates);
+  const response = await apiService.patch<PassengerUser>(`/admin/passengers/${id}`, updates);
   if (!response.success || !response.data) {
     throw new Error(response.error || 'Erreur lors de la mise à jour');
   }
@@ -104,7 +104,7 @@ export async function suspendPassenger(id: string, reason: string): Promise<void
   }
 
   // Mode Production
-  const response = await apiService.post<void>(`/api/admin/passengers/${id}/suspend`, { reason });
+  const response = await apiService.post<void>(`/admin/passengers/${id}/suspend`, { reason });
   if (!response.success) {
     throw new Error(response.error || 'Erreur lors de la suspension');
   }
@@ -125,7 +125,7 @@ export async function reactivatePassenger(id: string): Promise<void> {
   }
 
   // Mode Production
-  const response = await apiService.post<void>(`/api/admin/passengers/${id}/reactivate`);
+  const response = await apiService.post<void>(`/admin/passengers/${id}/reactivate`);
   if (!response.success) {
     throw new Error(response.error || 'Erreur lors de la réactivation');
   }
@@ -145,7 +145,7 @@ export async function resetPassengerPassword(id: string): Promise<{ temporaryPas
 
   // Mode Production
   const response = await apiService.post<{ temporaryPassword: string }>(
-    `/api/admin/passengers/${id}/reset-password`
+    `/admin/passengers/${id}/reset-password`
   );
   if (!response.success || !response.data) {
     throw new Error(response.error || 'Erreur lors de la réinitialisation');
@@ -168,7 +168,7 @@ export async function deletePassenger(id: string): Promise<void> {
   }
 
   // Mode Production
-  const response = await apiService.delete<void>(`/api/admin/passengers/${id}`);
+  const response = await apiService.delete<void>(`/admin/passengers/${id}`);
   if (!response.success) {
     throw new Error(response.error || 'Erreur lors de la suppression');
   }
@@ -189,7 +189,7 @@ export async function sendNotificationToPassenger(
   }
 
   // Mode Production
-  const response = await apiService.post<void>(`/api/admin/passengers/${id}/notify`, notification);
+  const response = await apiService.post<void>(`/admin/passengers/${id}/notify`, notification);
   if (!response.success) {
     throw new Error(response.error || 'Erreur lors de l\'envoi de la notification');
   }

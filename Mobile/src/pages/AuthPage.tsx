@@ -15,6 +15,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
+import { authService } from '../services/api/auth.service';
 import brandLogo from '../assets/brand/logo.png';
 import bgDay from 'figma:asset/bcca83482c8b3b02fad6bfe11da57e59506831e5.png';
 import bgNight from 'figma:asset/b9ee1e83da37e8d99fdb6bc684feefadda356498.png';
@@ -82,12 +83,7 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
     setStage('form');
   };
 
-  const handleBackToChoice = () => {
-    feedback.tap();
-    setStage('choice');
-  };
-
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setGlobalError('');
     const errors: { identifier?: string; password?: string } = {};
     
@@ -117,31 +113,40 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
       setIsLoading(true);
       feedback.tap();
       
-      const userData = {
-        name: 'NAPON Yahasine',
-        email: loginMethod === 'email' ? loginEmail : 'yahasine@transportbf.bf',
-        phone: loginMethod === 'phone' ? loginPhone : '70123456',
-        isGuest: false,
-        loginIdentifier: loginMethod === 'phone' ? loginPhone : loginEmail
-      };
-      
-      // Simulate API call (remove when connecting real API)
-      setTimeout(() => {
-        setIsLoading(false);
+      try {
+        const identifier = loginMethod === 'phone' ? loginPhone : loginEmail;
+        const response = await authService.login({
+          email: loginMethod === 'email' ? loginEmail : `${loginPhone}@phone.transportbf.bf`,
+          password: loginPassword,
+        });
+
         feedback.success();
-        
-        // Persist user to localStorage
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-        localStorage.setItem('auth_token', `token_${Date.now()}`);
-        
+
+        const u = response.user as any;
+        const userData = {
+          name: u.firstName
+            ? `${u.firstName} ${u.lastName || ''}`.trim()
+            : u.name || identifier,
+          email: u.email || '',
+          phone: u.phone || loginPhone || '',
+          isGuest: false,
+          loginIdentifier: identifier,
+        };
+
         onAuth(userData);
-      }, 800);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erreur de connexion';
+        setGlobalError(message);
+        feedback.error();
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       feedback.error();
     }
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const errors: {
       name?: string;
       email?: string;
@@ -180,25 +185,34 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
       setIsLoading(true);
       feedback.tap();
       
-      const userData = {
-        name: registerName,
-        email: registerEmail || `${registerPhone.replace(/\s/g, '')}@transportbf.bf`,
-        phone: registerPhone,
-        isGuest: false,
-        loginIdentifier: registerPhone
-      };
-      
-      // Simulate API call (remove when connecting real API)
-      setTimeout(() => {
-        setIsLoading(false);
+      try {
+        const nameParts = registerName.trim().split(/\s+/);
+        const response = await authService.register({
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(' '),
+          email: registerEmail || `${registerPhone.replace(/\s/g, '')}@phone.transportbf.bf`,
+          phone: registerPhone,
+          password: registerPassword,
+        });
+
         feedback.success();
-        
-        // Persist user to localStorage
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-        localStorage.setItem('auth_token', `token_${Date.now()}`);
-        
+
+        const userData = {
+          name: registerName,
+          email: response.user.email || registerEmail || '',
+          phone: (response.user as any).phone || registerPhone,
+          isGuest: false,
+          loginIdentifier: registerPhone,
+        };
+
         onAuth(userData);
-      }, 800);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erreur lors de l\'inscription';
+        setGlobalError(message);
+        feedback.error();
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       feedback.error();
     }

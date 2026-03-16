@@ -11,7 +11,7 @@ interface FormModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
-const sizeClasses = {
+const sizeClasses: Record<string, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
@@ -33,12 +33,15 @@ export function FormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div 
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700"
+        className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl ${sizeClasses[size] || sizeClasses.lg} w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-500 to-red-600">
-          <h2 className="text-xl text-white">{title}</h2>
+          <div>
+            <h2 className="text-xl text-white">{title}</h2>
+            {description && <p className="text-sm text-white/80 mt-0.5">{description}</p>}
+          </div>
           <button
             onClick={onClose}
             className="ml-4 p-1 hover:bg-white/20 rounded-lg transition-colors text-white"

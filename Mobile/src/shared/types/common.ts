@@ -131,34 +131,41 @@ export interface ApiResponse<T = unknown> {
 // ============================================
 
 export enum PaymentMethod {
-  ORANGE_MONEY = 'ORANGE_MONEY',
-  MOOV_MONEY = 'MOOV_MONEY',
-  CARTE_BANCAIRE = 'CARTE_BANCAIRE',
-  CASH = 'CASH',
+  CASH = 'cash',
+  ORANGE_MONEY = 'orange_money',
+  MOOV_MONEY = 'moov_money',
+  WAVE = 'wave',
+  CARD = 'card',
 }
 
 export enum PaymentStatus {
-  PENDING = 'PENDING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED',
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
 }
 
 export enum TicketStatus {
-  AVAILABLE = 'AVAILABLE',
-  HOLD = 'HOLD',
-  PAID = 'PAID',
-  EMBARKED = 'EMBARKED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
+  ACTIVE = 'active',
+  BOARDED = 'boarded',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
+  REFUNDED = 'refunded',
+}
+
+export enum BookingStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }
 
 export enum TripStatus {
-  SCHEDULED = 'SCHEDULED',
-  BOARDING = 'BOARDING',
-  DEPARTED = 'DEPARTED',
-  ARRIVED = 'ARRIVED',
-  CANCELLED = 'CANCELLED',
+  SCHEDULED = 'scheduled',
+  BOARDING = 'boarding',
+  DEPARTED = 'departed',
+  ARRIVED = 'arrived',
+  CANCELLED = 'cancelled',
 }
 
 // ============================================

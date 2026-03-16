@@ -244,20 +244,29 @@ export function useSeats(tripId: string) {
         // setLayout(data.layout);
         // setSeats(data.occupied_seats);
         
-        // MOCK DATA en attendant backend
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // MOCK DATA — déterministe par tripId pour cohérence
+        await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Mock seat statuses (hardcodé pour l'instant)
-        const mockSeats: { [key: string]: SeatStatus } = {
-          'A1': 'paid',
-          'A2': 'paid',
-          'B3': 'hold',
-          'C5': 'offline_reserved',
-          'D7': 'paid'
-        };
+        // Générer un hash simple du tripId pour varier les sièges occupés
+        let hash = 0;
+        for (let i = 0; i < tripId.length; i++) {
+          hash = ((hash << 5) - hash) + tripId.charCodeAt(i);
+          hash |= 0;
+        }
+        
+        const allSeats = ['A1','A2','A3','A4','B1','B2','B3','B4','C1','C2','C3','C4','D1','D2','D3','D4'];
+        const statuses: SeatStatus[] = ['paid', 'hold', 'offline_reserved'];
+        const mockSeats: { [key: string]: SeatStatus } = {};
+        
+        // Occuper ~30% des sièges, de façon déterministe
+        allSeats.forEach((seat, idx) => {
+          const seatHash = Math.abs(hash + idx * 7);
+          if (seatHash % 3 === 0) {
+            mockSeats[seat] = statuses[seatHash % statuses.length];
+          }
+        });
         
         setSeats(mockSeats);
-        // Layout null = utilise props legacy dans SeatMap
         setLayout(null);
         
       } catch (err) {
@@ -818,7 +827,7 @@ export function usePaymentMethods() {
             enabled: true,
             min_amount: 100,
             max_amount: 1000000,
-            fees_percentage: 1.5
+            fees_percentage: 1
           },
           {
             id: 'moov_money',
@@ -829,17 +838,50 @@ export function usePaymentMethods() {
             enabled: true,
             min_amount: 100,
             max_amount: 1000000,
-            fees_percentage: 1.5
+            fees_percentage: 1
           },
           {
-            id: 'credit_card',
+            id: 'wave',
+            name: 'Wave',
+            type: 'mobile_money',
+            provider: 'wave',
+            logo: '🌊',
+            enabled: true,
+            min_amount: 100,
+            max_amount: 1000000,
+            fees_percentage: 1
+          },
+          {
+            id: 'sank_money',
+            name: 'Sank Money',
+            type: 'mobile_money',
+            provider: 'sank',
+            logo: '🟢',
+            enabled: true,
+            min_amount: 100,
+            max_amount: 1000000,
+            fees_percentage: 1
+          },
+          {
+            id: 'telecel_money',
+            name: 'Telecel Money',
+            type: 'mobile_money',
+            provider: 'telecel',
+            logo: '🟡',
+            enabled: true,
+            min_amount: 100,
+            max_amount: 1000000,
+            fees_percentage: 1
+          },
+          {
+            id: 'card',
             name: 'Carte Bancaire',
             type: 'card',
             provider: 'visa',
             logo: '💳',
             enabled: true,
             min_amount: 500,
-            fees_percentage: 2.5
+            fees_percentage: 0
           }
         ];
         

@@ -1,0 +1,121 @@
+﻿src/components/dashboard/SupportCenter.tsx(313,24): error TS7053: Element implicitly has an 'any' type because expression of type '"low" | "medium" | "high" | "urgent" | "normal"' can't be used to index type '{ readonly low: "Basse"; readonly medium: "Moyenne"; readonly high: "├ëlev├®e"; readonly urgent: "Urgent"; readonly critical: "Critique"; }'.
+  Property 'normal' does not exist on type '{ readonly low: "Basse"; readonly medium: "Moyenne"; readonly high: "├ëlev├®e"; readonly urgent: "Urgent"; readonly critical: "Critique"; }'.
+src/components/dashboard/SupportCenter.tsx(393,62): error TS2345: Argument of type '"low" | "medium" | "high" | "urgent" | "normal"' is not assignable to parameter of type '"low" | "medium" | "high" | "critical" | "urgent"'.
+  Type '"normal"' is not assignable to type '"low" | "medium" | "high" | "critical" | "urgent"'.
+src/components/dashboard/SupportCenter.tsx(395,20): error TS7053: Element implicitly has an 'any' type because expression of type '"low" | "medium" | "high" | "urgent" | "normal"' can't be used to index type '{ readonly low: "Basse"; readonly medium: "Moyenne"; readonly high: "├ëlev├®e"; readonly urgent: "Urgent"; readonly critical: "Critique"; }'.
+  Property 'normal' does not exist on type '{ readonly low: "Basse"; readonly medium: "Moyenne"; readonly high: "├ëlev├®e"; readonly urgent: "Urgent"; readonly critical: "Critique"; }'.
+src/hooks/useEntities.ts(1392,54): error TS2339: Property 'getById' does not exist on type 'OperatorServicesService'.
+src/hooks/useFinancialFlow.ts(218,23): error TS2345: Argument of type 'number' is not assignable to parameter of type 'SetStateAction<5>'.
+src/hooks/useFinancialFlow.ts(224,28): error TS2345: Argument of type 'number' is not assignable to parameter of type 'SetStateAction<100>'.
+src/hooks/usePerformance.ts(48,20): error TS2554: Expected 1 arguments, but got 0.
+src/hooks/usePerformance.ts(83,20): error TS2554: Expected 1 arguments, but got 0.
+src/hooks/usePerformance.ts(132,27): error TS2554: Expected 1 arguments, but got 0.
+src/hooks/usePerformance.ts(174,27): error TS2554: Expected 1 arguments, but got 0.
+src/hooks/usePerformance.ts(329,28): error TS2554: Expected 1 arguments, but got 0.
+src/imports/AdminDashboardWebApp.tsx(305,15): error TS2322: Type '{ children: Element; additionalClassNames: string; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+  Property 'additionalClassNames' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+src/imports/AdminDashboardWebApp.tsx(317,15): error TS2322: Type '{ children: Element; additionalClassNames: string; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+  Property 'additionalClassNames' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+src/imports/AdminDashboardWebApp.tsx(339,20): error TS2322: Type '{ children: string; additionalClassNames: string; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+  Property 'additionalClassNames' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+src/imports/AdminDashboardWebApp.tsx(407,15): error TS2322: Type '{ children: Element; additionalClassNames: string; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+  Property 'additionalClassNames' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+src/imports/AdminDashboardWebApp.tsx(1265,39): error TS2322: Type '{ children: string; additionalClassNames: string; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+  Property 'additionalClassNames' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+src/imports/AdminDashboardWebApp.tsx(1272,39): error TS2322: Type '{ children: string; additionalClassNames: string; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+  Property 'additionalClassNames' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+src/imports/AdminDashboardWebApp.tsx(1578,45): error TS2339: Property 'p31be3270' does not exist on type '{ p10b7a550: string; p1106d8a0: string; p12acf800: string; p1302ca40: string; p141b0c80: string; p152e1d00: string; p15d7c500: string; p1634f2c0: string; p167d4380: string; p16a3d900: string; p16d78b00: string; ... 72 more ...; pf5e7b80: string; }'.
+src/imports/AdminDashboardWebApp.tsx(1619,39): error TS2339: Property 'p1279400' does not exist on type '{ p10b7a550: string; p1106d8a0: string; p12acf800: string; p1302ca40: string; p141b0c80: string; p152e1d00: string; p15d7c500: string; p1634f2c0: string; p167d4380: string; p16a3d900: string; p16d78b00: string; ... 72 more ...; pf5e7b80: string; }'.
+src/imports/AdminDashboardWebApp.tsx(1687,37): error TS2339: Property 'p773c080' does not exist on type '{ p10b7a550: string; p1106d8a0: string; p12acf800: string; p1302ca40: string; p141b0c80: string; p152e1d00: string; p15d7c500: string; p1634f2c0: string; p167d4380: string; p16a3d900: string; p16d78b00: string; ... 72 more ...; pf5e7b80: string; }'.
+src/imports/AdminDashboardWebApp.tsx(1690,37): error TS2339: Property 'p12577a40' does not exist on type '{ p10b7a550: string; p1106d8a0: string; p12acf800: string; p1302ca40: string; p141b0c80: string; p152e1d00: string; p15d7c500: string; p1634f2c0: string; p167d4380: string; p16a3d900: string; p16d78b00: string; ... 72 more ...; pf5e7b80: string; }'.
+src/imports/AdminDashboardWebApp.tsx(1691,37): error TS2551: Property 'p4b0c80' does not exist on type '{ p10b7a550: string; p1106d8a0: string; p12acf800: string; p1302ca40: string; p141b0c80: string; p152e1d00: string; p15d7c500: string; p1634f2c0: string; p167d4380: string; p16a3d900: string; p16d78b00: string; ... 72 more ...; pf5e7b80: string; }'. Did you mean 'p141b0c80'?
+src/imports/AdminDashboardWebApp.tsx(1694,37): error TS2339: Property 'p1f4149e0' does not exist on type '{ p10b7a550: string; p1106d8a0: string; p12acf800: string; p1302ca40: string; p141b0c80: string; p152e1d00: string; p15d7c500: string; p1634f2c0: string; p167d4380: string; p16a3d900: string; p16d78b00: string; ... 72 more ...; pf5e7b80: string; }'.
+src/imports/AdminDashboardWebApp.tsx(1695,37): error TS2339: Property 'p3c35f580' does not exist on type '{ p10b7a550: string; p1106d8a0: string; p12acf800: string; p1302ca40: string; p141b0c80: string; p152e1d00: string; p15d7c500: string; p1634f2c0: string; p167d4380: string; p16a3d900: string; p16d78b00: string; ... 72 more ...; pf5e7b80: string; }'.
+src/lib/adminMockData.ts(2670,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(2690,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(2709,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(2732,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(2751,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(2770,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(2793,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(2814,5): error TS2353: Object literal may only specify known properties, and 'scheduledDeparture' does not exist in type 'Trip'.
+src/lib/adminMockData.ts(3140,34): error TS2304: Cannot find name 'BookingStats'.
+src/services/financialService.ts(193,7): error TS2740: Type 'ApiResponse<any>' is missing the following properties from type 'DailyRevenue[]': length, pop, push, concat, and 29 more.
+src/services/financialService.ts(205,7): error TS2740: Type 'ApiResponse<any>' is missing the following properties from type 'PaymentMethodStats[]': length, pop, push, concat, and 29 more.
+src/services/financialService.ts(218,7): error TS2740: Type 'ApiResponse<any>' is missing the following properties from type 'CompanyRevenue[]': length, pop, push, concat, and 29 more.
+src/services/platformAnalyticsService.ts(105,5): error TS2322: Type 'PlatformGrowthMetrics | undefined' is not assignable to type 'PlatformGrowthMetrics'.
+  Type 'undefined' is not assignable to type 'PlatformGrowthMetrics'.
+src/services/platformAnalyticsService.ts(128,5): error TS2322: Type 'MockWeeklyRegistration[] | undefined' is not assignable to type 'MockWeeklyRegistration[]'.
+  Type 'undefined' is not assignable to type 'MockWeeklyRegistration[]'.
+src/services/platformAnalyticsService.ts(148,5): error TS2322: Type 'MockStationActivity[] | undefined' is not assignable to type 'MockStationActivity[]'.
+  Type 'undefined' is not assignable to type 'MockStationActivity[]'.
+src/services/platformAnalyticsService.ts(167,5): error TS2322: Type 'DashboardStats | undefined' is not assignable to type 'DashboardStats'.
+  Type 'undefined' is not assignable to type 'DashboardStats'.
+src/services/policyService.ts(86,32): error TS2352: Conversion of type 'ApiResponse<OperatorPolicy[]>' to type 'OperatorPolicy[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<OperatorPolicy[]>' is missing the following properties from type 'OperatorPolicy[]': length, pop, push, concat, and 29 more.
+src/services/policyService.ts(126,37): error TS2352: Conversion of type 'ApiResponse<OperatorPolicy>' to type 'OperatorPolicy' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<OperatorPolicy>' is missing the following properties from type 'OperatorPolicy': id, type, title, description, and 6 more.
+src/services/policyService.ts(157,37): error TS2352: Conversion of type 'ApiResponse<OperatorPolicy>' to type 'OperatorPolicy' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<OperatorPolicy>' is missing the following properties from type 'OperatorPolicy': id, type, title, description, and 6 more.
+src/services/policyService.ts(198,37): error TS2352: Conversion of type 'ApiResponse<OperatorPolicy>' to type 'OperatorPolicy' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<OperatorPolicy>' is missing the following properties from type 'OperatorPolicy': id, type, title, description, and 6 more.
+src/services/policyService.ts(256,32): error TS2352: Conversion of type 'ApiResponse<PlatformPolicy[]>' to type 'PlatformPolicy[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<PlatformPolicy[]>' is missing the following properties from type 'PlatformPolicy[]': length, pop, push, concat, and 29 more.
+src/services/policyService.ts(310,37): error TS2352: Conversion of type 'ApiResponse<PlatformPolicy>' to type 'PlatformPolicy' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<PlatformPolicy>' is missing the following properties from type 'PlatformPolicy': id, type, title, content, and 7 more.
+src/services/policyService.ts(347,37): error TS2352: Conversion of type 'ApiResponse<PlatformPolicy>' to type 'PlatformPolicy' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<PlatformPolicy>' is missing the following properties from type 'PlatformPolicy': id, type, title, content, and 7 more.
+src/services/policyService.ts(378,37): error TS2352: Conversion of type 'ApiResponse<PlatformPolicy>' to type 'PlatformPolicy' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiResponse<PlatformPolicy>' is missing the following properties from type 'PlatformPolicy': id, type, title, content, and 7 more.
+src/services/promotionService.ts(119,5): error TS2740: Type 'ApiResponse<Promotion[]>' is missing the following properties from type 'Promotion[]': length, pop, push, concat, and 29 more.
+src/services/promotionService.ts(127,5): error TS2740: Type 'ApiResponse<PromotionStats>' is missing the following properties from type 'PromotionStats': total, active, pending, expired, and 4 more.
+src/services/promotionService.ts(134,5): error TS2740: Type 'ApiResponse<Promotion>' is missing the following properties from type 'Promotion': id, operatorId, title, discountType, and 9 more.
+src/services/promotionService.ts(181,5): error TS2740: Type 'ApiResponse<Promotion>' is missing the following properties from type 'Promotion': id, operatorId, title, discountType, and 9 more.
+src/services/promotionService.ts(199,5): error TS2740: Type 'ApiResponse<Promotion>' is missing the following properties from type 'Promotion': id, operatorId, title, discountType, and 9 more.
+src/services/promotionService.ts(221,5): error TS2740: Type 'ApiResponse<Promotion>' is missing the following properties from type 'Promotion': id, operatorId, title, discountType, and 9 more.
+src/services/promotionService.ts(242,5): error TS2740: Type 'ApiResponse<Promotion>' is missing the following properties from type 'Promotion': id, operatorId, title, discountType, and 9 more.
+src/services/promotionService.ts(256,5): error TS2740: Type 'ApiResponse<Promotion>' is missing the following properties from type 'Promotion': id, operatorId, title, discountType, and 9 more.
+src/services/promotionService.ts(268,5): error TS2740: Type 'ApiResponse<Promotion>' is missing the following properties from type 'Promotion': id, operatorId, title, discountType, and 9 more.
+src/services/stationService.ts(70,5): error TS2322: Type 'MockStationStats[] | undefined' is not assignable to type 'MockStationStats[]'.
+  Type 'undefined' is not assignable to type 'MockStationStats[]'.
+src/services/stationService.ts(91,5): error TS2322: Type 'MockGlobalStationStats | undefined' is not assignable to type 'MockGlobalStationStats'.
+  Type 'undefined' is not assignable to type 'MockGlobalStationStats'.
+src/services/stationService.ts(109,5): error TS2322: Type 'MockStationStats | undefined' is not assignable to type 'MockStationStats | null'.
+  Type 'undefined' is not assignable to type 'MockStationStats | null'.
+src/services/ticketService.ts(53,5): error TS2740: Type 'ApiResponse<Ticket[]>' is missing the following properties from type 'Ticket[]': length, pop, push, concat, and 29 more.
+src/services/ticketService.ts(55,5): error TS2740: Type 'ApiResponse<Ticket[]>' is missing the following properties from type 'Ticket[]': length, pop, push, concat, and 29 more.
+src/services/ticketService.ts(75,5): error TS2740: Type 'ApiResponse<TicketStats>' is missing the following properties from type 'TicketStats': totalTickets, confirmedTickets, cancelledTickets, usedTickets, and 4 more.
+src/services/ticketService.ts(76,5): error TS2740: Type 'ApiResponse<TicketStats>' is missing the following properties from type 'TicketStats': totalTickets, confirmedTickets, cancelledTickets, usedTickets, and 4 more.
+src/services/ticketService.ts(88,5): error TS2740: Type 'ApiResponse<Ticket>' is missing the following properties from type 'Ticket': id, bookingId, tripId, passengerId, and 7 more.
+src/services/tripService.ts(112,5): error TS2322: Type 'CompanyTripSummary[] | undefined' is not assignable to type 'CompanyTripSummary[]'.
+  Type 'undefined' is not assignable to type 'CompanyTripSummary[]'.
+src/services/tripService.ts(137,5): error TS2322: Type 'TripGlobalStats | undefined' is not assignable to type 'TripGlobalStats'.
+  Type 'undefined' is not assignable to type 'TripGlobalStats'.
+src/services/tripService.ts(164,5): error TS2322: Type 'CompanyTripSummary | undefined' is not assignable to type 'CompanyTripSummary | null'.
+  Type 'undefined' is not assignable to type 'CompanyTripSummary | null'.
+src/shared/types/standardized.ts(117,3): error TS2300: Duplicate identifier 'vehicleCount'.
+src/shared/types/standardized.ts(118,3): error TS2300: Duplicate identifier 'operatorId'.
+src/shared/types/standardized.ts(119,3): error TS2300: Duplicate identifier 'approvedAt'.
+src/shared/types/standardized.ts(123,3): error TS2300: Duplicate identifier 'vehicleCount'.
+src/shared/types/standardized.ts(128,3): error TS2300: Duplicate identifier 'operatorId'.
+src/shared/types/standardized.ts(129,3): error TS2300: Duplicate identifier 'approvedAt'.
+src/societe/src/contexts/AppContext.tsx(183,22): error TS2345: Argument of type '{ id: string; email: string; name: string; role: "responsable"; societyId: string; } | { id: string; email: string; name: string; role: "manager"; societyId: string; gareName: string; gareId: string; } | { ...; }' is not assignable to parameter of type 'SetStateAction<OperatorUser | null>'.
+  Type '{ id: string; email: string; name: string; role: "responsable"; societyId: string; }' is not assignable to type 'SetStateAction<OperatorUser | null>'.
+    Type '{ id: string; email: string; name: string; role: "responsable"; societyId: string; }' is missing the following properties from type 'OperatorUser': companyId, companyName, status, createdAt, updatedAt
+src/societe/src/contexts/AppContext.tsx(217,25): error TS2345: Argument of type '{ activeTrips: number; todayBookings: number; todayPassengers: number; pendingIncidents: number; totalRevenue: number; totalPassengers: number; totalBookings: number; }' is not assignable to parameter of type 'SetStateAction<DashboardStats | null>'.
+  Type '{ activeTrips: number; todayBookings: number; todayPassengers: number; pendingIncidents: number; totalRevenue: number; totalPassengers: number; totalBookings: number; }' is missing the following properties from type 'DashboardStats': todayRevenue, todayTrips, cancelledBookings, systemHealth
+src/societe/src/pages/responsable/RoutesPage.tsx(115,16): error TS2322: Type 'import("C:/FasoTravel/admin/src/shared/types/standardized").Route[]' is not assignable to type 'Route[]'.
+  Type 'import("C:/FasoTravel/admin/src/shared/types/standardized").Route' is not assignable to type 'Route'.
+    Types of property 'startStationName' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/societe/src/pages/responsable/StaffPage.tsx(73,16): error TS2322: Type 'import("C:/FasoTravel/admin/src/shared/types/standardized").Manager[]' is not assignable to type 'Manager[]'.
+  Type 'import("C:/FasoTravel/admin/src/shared/types/standardized").Manager' is not assignable to type 'Manager'.
+    Types of property 'gareName' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/societe/src/pages/responsable/StaffPage.tsx(77,16): error TS2322: Type 'import("C:/FasoTravel/admin/src/shared/types/standardized").Cashier[]' is not assignable to type 'Cashier[]'.
+  Type 'import("C:/FasoTravel/admin/src/shared/types/standardized").Cashier' is not assignable to type 'Cashier'.
+    Types of property 'gareName' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.

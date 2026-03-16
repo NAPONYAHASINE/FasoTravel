@@ -28,9 +28,7 @@ import { useSupportTickets, useSupportActions } from '../../hooks/useEntities';
 import { useAdminApp } from '../../context/AdminAppContext';
 import { getStatusColor, getPriorityColor, getRelativeTime } from '../../lib/utils';
 import { STATUS_LABELS, PRIORITY_LABELS } from '../../lib/constants';
-import { PAGE_CLASSES } from '../../lib/design-system';
 import { toast } from 'sonner@2.0.3';
-import type { Support, SupportReply } from '../../shared/types/standardized';
 
 type FilterUserType = 'all' | 'passenger' | 'operator';
 

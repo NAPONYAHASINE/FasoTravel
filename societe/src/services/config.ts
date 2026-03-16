@@ -24,10 +24,10 @@ export const API_CONFIG = {
   baseUrl: getEnvVar('VITE_API_URL', 'http://localhost:3000/api'),
   
   // Timeout des requêtes HTTP (en ms)
-  timeout: 10000,
+  timeout: 30000,
   
-  // Préfixe pour les clés localStorage
-  storagePrefix: 'transportbf_',
+  // Préfixe pour les clés localStorage (vide pour cohérence avec admin + shared constants)
+  storagePrefix: '',
 };
 
 /**
@@ -40,6 +40,21 @@ export const isLocalMode = () => API_CONFIG.mode === 'local';
  */
 export const isApiMode = () => API_CONFIG.mode === 'api';
 
+// ============================================
+// FEATURE FLAGS
+// ============================================
+
+export const FEATURE_FLAGS = {
+  /** Utiliser mock data même en prod */
+  forceMockData: false,
+  
+  /** Mode debug console */
+  debugMode: isLocalMode(),
+  
+  /** Log toutes les requêtes API */
+  logRequests: isLocalMode(),
+};
+
 /**
  * Configuration des endpoints API
  */
@@ -51,6 +66,7 @@ export const API_ENDPOINTS = {
     logout: '/auth/logout',
     me: '/auth/me',
     resetPassword: '/auth/reset-password',
+    refreshToken: '/auth/refresh-token',
   },
   
   // Managers
@@ -93,23 +109,9 @@ export const API_ENDPOINTS = {
  * Configuration des headers par défaut
  */
 export const getDefaultHeaders = (): HeadersInit => {
-  const headers: HeadersInit = {
+  return {
     'Content-Type': 'application/json',
   };
-  
-  // Ajouter le token d'authentification si disponible (seulement côté client)
-  if (typeof window !== 'undefined') {
-    try {
-      const token = localStorage.getItem(`${API_CONFIG.storagePrefix}auth_token`);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    } catch (error) {
-      // Ignorer les erreurs d'accès au localStorage
-    }
-  }
-  
-  return headers;
 };
 
 /**

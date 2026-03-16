@@ -162,8 +162,8 @@ export function useFinancialFlow(
   const loadedRef = useRef(false);
 
   // Paramètres modèle économique modifiables
-  const [commissionRate, setCommissionRate] = useState(FASOTRAVEL_MODEL_DEFAULTS.defaultCommissionRate);
-  const [serviceFeePerTicket, setServiceFeePerTicket] = useState(FASOTRAVEL_MODEL_DEFAULTS.defaultServiceFee);
+  const [commissionRate, setCommissionRate] = useState<number>(FASOTRAVEL_MODEL_DEFAULTS.defaultCommissionRate);
+  const [serviceFeePerTicket, setServiceFeePerTicket] = useState<number>(FASOTRAVEL_MODEL_DEFAULTS.defaultServiceFee);
 
   // ==================== FETCH ====================
 

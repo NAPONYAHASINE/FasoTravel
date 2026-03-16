@@ -9,7 +9,7 @@
  * ```
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { platformAnalyticsService } from '../services/platformAnalyticsService';
 import type {
   PlatformGrowthMetrics,
@@ -61,7 +61,6 @@ export function usePlatformAnalytics(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const loadedRef = useRef(false);
 
   /**
    * Récupère les métriques depuis le service

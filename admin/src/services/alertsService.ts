@@ -18,7 +18,7 @@
 
 import { AppConfig } from '../config/app.config';
 import { apiService } from './apiService';
-import type { IntegrationAlertRule, IntegrationAlert, AlertRuleType, AlertSeverity } from '../shared/types/standardized';
+import type { IntegrationAlertRule, IntegrationAlert } from '../shared/types/standardized';
 import { MOCK_ALERT_RULES, MOCK_INTEGRATION_ALERTS } from '../lib/adminMockData';
 
 interface ApiResponse<T> {

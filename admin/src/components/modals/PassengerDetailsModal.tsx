@@ -3,7 +3,7 @@
  * @description Modal pour afficher les détails complets d'un passager
  */
 
-import { X, User, Mail, Phone, Calendar, Shield, CheckCircle, XCircle, MapPin, CreditCard } from 'lucide-react';
+import { X, Mail, Phone, Calendar, Shield, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 import { PassengerUser } from '../../shared/types/standardized';
 import { Badge } from '../ui/badge';
 
@@ -47,6 +47,7 @@ export function PassengerDetailsModal({ isOpen, onClose, passenger }: PassengerD
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            title="Fermer"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>

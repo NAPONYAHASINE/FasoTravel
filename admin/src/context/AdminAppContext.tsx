@@ -15,7 +15,6 @@ import {
   TransportCompany,
   PassengerUser,
   AdminUser,
-  OperatorUser,
   Station,
   Support,
   Incident,
@@ -26,12 +25,12 @@ import {
   Payment,
   RevenueStats,
   Advertisement,
-  Promotion,
-  Integration,
-  OperatorPolicy,
-  OperatorService,
-  UserSession,
 } from '../shared/types/standardized';
+import {
+  STORAGE_AUTH_TOKEN,
+  STORAGE_REFRESH_TOKEN,
+  clearAuthStorage,
+} from '../shared/constants/storage';
 
 // Import des hooks backend-ready
 import {
@@ -46,13 +45,11 @@ import {
   useAdvertisements,
   useCompanyActions,
   usePassengerActions,
-  useStationActions,
   useSupportActions,
   useNotificationActions,
   useAdvertisementActions,
 } from '../hooks/useEntities';
 
-import { AppConfig } from '../config/app.config';
 import { authService } from '../services';
 
 // Import du service paiements backend-ready
@@ -168,7 +165,7 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
   // ==================== AUTH STATE ====================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [_isInitialized, setIsInitialized] = useState(false);
   
   // ==================== OTP STATE ====================
   const [otpPending, setOtpPending] = useState(false);
@@ -246,14 +243,13 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
     data: advertisements,
     loading: advertisementsLoading,
     error: advertisementsError,
-    refresh: refreshAdvertisements,
+    refresh: _refreshAdvertisements,
   } = useAdvertisements();
 
   // ==================== ACTIONS HOOKS ====================
   
   const companyActions = useCompanyActions();
   const passengerActions = usePassengerActions();
-  const stationActions = useStationActions();
   const supportActions = useSupportActions();
   const notificationActions = useNotificationActions();
   const advertisementActions = useAdvertisementActions();
@@ -393,10 +389,10 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
 
       // Stocker tokens si production
       if (result.token) {
-        localStorage.setItem('auth_token', result.token);
+        localStorage.setItem(STORAGE_AUTH_TOKEN, result.token);
       }
       if (result.refreshToken) {
-        localStorage.setItem('refresh_token', result.refreshToken);
+        localStorage.setItem(STORAGE_REFRESH_TOKEN, result.refreshToken);
       }
 
       // Passer en mode OTP
@@ -430,10 +426,10 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
 
     // Stocker tokens si production
     if (result.token) {
-      localStorage.setItem('auth_token', result.token);
+      localStorage.setItem(STORAGE_AUTH_TOKEN, result.token);
     }
     if (result.refreshToken) {
-      localStorage.setItem('refresh_token', result.refreshToken);
+      localStorage.setItem(STORAGE_REFRESH_TOKEN, result.refreshToken);
     }
 
     setCurrentUser(user);
@@ -467,8 +463,7 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     authService.logout().catch(console.error);
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
+    clearAuthStorage();
     setCurrentUser(null);
     setIsAuthenticated(false);
     setOtpPending(false);
@@ -584,7 +579,7 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
     return stories.find(s => s.id === id);
   };
 
-  const publishStory = (id: string) => {
+  const publishStory = (_id: string) => {
     // Backend: await storiesService.publish(id)
     refreshStories();
   };

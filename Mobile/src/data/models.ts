@@ -8,11 +8,11 @@
 // TYPES & INTERFACES DE BASE
 // ============================================
 
-export type TicketStatus = 'AVAILABLE' | 'HOLD' | 'PAID' | 'EMBARKED' | 'CANCELLED';
+export type TicketStatus = 'active' | 'boarded' | 'expired' | 'cancelled' | 'refunded';
 export type SeatStatus = 'available' | 'hold' | 'paid' | 'offline_reserved' | 'selected';
 export type TripType = 'ALLER_SIMPLE' | 'ALLER_RETOUR';
 export type UserRole = 'USER' | 'OPERATOR_ADMIN' | 'SUPER_ADMIN';
-export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 // ============================================
 // FONCTIONS UTILITAIRES - VALIDATIONS
@@ -58,7 +58,7 @@ export function validateTripCapacity(trip: Trip): boolean {
   }
   return true;
 }
-export type PaymentMethod = 'ORANGE_MONEY' | 'MOOV_MONEY' | 'CARTE_BANCAIRE' | 'CASH';
+export type PaymentMethod = 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card';
 export type StoryType =
   | 'PROMO'
   | 'PROMOTIONS'
@@ -323,7 +323,7 @@ export interface Ticket {
   can_cancel: boolean;
   can_transfer: boolean;
   cancellation_reason?: string;
-  refund_status?: 'PENDING' | 'COMPLETED' | 'REJECTED';
+  refund_status?: 'pending' | 'completed' | 'rejected';
   metadata?: Record<string, any>;
 }
 
@@ -333,7 +333,7 @@ export interface TicketTransfer {
   from_user_id: string;
   to_user_id: string;
   transfer_time: string;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  status: 'pending' | 'completed' | 'cancelled';
   expires_at: string;
 }
 
@@ -342,7 +342,7 @@ export interface Booking {
   user_id: string;
   trip_id: string;
   operator_id: string;
-  status: 'HOLD' | 'CONFIRMED' | 'CANCELLED';
+  status: 'pending' | 'confirmed' | 'cancelled';
   hold_expires_at?: string;
   total_amount: number;
   currency: string;
@@ -449,7 +449,7 @@ export interface Review {
   is_verified_traveler: boolean; // Backend confirms user took this trip
   helpful_count: number;
   unhelpful_count: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   updated_at: string;
 }
@@ -1290,12 +1290,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22670123456',
     passenger_email: 'napon@example.com',
     seat_number: 'A12',
-    status: 'PAID',
+    status: 'active',
     qr_code: 'QR_AC7H851940',
     alphanumeric_code: 'AC7H851940',
     price: 8500,
     currency: 'XOF',
-    payment_method: 'ORANGE_MONEY',
+    payment_method: 'orange_money',
     payment_id: 'PAY_AC7H851940',
     created_at: '2025-10-20T10:30:00',
     updated_at: '2025-10-20T10:30:00',
@@ -1323,12 +1323,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22670123456',
     passenger_email: 'napon@example.com',
     seat_number: 'B05',
-    status: 'EMBARKED',
+    status: 'boarded',
     qr_code: 'QR_SC9K1234AB',
     alphanumeric_code: 'SC9K1234AB',
     price: 7000,
     currency: 'XOF',
-    payment_method: 'MOOV_MONEY',
+    payment_method: 'moov_money',
     payment_id: 'PAY_SC9K1234AB',
     created_at: '2025-10-18T14:20:00',
     updated_at: '2025-10-18T14:20:00',
@@ -1356,17 +1356,17 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22670123456',
     passenger_email: 'napon@example.com',
     seat_number: 'C08',
-    status: 'CANCELLED',
+    status: 'cancelled',
     qr_code: 'QR_RK3L9876CD',
     alphanumeric_code: 'RK3L9876CD',
     price: 6500,
     currency: 'XOF',
-    payment_method: 'CARTE_BANCAIRE',
+    payment_method: 'card',
     payment_id: 'PAY_RK3L9876CD',
     created_at: '2025-10-15T09:00:00',
     updated_at: '2025-10-22T14:15:00',
     cancellation_reason: 'Annulation client - Changement de dates',
-    refund_status: 'COMPLETED',
+    refund_status: 'completed',
     holder_downloaded: false,
     holder_presented: false,
     last_sync_at: '2025-10-22T14:15:00',
@@ -1391,12 +1391,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22670123456',
     passenger_email: 'napon@example.com',
     seat_number: 'D10',
-    status: 'PAID', // Status is PAID but trip date has passed
+    status: 'active', // Status is PAID but trip date has passed
     qr_code: 'QR_TS5M5432EF',
     alphanumeric_code: 'TS5M5432EF',
     price: 7500,
     currency: 'XOF',
-    payment_method: 'ORANGE_MONEY',
+    payment_method: 'orange_money',
     payment_id: 'PAY_TS5M5432EF',
     created_at: '2025-10-10T11:30:00',
     updated_at: '2025-10-10T11:30:00',
@@ -1424,12 +1424,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22671234567',
     passenger_email: 'traore@example.com',
     seat_number: 'A08',
-    status: 'AVAILABLE',
+    status: 'active',
     qr_code: 'QR_AC7H851941',
     alphanumeric_code: 'AC7H851941',
     price: 6375, // 8500 with 25% discount
     currency: 'XOF',
-    payment_method: 'ORANGE_MONEY',
+    payment_method: 'orange_money',
     payment_id: 'PAY_AC7H851941',
     created_at: '2025-10-22T14:30:00',
     updated_at: '2025-10-22T14:30:00',
@@ -1456,12 +1456,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22672345678',
     passenger_email: 'diallo@example.com',
     seat_number: 'A10',
-    status: 'HOLD',
+    status: 'active',
     qr_code: 'QR_AC7H851942',
     alphanumeric_code: 'AC7H851942',
     price: 6375, // 8500 with 25% discount
     currency: 'XOF',
-    payment_method: 'MOOV_MONEY',
+    payment_method: 'moov_money',
     payment_id: 'PAY_AC7H851942',
     created_at: '2025-10-22T15:00:00',
     updated_at: '2025-10-22T15:00:00',
@@ -1488,12 +1488,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22673456789',
     passenger_email: 'kone@example.com',
     seat_number: 'A15',
-    status: 'AVAILABLE',
+    status: 'active',
     qr_code: 'QR_AC7H851943',
     alphanumeric_code: 'AC7H851943',
     price: 6375, // 8500 with 25% discount
     currency: 'XOF',
-    payment_method: 'CARTE_BANCAIRE',
+    payment_method: 'card',
     payment_id: 'PAY_AC7H851943',
     created_at: '2025-10-22T15:30:00',
     updated_at: '2025-10-22T15:30:00',
@@ -1520,12 +1520,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22674567890',
     passenger_email: 'sawadogo@example.com',
     seat_number: 'B02',
-    status: 'AVAILABLE',
+    status: 'active',
     qr_code: 'QR_AC7H851944',
     alphanumeric_code: 'AC7H851944',
     price: 6375, // 8500 with 25% discount
     currency: 'XOF',
-    payment_method: 'ORANGE_MONEY',
+    payment_method: 'orange_money',
     payment_id: 'PAY_AC7H851944',
     created_at: '2025-10-22T16:00:00',
     updated_at: '2025-10-22T16:00:00',
@@ -1553,12 +1553,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22675678901',
     passenger_email: 'ouedraogo@example.com',
     seat_number: 'A05',
-    status: 'AVAILABLE',
+    status: 'active',
     qr_code: 'QR_SC9K1234AC',
     alphanumeric_code: 'SC9K1234AC',
     price: 5950, // 7000 with 15% discount
     currency: 'XOF',
-    payment_method: 'MOOV_MONEY',
+    payment_method: 'moov_money',
     payment_id: 'PAY_SC9K1234AC',
     created_at: '2025-10-22T16:30:00',
     updated_at: '2025-10-22T16:30:00',
@@ -1585,12 +1585,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22676789012',
     passenger_email: 'gning@example.com',
     seat_number: 'A08',
-    status: 'AVAILABLE',
+    status: 'active',
     qr_code: 'QR_SC9K1234AD',
     alphanumeric_code: 'SC9K1234AD',
     price: 5950, // 7000 with 15% discount
     currency: 'XOF',
-    payment_method: 'ORANGE_MONEY',
+    payment_method: 'orange_money',
     payment_id: 'PAY_SC9K1234AD',
     created_at: '2025-10-22T17:00:00',
     updated_at: '2025-10-22T17:00:00',
@@ -1617,12 +1617,12 @@ export const MOCK_TICKETS: Ticket[] = [
     passenger_phone: '+22677890123',
     passenger_email: 'zerbo@example.com',
     seat_number: 'B03',
-    status: 'HOLD',
+    status: 'active',
     qr_code: 'QR_SC9K1234AE',
     alphanumeric_code: 'SC9K1234AE',
     price: 5950, // 7000 with 15% discount
     currency: 'XOF',
-    payment_method: 'CARTE_BANCAIRE',
+    payment_method: 'card',
     payment_id: 'PAY_SC9K1234AE',
     created_at: '2025-10-22T17:30:00',
     updated_at: '2025-10-22T17:30:00',

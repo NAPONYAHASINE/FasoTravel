@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { MapPin, Search, Filter, Calendar, Clock, Users, DollarSign, Bus, Ban, CheckCircle, AlertCircle } from 'lucide-react';
+import { Search, Users, DollarSign, Bus, Ban, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAdminApp } from '../../context/AdminAppContext';
 import { PageTemplate } from '../templates/PageTemplate';
 import { PAGE_CLASSES, COMPONENTS } from '../../lib/design-system';
@@ -15,12 +15,12 @@ import { useTrips } from '../../hooks/useTrips';
  * mais peut les superviser globalement
  */
 export function TripManagement() {
-  const { transportCompanies } = useAdminApp();
+  const { transportCompanies: _transportCompanies } = useAdminApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   // 🔥 HOOK BACKEND-READY - Toute la logique métier externalisée
-  const { summaries, globalStats, loading, error } = useTrips({ loadGlobalStats: true });
+  const { summaries, globalStats, loading: _loading, error: _error } = useTrips({ loadGlobalStats: true });
 
   const filteredData = useMemo(() => {
     return summaries.filter(item => {

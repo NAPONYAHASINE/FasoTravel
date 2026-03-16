@@ -15,9 +15,11 @@ export enum TransactionStatus {
 }
 
 export enum PaymentMethod {
-  MOBILE_MONEY = 'mobile_money',
-  CREDIT_CARD = 'credit_card',
   CASH = 'cash',
+  ORANGE_MONEY = 'orange_money',
+  MOOV_MONEY = 'moov_money',
+  WAVE = 'wave',
+  CARD = 'card',
 }
 
 export enum RevenueCategory {

@@ -17,7 +17,6 @@ export function Login() {
   // 🔥 PLUS DE SPINNER BLOQUANT - Le formulaire s'affiche TOUJOURS
   // Si ctx est null (HMR Figma Make), on utilise un fallback local
   const loginFn = ctx?.login;
-  const theme = ctx?.theme ?? (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

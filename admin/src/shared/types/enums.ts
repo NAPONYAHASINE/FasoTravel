@@ -21,6 +21,9 @@ export enum UserStatus {
 
 export enum TripStatus {
   SCHEDULED = 'scheduled',
+  BOARDING = 'boarding',
+  DEPARTED = 'departed',
+  ARRIVED = 'arrived',
   IN_PROGRESS = 'in-progress',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled'
@@ -29,25 +32,31 @@ export enum TripStatus {
 // ============= TICKET STATUSES =============
 
 export enum TicketStatus {
+  ACTIVE = 'active',
+  BOARDED = 'boarded',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
+  REFUNDED = 'refunded',
   BOOKED = 'booked',
   CONFIRMED = 'confirmed',
-  USED = 'used',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded'
+  USED = 'used'
 }
 
 // ============= PAYMENT =============
 
 export enum PaymentMethod {
   CASH = 'cash',
+  ORANGE_MONEY = 'orange_money',
+  MOOV_MONEY = 'moov_money',
+  WAVE = 'wave',
   CARD = 'card',
-  MOBILE_MONEY = 'mobile_money'
 }
 
 export enum PaymentStatus {
   PENDING = 'pending',
-  PAID = 'paid',
-  FAILED = 'failed'
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
 }
 
 // ============= INCIDENT =============
@@ -184,6 +193,9 @@ export function getUserRoleLabel(role: UserRole): string {
 export function getTripStatusLabel(status: TripStatus): string {
   const labels: Record<TripStatus, string> = {
     [TripStatus.SCHEDULED]: 'Programmé',
+    [TripStatus.BOARDING]: 'Embarquement',
+    [TripStatus.DEPARTED]: 'En route',
+    [TripStatus.ARRIVED]: 'Arrivé',
     [TripStatus.IN_PROGRESS]: 'En cours',
     [TripStatus.COMPLETED]: 'Terminé',
     [TripStatus.CANCELLED]: 'Annulé'
@@ -196,11 +208,14 @@ export function getTripStatusLabel(status: TripStatus): string {
  */
 export function getTicketStatusLabel(status: TicketStatus): string {
   const labels: Record<TicketStatus, string> = {
+    [TicketStatus.ACTIVE]: 'Actif',
+    [TicketStatus.BOARDED]: 'Embarqué',
+    [TicketStatus.EXPIRED]: 'Expiré',
+    [TicketStatus.CANCELLED]: 'Annulé',
+    [TicketStatus.REFUNDED]: 'Remboursé',
     [TicketStatus.BOOKED]: 'Réservé',
     [TicketStatus.CONFIRMED]: 'Confirmé',
-    [TicketStatus.USED]: 'Utilisé',
-    [TicketStatus.CANCELLED]: 'Annulé',
-    [TicketStatus.REFUNDED]: 'Remboursé'
+    [TicketStatus.USED]: 'Utilisé'
   };
   return labels[status];
 }
@@ -212,7 +227,9 @@ export function getPaymentMethodLabel(method: PaymentMethod): string {
   const labels: Record<PaymentMethod, string> = {
     [PaymentMethod.CASH]: 'Espèces',
     [PaymentMethod.CARD]: 'Carte bancaire',
-    [PaymentMethod.MOBILE_MONEY]: 'Mobile Money'
+    [PaymentMethod.ORANGE_MONEY]: 'Orange Money',
+    [PaymentMethod.MOOV_MONEY]: 'Moov Money',
+    [PaymentMethod.WAVE]: 'Wave'
   };
   return labels[method];
 }
@@ -251,10 +268,13 @@ export function getDayOfWeekLabel(day: DayOfWeek): string {
  */
 export function getTripStatusColor(status: TripStatus): string {
   const colors: Record<TripStatus, string> = {
-    [TripStatus.SCHEDULED]: '#3b82f6', // blue
-    [TripStatus.IN_PROGRESS]: '#f59e0b', // yellow
-    [TripStatus.COMPLETED]: '#16a34a', // green
-    [TripStatus.CANCELLED]: '#dc2626' // red
+    [TripStatus.SCHEDULED]: '#3b82f6',
+    [TripStatus.BOARDING]: '#8b5cf6',
+    [TripStatus.DEPARTED]: '#f97316',
+    [TripStatus.ARRIVED]: '#14b8a6',
+    [TripStatus.IN_PROGRESS]: '#f59e0b',
+    [TripStatus.COMPLETED]: '#16a34a',
+    [TripStatus.CANCELLED]: '#dc2626'
   };
   return colors[status];
 }
@@ -264,6 +284,9 @@ export function getTripStatusColor(status: TripStatus): string {
  */
 export function getTicketStatusColor(status: TicketStatus): string {
   const colors: Record<TicketStatus, string> = {
+    [TicketStatus.ACTIVE]: '#16a34a',
+    [TicketStatus.BOARDED]: '#8b5cf6',
+    [TicketStatus.EXPIRED]: '#6b7280',
     [TicketStatus.BOOKED]: '#3b82f6',
     [TicketStatus.CONFIRMED]: '#16a34a',
     [TicketStatus.USED]: '#6b7280',

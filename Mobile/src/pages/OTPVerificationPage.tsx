@@ -13,6 +13,7 @@ import { ArrowLeft, Clock, RotateCw, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
+import { authService } from '../services/api/auth.service';
 import bgDay from 'figma:asset/bcca83482c8b3b02fad6bfe11da57e59506831e5.png';
 
 interface OTPVerificationPageProps {
@@ -83,13 +84,8 @@ export function OTPVerificationPage({
     setError(null);
 
     try {
-      // ✅ Appel API - pas de mock
-      // const response = await fetch('/api/verify-otp', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ identifier, code: otp, mode })
-      // });
-      // if (!response.ok) throw new Error('Code invalide');
+      // Vérifier OTP via authService
+      await authService.verifyOtp(identifier, otp, mode);
 
       feedback.success();
       
@@ -115,13 +111,8 @@ export function OTPVerificationPage({
     setError(null);
 
     try {
-      // ✅ Appel API - pas de mock
-      // const response = await fetch('/api/resend-otp', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ identifier, mode })
-      // });
-      // if (!response.ok) throw new Error('Erreur lors du renvoi');
+      // Renvoyer OTP via authService
+      await authService.resendOtp(identifier, mode);
 
       feedback.success();
       setOtp('');

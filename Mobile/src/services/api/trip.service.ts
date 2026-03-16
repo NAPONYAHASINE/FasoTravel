@@ -47,7 +47,7 @@ function mapTripFromModel(modelTrip: any): Trip {
     hasLiveTracking: modelTrip.has_live_tracking,
     availableSeats: modelTrip.available_seats,
     totalSeats: modelTrip.total_seats,
-    status: 'SCHEDULED', // Mock status
+    status: 'scheduled', // Mock status
     createdAt: new Date().toISOString(),
     // PROMOTION FIELDS - Now properly mapped from MOCK_TRIPS
     ...(modelTrip.promotion && { promotion: modelTrip.promotion }),

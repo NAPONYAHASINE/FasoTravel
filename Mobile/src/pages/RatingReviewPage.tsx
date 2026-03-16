@@ -20,6 +20,7 @@ import { ArrowLeft, Star, MessageSquare, Send, AlertCircle } from 'lucide-react'
 import { Button } from '../components/ui/button';
 import { motion } from 'motion/react';
 import { feedback } from '../lib/interactions';
+import { reviewService } from '../services/api/review.service';
 
 interface RatingReviewPageProps {
   onNavigate: (page: Page, data?: any) => void;
@@ -99,19 +100,15 @@ export function RatingReviewPage({ onNavigate, tripData }: RatingReviewPageProps
         rating: overallRating,
         comment: comment.trim(),
         aspects: Object.keys(aspectRatings).length > 0 ? aspectRatings : undefined,
-        is_verified_traveler: true // Backend vérife que l'utilisateur a vraiment pris ce trajet
+        is_verified_traveler: true
       };
 
-      // TODO: Connecter à la vraie API
-      // const response = await fetch('/api/reviews', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(reviewData)
-      // });
-
-      // Pour le moment, simuler succès
-      console.log('Submitting review:', reviewData);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simuler délai API
+      await reviewService.createReview({
+        operatorId: reviewData.operator_id || '',
+        tripId: reviewData.trip_id,
+        rating: reviewData.rating,
+        comment: reviewData.comment,
+      });
 
       feedback.success();
       setIsSuccess(true);
@@ -161,7 +158,7 @@ export function RatingReviewPage({ onNavigate, tripData }: RatingReviewPageProps
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-x-hidden">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 pt-safe-area">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => {

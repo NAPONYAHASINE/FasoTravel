@@ -1,5 +1,5 @@
 import { X, History as HistoryIcon, Clock, User as UserIcon } from 'lucide-react';
-import { TransportCompany, AuditLog } from '../../shared/types/standardized';
+import { TransportCompany } from '../../shared/types/standardized';
 import { useAdminApp } from '../../context/AdminAppContext';
 
 interface CompanyHistoryModalProps {
@@ -88,6 +88,7 @@ export function CompanyHistoryModal({ isOpen, onClose, company }: CompanyHistory
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              title="Fermer"
             >
               <X size={20} />
             </button>

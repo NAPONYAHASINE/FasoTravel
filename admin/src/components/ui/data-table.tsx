@@ -17,8 +17,8 @@ interface DataTableProps<T> {
 export function DataTable<T extends Record<string, any>>({ 
   data, 
   columns, 
-  onRowClick,
-  emptyMessage = 'Aucune donnée disponible'
+  onRowClick: _onRowClick,
+  emptyMessage: _emptyMessage = 'Aucune donnée disponible'
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (

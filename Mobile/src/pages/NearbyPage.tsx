@@ -46,7 +46,7 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
   // If the user comes from a ticket we track that trip, otherwise if the user has any EMBARKED ticket
   // auto-enable tracking for that trip so Nearby page shows the vehicle immediately.
   const { tickets } = useMyTickets();
-  const embarkedTicket = tickets.find(t => t.status === 'EMBARKED') || null;
+  const embarkedTicket = tickets.find(t => t.status === 'boarded') || null;
   const autoTripId = trackingTripId || embarkedTicket?.trip_id || null;
   const { location: vehicleLocation } = useVehicleLiveTracking(autoTripId, !!autoTripId);
 
@@ -63,9 +63,9 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
 
   // Emit location when EMBARKED (collaboratif)
   useEmitLocation(
-    embarkedTicket?.status === 'EMBARKED' ? embarkedTicket?.ticket_id : null,
+    embarkedTicket?.status === 'boarded' ? embarkedTicket?.ticket_id : null,
     autoTripId,
-    embarkedTicket?.status === 'EMBARKED' ? 'in_progress' : null,
+    embarkedTicket?.status === 'boarded' ? 'in_progress' : null,
     userPosition ? { lat: userPosition.lat, lon: userPosition.lon } : null
   );
 
@@ -362,7 +362,7 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
             </div>
 
             {/* Vehicle Tracking Card - EMBARKED only with Actions */}
-            {embarkedTicket && embarkedTicket.status === 'EMBARKED' && vehicleLocation && (
+            {embarkedTicket && embarkedTicket.status === 'boarded' && vehicleLocation && (
               <div className="bg-white dark:bg-gray-800 border-2 border-green-100 dark:border-green-700 rounded-xl p-4 shadow-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <Navigation className="w-5 h-5 text-green-600 dark:text-green-400 animate-bounce" />

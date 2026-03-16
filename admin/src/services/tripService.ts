@@ -93,7 +93,7 @@ class TripService {
    * MODE MOCK: Utilise MOCK_COMPANY_TRIP_SUMMARIES (données centralisées)
    * MODE PRODUCTION: Appelle GET /api/admin/trips/summary
    */
-  async getCompanyTripSummaries(companies: TransportCompany[]): Promise<CompanyTripSummary[]> {
+  async getCompanyTripSummaries(_companies: TransportCompany[]): Promise<CompanyTripSummary[]> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
       
@@ -109,7 +109,7 @@ class TripService {
       throw new Error(response.error || 'Erreur lors de la récupération des résumés de trajets');
     }
     
-    return response.data;
+    return response.data!;
   }
   
   /**
@@ -118,7 +118,7 @@ class TripService {
    * MODE MOCK: Utilise MOCK_GLOBAL_TRIP_STATS (données centralisées)
    * MODE PRODUCTION: Appelle GET /api/admin/trips/stats
    */
-  async getGlobalTripStats(companies: TransportCompany[]): Promise<TripGlobalStats> {
+  async getGlobalTripStats(_companies: TransportCompany[]): Promise<TripGlobalStats> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
       
@@ -134,13 +134,13 @@ class TripService {
       throw new Error(response.error || 'Erreur lors de la récupération des statistiques');
     }
     
-    return response.data;
+    return response.data!;
   }
   
   /**
    * Récupère le résumé pour une société spécifique
    */
-  async getCompanyTripSummary(companyId: string, companies: TransportCompany[]): Promise<CompanyTripSummary | null> {
+  async getCompanyTripSummary(companyId: string, _companies: TransportCompany[]): Promise<CompanyTripSummary | null> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
       
@@ -161,7 +161,7 @@ class TripService {
       return null;
     }
     
-    return response.data;
+    return response.data ?? null;
   }
 }
 

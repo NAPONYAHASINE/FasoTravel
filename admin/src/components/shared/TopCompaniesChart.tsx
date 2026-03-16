@@ -3,7 +3,6 @@
  * Zéro duplication - Peut afficher par revenus ou par véhicules
  */
 
-import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Activity } from 'lucide-react';
 import { CompanyRevenue } from '../../types/financial';

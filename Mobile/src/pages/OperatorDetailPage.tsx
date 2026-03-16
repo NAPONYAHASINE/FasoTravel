@@ -164,7 +164,7 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8 overflow-x-hidden">
       {/* Sticky Header (compact) */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 pt-6 pb-6 shadow-lg sticky top-0 z-30" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-white px-4 sm:px-6 pt-6 pb-6 shadow-lg sticky top-0 z-30 pt-safe-area-6">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}

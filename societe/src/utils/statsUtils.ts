@@ -19,7 +19,7 @@ export const calculatePercentageChange = (current: number, previous: number): st
  */
 export const calculateTicketsRevenue = (tickets: Ticket[]): number => {
   return tickets
-    .filter(t => t.status === 'valid' || t.status === 'used')
+    .filter(t => t.status === 'active' || t.status === 'boarded')
     .reduce((sum, t) => sum + t.price, 0);
 };
 
@@ -28,7 +28,7 @@ export const calculateTicketsRevenue = (tickets: Ticket[]): number => {
  */
 export const calculateTicketsCommission = (tickets: Ticket[]): number => {
   return tickets
-    .filter(t => t.status === 'valid' || t.status === 'used')
+    .filter(t => t.status === 'active' || t.status === 'boarded')
     .reduce((sum, t) => sum + (t.commission || 0), 0);
 };
 
@@ -36,7 +36,7 @@ export const calculateTicketsCommission = (tickets: Ticket[]): number => {
  * Calcule les revenus par canal de vente (online vs counter)
  */
 export const calculateRevenueByChannel = (tickets: Ticket[]) => {
-  const validTickets = tickets.filter(t => t.status === 'valid' || t.status === 'used');
+  const validTickets = tickets.filter(t => t.status === 'active' || t.status === 'boarded');
   
   const onlineTickets = validTickets.filter(t => t.salesChannel === 'online');
   const counterTickets = validTickets.filter(t => t.salesChannel === 'counter');
@@ -76,10 +76,10 @@ export const calculateRevenueByChannel = (tickets: Ticket[]) => {
  * Calcule les revenus par méthode de paiement
  */
 export const calculateRevenueByPaymentMethod = (tickets: Ticket[]) => {
-  const validTickets = tickets.filter(t => t.status === 'valid' || t.status === 'used');
+  const validTickets = tickets.filter(t => t.status === 'active' || t.status === 'boarded');
   
   const cashTickets = validTickets.filter(t => t.paymentMethod === 'cash');
-  const mobileTickets = validTickets.filter(t => t.paymentMethod === 'mobile_money');
+  const mobileTickets = validTickets.filter(t => t.paymentMethod === 'orange_money' || t.paymentMethod === 'moov_money' || t.paymentMethod === 'wave');
   const cardTickets = validTickets.filter(t => t.paymentMethod === 'card');
   
   return {
@@ -164,7 +164,7 @@ export const formatChange = (changePercent: string | number): string => {
  * Filtre les tickets valides (valid ou used)
  */
 export const getValidTickets = (tickets: Ticket[]): Ticket[] => {
-  return tickets.filter(t => t.status === 'valid' || t.status === 'used');
+  return tickets.filter(t => t.status === 'active' || t.status === 'boarded');
 };
 
 /**
@@ -323,7 +323,7 @@ export const groupTicketsByTrip = (tickets: Ticket[]): Map<string, Ticket[]> => 
  * Filtre les tickets d'un trip spécifique avec statut valide
  */
 export const getTripValidTickets = (tickets: Ticket[], tripId: string): Ticket[] => {
-  return tickets.filter(t => t.tripId === tripId && (t.status === 'valid' || t.status === 'used'));
+  return tickets.filter(t => t.tripId === tripId && (t.status === 'active' || t.status === 'boarded'));
 };
 
 /**
@@ -396,18 +396,20 @@ export const calculateNetRevenue = (transactions: CashTransaction[]): number => 
  */
 export const calculateCashByPaymentMethod = (
   transactions: CashTransaction[]
-): { cash: number; mobile_money: number; card: number } => {
+): { cash: number; mobileMoney: number; card: number } => {
   const byMethod = {
     cash: 0,
-    mobile_money: 0,
+    mobileMoney: 0,
     card: 0,
   };
 
   transactions.forEach(t => {
+    const isMobile = t.method === 'orange_money' || t.method === 'moov_money' || t.method === 'wave';
+    const key = isMobile ? 'mobileMoney' : t.method === 'card' ? 'card' : 'cash';
     if (t.type === 'sale' || t.type === 'deposit') {
-      byMethod[t.method] += t.amount;
+      byMethod[key] += t.amount;
     } else if (t.type === 'refund' || t.type === 'withdrawal') {
-      byMethod[t.method] -= t.amount;
+      byMethod[key] -= t.amount;
     }
   });
 

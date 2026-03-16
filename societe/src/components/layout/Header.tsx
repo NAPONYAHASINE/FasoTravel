@@ -1,7 +1,5 @@
 import { Bell, Moon, Sun, Search, Wifi, WifiOff, X } from "lucide-react";
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import logoImage from "figma:asset/ddaf4c7eb0e28936f4d0223e859065e25d5c3fc8.png";
 
 interface HeaderProps {
@@ -52,7 +50,6 @@ export default function Header({ title, showSearch = false }: HeaderProps) {
       type: 'info'
     }
   ]);
-  const { user } = useAuth();
   const notificationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

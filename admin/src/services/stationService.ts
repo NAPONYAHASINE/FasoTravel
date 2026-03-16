@@ -67,7 +67,7 @@ class StationService {
       throw new Error(response.error || 'Erreur lors de la récupération des statistiques des gares');
     }
     
-    return response.data;
+    return response.data!;
   }
   
   /**
@@ -76,7 +76,7 @@ class StationService {
    * MODE MOCK: Lit depuis adminMockData.ts
    * MODE PRODUCTION: Appelle GET /api/admin/stations/global-stats
    */
-  async getGlobalStationStats(stations: Station[]): Promise<GlobalStationStats> {
+  async getGlobalStationStats(_stations: Station[]): Promise<GlobalStationStats> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
       return MOCK_GLOBAL_STATION_STATS;
@@ -88,13 +88,13 @@ class StationService {
       throw new Error(response.error || 'Erreur lors de la récupération des statistiques globales');
     }
     
-    return response.data;
+    return response.data!;
   }
   
   /**
    * Récupère les statistiques d'une gare spécifique
    */
-  async getStationStats(stationId: string, stations: Station[]): Promise<StationStats | null> {
+  async getStationStats(stationId: string, _stations: Station[]): Promise<StationStats | null> {
     if (AppConfig.isMock) {
       await this.simulateNetworkDelay();
       return MOCK_STATION_STATS.find(s => s.station_id === stationId) || null;
@@ -106,7 +106,7 @@ class StationService {
       return null;
     }
     
-    return response.data;
+    return response.data ?? null;
   }
 }
 

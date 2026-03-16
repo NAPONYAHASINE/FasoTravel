@@ -254,7 +254,9 @@ export function PaymentManagement() {
               className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#dc2626] bg-white dark:bg-gray-700 dark:text-white transition-colors"
             >
               <option value="all">Toutes méthodes</option>
-              <option value="mobile_money">Mobile Money</option>
+              <option value="orange_money">Orange Money</option>
+              <option value="moov_money">Moov Money</option>
+              <option value="wave">Wave</option>
               <option value="card">Carte Bancaire</option>
               <option value="cash">Espèces</option>
             </select>

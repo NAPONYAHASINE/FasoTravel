@@ -14,7 +14,6 @@ import {
   Building2, 
   Plus, 
   Search, 
-  Filter, 
   MoreVertical, 
   CheckCircle, 
   XCircle, 
@@ -39,18 +38,17 @@ import {
 import { useAdminApp } from '../../context/AdminAppContext';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { CreateCompanyModal } from '../modals/CreateCompanyModal';
 import { EditCompanyModal } from '../modals/EditCompanyModal';
 import { CompanyHistoryModal } from '../modals/CompanyHistoryModal';
 import { ConfirmWrapper } from '../modals/ConfirmWrapper';
 import { TransportCompany } from '../../shared/types/standardized';
 import { StatCard } from '../ui/stat-card';
-import { PAGE_CLASSES, COMPONENTS } from '../../lib/design-system';
-import React from 'react';
+import { PAGE_CLASSES } from '../../lib/design-system';
 
 export function TransportCompanyManagement() {
-  const { transportCompanies, approveCompany, suspendCompany, createCompany, updateCompany, deleteCompany, refreshCompanies } = useAdminApp();
+  const { transportCompanies, approveCompany, suspendCompany, createCompany, updateCompany, deleteCompany, refreshCompanies: _refreshCompanies } = useAdminApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -234,6 +232,7 @@ export function TransportCompanyManagement() {
                     <button 
                       onClick={() => setOpenMenuId(openMenuId === company.id ? null : company.id)}
                       className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      title="Actions"
                     >
                       <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                     </button>
@@ -523,6 +522,7 @@ export function TransportCompanyManagement() {
                 <button
                   onClick={() => setShowDetailsModal(false)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title="Fermer"
                 >
                   <XCircle size={20} />
                 </button>

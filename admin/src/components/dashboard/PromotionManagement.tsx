@@ -51,7 +51,7 @@ const POPULAR_ROUTES = [
 
 export function PromotionManagement() {
   const {
-    promotions, stats, refresh,
+    promotions, stats, refresh: _refresh,
     createPromotion, updatePromotion, deletePromotion,
     approvePromotion, rejectPromotion, toggleActive,
   } = usePromotions({ loadStats: true });
@@ -514,6 +514,7 @@ export function PromotionManagement() {
             />
           </div>
           <select
+            aria-label="Filtrer par statut"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
             className={COMPONENTS.input + ' lg:w-44'}
@@ -526,6 +527,7 @@ export function PromotionManagement() {
             <option value="rejected">Rejetées</option>
           </select>
           <select
+            aria-label="Filtrer par compagnie"
             value={operatorFilter}
             onChange={(e) => setOperatorFilter(e.target.value)}
             className={COMPONENTS.input + ' lg:w-44'}
@@ -536,6 +538,7 @@ export function PromotionManagement() {
             ))}
           </select>
           <select
+            aria-label="Filtrer par type de réduction"
             value={discountFilter}
             onChange={(e) => setDiscountFilter(e.target.value as DiscountFilter)}
             className={COMPONENTS.input + ' lg:w-40'}
@@ -808,6 +811,7 @@ export function PromotionManagement() {
                         {route?.label}
                         <button
                           type="button"
+                          aria-label="Retirer la route"
                           onClick={() => setFormSelectedRoutes(prev => prev.filter(r => r !== id))}
                           className="ml-0.5 hover:text-red-900 dark:hover:text-red-100"
                         >
@@ -824,6 +828,7 @@ export function PromotionManagement() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Type de réduction" required>
                 <select
+                  aria-label="Type de réduction"
                   value={formData.discountType}
                   onChange={e => setFormData(d => ({ ...d, discountType: e.target.value as 'percentage' | 'fixed' }))}
                   className={COMPONENTS.input}
@@ -835,6 +840,7 @@ export function PromotionManagement() {
               <FormField label={formData.discountType === 'percentage' ? 'Pourcentage' : 'Montant (FCFA)'} error={formErrors.discountValue} required>
                 <input
                   type="number"
+                  aria-label="Valeur de réduction"
                   min={1}
                   max={formData.discountType === 'percentage' ? 100 : undefined}
                   value={formData.discountValue}
@@ -892,6 +898,7 @@ export function PromotionManagement() {
               <FormField label="Date de début" error={formErrors.startDate} required>
                 <input
                   type="date"
+                  aria-label="Date de début"
                   value={formData.startDate}
                   onChange={e => setFormData(d => ({ ...d, startDate: e.target.value }))}
                   className={COMPONENTS.input}
@@ -900,6 +907,7 @@ export function PromotionManagement() {
               <FormField label="Date de fin" error={formErrors.endDate} required>
                 <input
                   type="date"
+                  aria-label="Date de fin"
                   value={formData.endDate}
                   onChange={e => setFormData(d => ({ ...d, endDate: e.target.value }))}
                   className={COMPONENTS.input}
@@ -1159,6 +1167,7 @@ export function PromotionManagement() {
                       </div>
                       <button
                         type="button"
+                        aria-label="Supprimer la miniature"
                         onClick={() => {
                           if (formData.storyThumbnailUrl?.startsWith('blob:')) URL.revokeObjectURL(formData.storyThumbnailUrl);
                           setFormData(d => ({ ...d, storyThumbnailUrl: '' }));
@@ -1329,7 +1338,7 @@ function MultiSelectDropdown({
   options,
   selected,
   onChange,
-  placeholder,
+  placeholder: _placeholder,
   summary,
   allLabel,
   singleMode = false,

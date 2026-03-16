@@ -24,7 +24,9 @@ export interface PassengerUser {
   phoneVerifiedAt?: string;
   emailVerifiedAt?: string;
   lastLoginAt?: string;
-  status: 'active' | 'inactive' | 'suspended';
+  verified?: boolean;
+  totalBookings?: number;
+  status: 'active' | 'inactive' | 'suspended' | 'pending';
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +43,7 @@ export interface AdminUser {
   permissions?: string[];  // Legacy - now calculated from role
   operatorId?: string;  // For OPERATOR_ADMIN - limited to their operator
   status: 'active' | 'inactive' | 'suspended';
+  fullName?: string;
   mfaEnabled?: boolean;  // Multi-factor authentication
   lastLoginAt?: string;
   createdAt: string;
@@ -63,6 +66,10 @@ export interface OperatorUser {
   // For manager and caissier only
   stationId?: string;
   stationName?: string;
+  
+  // Legacy aliases (used by societe app)
+  gareId?: string;
+  gareName?: string;
   
   // For caissier only
   shiftStartTime?: string;
@@ -96,7 +103,7 @@ export interface TransportCompany {
   
   // Platform settings
   commission: number; // % commission taken by FasoTravel
-  status: 'active' | 'suspended'; // Admin creates & can suspend companies (no pending - admin creates all)
+  status: 'active' | 'suspended' | 'pending';
   
   // Additional services offered by the company
   amenities?: string[]; // e.g., ['wifi', 'coffee', 'ac', 'toilet', 'usb', 'tv', 'luggage']
@@ -106,6 +113,10 @@ export interface TransportCompany {
   contactPersonName?: string;
   contactPersonPhone?: string;
   contactPersonEmail?: string;
+  
+  vehicleCount?: number;
+  operatorId?: string;
+  approvedAt?: string;
   
   // Stats (read-only, calculated)
   totalVehicles?: number;
@@ -196,29 +207,44 @@ export interface ScheduleTemplate {
  */
 export interface Trip {
   id: string;
-  scheduleId: string;
+  scheduleId?: string;
   routeId: string;
   routeName?: string;
   companyId: string; // Company operating this trip
   companyName?: string;
-  stationId: string; // FIXED: was 'gareId', now 'stationId'
+  stationId?: string; // FIXED: was 'gareId', now 'stationId'
   stationName?: string; // FIXED: was 'gareName'
-  departureTime: string; // ISO datetime
-  arrivalTime: string; // ISO datetime
+  departureTime?: string; // ISO datetime
+  arrivalTime?: string; // ISO datetime
   driverId?: string;
   driverName?: string;
   vehicleId?: string; // Vehicle from company's fleet
   vehicleRegistration?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  currentPassengers: number;
-  capacity: number;
+  status: 'scheduled' | 'boarding' | 'departed' | 'arrived' | 'in-progress' | 'completed' | 'cancelled' | 'active';
+  currentPassengers?: number;
+  capacity?: number;
+  
+  // Optional extended fields
+  departureStationId?: string;
+  departureStationName?: string;
+  arrivalStationId?: string;
+  arrivalStationName?: string;
+  price?: number;
+  currency?: string;
+  scheduledDeparture?: string;
+  scheduledArrival?: string;
+  actualDeparture?: string;
+  actualArrival?: string;
+  availableSeats?: number;
+  totalSeats?: number;
+  bookedSeats?: number;
   
   // Real-time tracking
   currentLatitude?: number;
   currentLongitude?: number;
   lastLocationUpdate?: string;
   
-  createdBy: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
   cancelledAt?: string;
@@ -258,7 +284,7 @@ export interface PricingSegment {
  * - Réservation EN_ATTENTE → pas de billet encore
  * - Réservation ANNULÉE → billet ANNULÉ (si existant)
  */
-export type BookingStatus = 'EN_ATTENTE' | 'CONFIRMÉ' | 'TERMINÉ' | 'ANNULÉ';
+export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface Booking {
   booking_id: string;
@@ -284,10 +310,10 @@ export interface Booking {
 
 export interface BookingStats {
   total: number;
-  enAttente: number;
-  confirmé: number;
-  terminé: number;
-  annulé: number;
+  pending: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
   today: number;
   conversionRate: number;
   totalRevenue: number;
@@ -324,11 +350,13 @@ export interface Ticket {
   totalAmount: number;
   
   // Status - BILLETS uniquement (≠ réservations)
-  status: 'ACTIF' | 'EMBARQUÉ' | 'EXPIRÉ' | 'ANNULÉ';
+  status: 'active' | 'boarded' | 'expired' | 'cancelled' | 'refunded';
+  
+  qrCode?: string;
   
   // Payment info
-  paymentMethod?: 'cash' | 'card' | 'mobile_money';
-  paymentStatus?: 'pending' | 'paid' | 'failed';
+  paymentMethod?: 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card';
+  paymentStatus?: 'pending' | 'completed' | 'failed' | 'refunded';
   transactionId?: string;
   
   // Cashier info (if sold at station)
@@ -596,6 +624,9 @@ export interface AuditLog {
   /** Action duration in milliseconds */
   durationMs?: number;
   
+  /** Extra metadata */
+  metadata?: Record<string, any>;
+  
   status?: string;
   
   createdAt: string;
@@ -626,7 +657,7 @@ export interface Support {
   subject: string;
   message: string;
   category: 'booking' | 'payment' | 'technical' | 'feedback' | 'other';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: 'low' | 'medium' | 'high' | 'urgent' | 'normal';
   
   status: 'open' | 'in-progress' | 'resolved' | 'closed';
   
@@ -783,10 +814,8 @@ export interface BookingCreateData {
     phone: string;
     email: string;
   };
-  paymentMethod?: 'cash' | 'card' | 'mobile_money';
+  paymentMethod?: 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card';
 }
-
-// ============= TYPE GUARDS =============
 
 /**
  * Check if user is OperatorUser
@@ -847,7 +876,7 @@ export interface Payment {
   
   amount: number;
   currency: string;
-  method: 'cash' | 'card' | 'mobile_money';
+  method: 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card';
   
   status: 'pending' | 'completed' | 'failed' | 'refunded';
   

@@ -20,14 +20,14 @@ export const useCashierStats = ({ tickets, cashTransactions, cashierId, limit = 
   // ✅ FONCTION CENTRALISÉE: Filtre les tickets du caissier pour aujourd'hui
   const myTodayTickets = useMemo(() => {
     return filterByToday(tickets, 'purchaseDate').filter(
-      t => t.cashierId === cashierId && (t.status === 'valid' || t.status === 'used')
+      t => t.cashierId === cashierId && (t.status === 'active' || t.status === 'boarded')
     );
   }, [tickets, cashierId]);
 
   // ✅ FONCTION CENTRALISÉE: Filtre les tickets du caissier pour hier
   const myYesterdayTickets = useMemo(() => {
     return filterByYesterday(tickets, 'purchaseDate').filter(
-      t => t.cashierId === cashierId && (t.status === 'valid' || t.status === 'used')
+      t => t.cashierId === cashierId && (t.status === 'active' || t.status === 'boarded')
     );
   }, [tickets, cashierId]);
 

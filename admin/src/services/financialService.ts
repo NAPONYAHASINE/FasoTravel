@@ -190,7 +190,8 @@ class FinancialService {
    */
   async getDailyRevenue(period: TimePeriod): Promise<DailyRevenue[]> {
     if (!AppConfig.isMock) {
-      return await apiService.get(`/admin/financial/daily-revenue?period=${period}`);
+      const response = await apiService.get<DailyRevenue[]>(`/admin/financial/daily-revenue?period=${period}`);
+      return response.data!;
     }
     const data = this.getMockDailyRevenue(period);
     return await this.simulateNetworkCall(data);
@@ -202,7 +203,8 @@ class FinancialService {
    */
   async getPaymentMethodStats(): Promise<PaymentMethodStats[]> {
     if (!AppConfig.isMock) {
-      return await apiService.get('/admin/financial/payment-methods');
+      const response = await apiService.get<PaymentMethodStats[]>('/admin/financial/payment-methods');
+      return response.data!;
     }
     // Retourne les stats de base (non scalées)
     const data = MOCK_PAYMENT_METHOD_STATS.map(pm => ({ ...pm }));
@@ -215,7 +217,8 @@ class FinancialService {
    */
   async getTopCompaniesByRevenue(_companies: any[], limit: number = 10): Promise<CompanyRevenue[]> {
     if (!AppConfig.isMock) {
-      return await apiService.get(`/admin/financial/top-companies?limit=${limit}`);
+      const response = await apiService.get<CompanyRevenue[]>(`/admin/financial/top-companies?limit=${limit}`);
+      return response.data!;
     }
     const data = this.getMockTopCompanies().slice(0, limit);
     return await this.simulateNetworkCall(data);

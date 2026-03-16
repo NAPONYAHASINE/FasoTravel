@@ -45,7 +45,7 @@ const TicketCardComponent = ({ ticket, onDownload, onCancel, onClick }: TicketCa
 
   const canCancelComputed = (): boolean => {
     // Business rule: only PAID tickets can be cancelled and only if departure is >= 1 hour from now
-    if (ticket.status !== 'PAID') return false;
+    if (ticket.status !== 'active') return false;
     if (!ticket.departure_time) return false;
     try {
       const departure = new Date(ticket.departure_time).getTime();
@@ -72,14 +72,14 @@ const TicketCardComponent = ({ ticket, onDownload, onCancel, onClick }: TicketCa
 
   const getStatusBadge = () => {
     switch (ticket.status) {
-      case 'PAID':
+      case 'active':
         return <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Actif</Badge>;
-      case 'EMBARKED':
+      case 'boarded':
         return <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">Embarqué</Badge>;
-      case 'CANCELLED':
+      case 'cancelled':
         return <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">Annulé</Badge>;
-      case 'HOLD':
-        return <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">En attente</Badge>;
+      case 'expired':
+        return <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">Expiré</Badge>;
       default:
         return null;
     }
@@ -90,7 +90,7 @@ const TicketCardComponent = ({ ticket, onDownload, onCancel, onClick }: TicketCa
       className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
       onClick={() => onClick?.(ticket.ticket_id)}
       role="article"
-      aria-label={`Billet ${ticket.operator_name}, ${ticket.from_stop_name} vers ${ticket.to_stop_name}, départ ${formatDate(ticket.departure_time)} à ${formatTime(ticket.departure_time)}, statut: ${ticket.status === 'PAID' ? 'Actif' : ticket.status}`}
+      aria-label={`Billet ${ticket.operator_name}, ${ticket.from_stop_name} vers ${ticket.to_stop_name}, départ ${formatDate(ticket.departure_time)} à ${formatTime(ticket.departure_time)}, statut: ${ticket.status === 'active' ? 'Actif' : ticket.status}`}
       tabIndex={0}
     >
       {/* Header */}
@@ -143,7 +143,7 @@ const TicketCardComponent = ({ ticket, onDownload, onCancel, onClick }: TicketCa
       </div>
 
       {/* Actions */}
-      {ticket.status === 'PAID' && (
+      {ticket.status === 'active' && (
         <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
           {onDownload && (
             <Button

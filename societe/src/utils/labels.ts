@@ -13,8 +13,12 @@ export const getPaymentMethodLabel = (method: Ticket['paymentMethod']): string =
   switch (method) {
     case 'cash':
       return 'Espèces';
-    case 'mobile_money':
-      return 'Mobile Money';
+    case 'orange_money':
+      return 'Orange Money';
+    case 'moov_money':
+      return 'Moov Money';
+    case 'wave':
+      return 'Wave';
     case 'card':
       return 'Carte';
     default:
@@ -29,8 +33,12 @@ export const getPaymentMethodShortLabel = (method: Ticket['paymentMethod']): str
   switch (method) {
     case 'cash':
       return 'Cash';
-    case 'mobile_money':
-      return 'MoMo';
+    case 'orange_money':
+      return 'OM';
+    case 'moov_money':
+      return 'Moov';
+    case 'wave':
+      return 'Wave';
     case 'card':
       return 'Carte';
     default:
@@ -57,10 +65,12 @@ export const getSalesChannelLabel = (channel: Ticket['salesChannel']): string =>
  */
 export const getTicketStatusLabel = (status: Ticket['status']): string => {
   switch (status) {
-    case 'valid':
-      return 'Valide';
-    case 'used':
-      return 'Utilisé';
+    case 'active':
+      return 'Actif';
+    case 'boarded':
+      return 'Embarqué';
+    case 'expired':
+      return 'Expiré';
     case 'refunded':
       return 'Remboursé';
     case 'cancelled':

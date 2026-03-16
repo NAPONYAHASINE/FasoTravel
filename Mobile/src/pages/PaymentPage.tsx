@@ -11,7 +11,7 @@ import type { Page } from '../App';
  * - Show processing spinner + redirect simulation
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, CreditCard, Smartphone, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '../components/ui/button';
@@ -19,6 +19,11 @@ import { BookingStepIndicator } from '../components/BookingStepIndicator';
 import { InteractiveButton } from '../components/InteractiveButton';
 import { feedback, showConfetti } from '../lib/interactions';
 import { usePaymentMethods } from '../lib/hooks';
+import { bookingService } from '../services/api/booking.service';
+import { paymentService } from '../services/api/payment.service';
+
+/** Frais de service FasoTravel — 100 FCFA par passager (identique admin/societe) */
+const PLATFORM_SERVICE_FEE = 100;
 
 interface PaymentPageProps {
   reservationData: any;
@@ -34,24 +39,105 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null);
   const [, setIsWaitingOtp] = useState(false);
 
-  // Process payment after OTP verification
-  const handlePaymentProcess = () => {
+  // ============================================
+  // PRICE BREAKDOWN — calculated dynamically
+  // ============================================
+  const priceBreakdown = useMemo(() => {
+    const numPassengers = reservationData.passengers?.length || 1;
+    const ticketPrice = reservationData.total_price || reservationData.price || 0;
+    const serviceFee = PLATFORM_SERVICE_FEE * numPassengers;
+
+    // Check if there's a discount on any trip
+    const outboundTrip = reservationData.outbound?.trip;
+    const returnTrip = reservationData.return?.trip;
+    
+    let baseTotal = 0;
+    let discountTotal = 0;
+    
+    if (outboundTrip) {
+      const outboundBase = outboundTrip.base_price * numPassengers;
+      baseTotal += outboundBase;
+      if (outboundTrip.promoted_price && outboundTrip.promoted_price < outboundTrip.base_price) {
+        discountTotal += (outboundTrip.base_price - outboundTrip.promoted_price) * numPassengers;
+      }
+    }
+    if (returnTrip) {
+      const returnBase = returnTrip.base_price * numPassengers;
+      baseTotal += returnBase;
+      if (returnTrip.promoted_price && returnTrip.promoted_price < returnTrip.base_price) {
+        discountTotal += (returnTrip.base_price - returnTrip.promoted_price) * numPassengers;
+      }
+    }
+    
+    // If no trip objects available, fall back to passed total_price
+    if (baseTotal === 0) baseTotal = ticketPrice;
+
+    const selectedMethod = paymentMethods.find(m => m.id === paymentMethod);
+    const feePercentage = selectedMethod?.fees_percentage || 0;
+    const paymentFee = Math.round(ticketPrice * feePercentage / 100);
+    
+    const totalToPay = ticketPrice + serviceFee + paymentFee;
+
+    return {
+      baseTotal,
+      discountTotal,
+      ticketPrice,          // base - discount (what the passenger actually pays for seats)
+      serviceFee,
+      feePercentage,
+      paymentFee,
+      totalToPay,
+      numPassengers,
+    };
+  }, [reservationData, paymentMethod, paymentMethods]);
+
+  // Process payment via bookingService + paymentService
+  const handlePaymentProcess = async () => {
     if (!paymentMethod) return;
 
     setIsProcessing(true);
     setPaymentStatus('pending');
 
-    // Simulate payment processing
-    setTimeout(() => {
-      const success = Math.random() > 0.1; // 90% success rate
-      
-      if (success) {
+    try {
+      // 1. Create hold booking
+      const outboundTrip = reservationData.outbound?.trip;
+      const unitPrice = outboundTrip?.promoted_price ?? outboundTrip?.base_price ?? 0;
+      const firstPassenger = reservationData.passengers?.[0];
+      const booking = await bookingService.createHoldBooking({
+        tripId: reservationData.outbound?.trip_id || outboundTrip?.trip_id || '',
+        numSeats: priceBreakdown.numPassengers,
+        unitPrice,
+        passengerName: firstPassenger?.name,
+        passengerPhone: firstPassenger?.phone,
+      });
+
+      // 2. Create payment
+      const payment = await paymentService.createPayment(
+        booking.id,
+        paymentMethod as any,
+        priceBreakdown.totalToPay
+      );
+
+      // 3. Process payment (simulate webhook validation)
+      const result = await paymentService.processPayment(payment.id, '0000');
+
+      if (result.status === 'completed') {
+        // 4. Confirm booking
+        const ticket = await bookingService.confirmBooking({
+          bookingId: booking.id,
+          paymentMethod: paymentMethod as any,
+        });
+
         setPaymentStatus('success');
         feedback.payment();
         showConfetti();
         setTimeout(() => {
-          const ticketId = `TK${Date.now()}`;
-          onNavigate('payment-success', { ticketId, ...reservationData });
+          onNavigate('payment-success', { 
+            ticketId: ticket.id, 
+            bookingId: booking.id,
+            paymentId: payment.id,
+            totalPaid: priceBreakdown.totalToPay,
+            ...reservationData 
+          });
         }, 2000);
       } else {
         setPaymentStatus('failed');
@@ -59,7 +145,13 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
         setIsProcessing(false);
         setIsWaitingOtp(false);
       }
-    }, 3000);
+    } catch (err) {
+      console.error('Payment failed:', err);
+      setPaymentStatus('failed');
+      feedback.error();
+      setIsProcessing(false);
+      setIsWaitingOtp(false);
+    }
   };
 
   // Auto-process payment after returning from OTP
@@ -109,8 +201,8 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
           <p className="text-gray-600 dark:text-gray-400">Veuillez patienter...</p>
           <div className="mt-6 flex items-center justify-center gap-1">
             <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-red-600 dark:bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full animate-bounce delay-100"></div>
+            <div className="w-2 h-2 bg-red-600 dark:bg-red-400 rounded-full animate-bounce delay-200"></div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Ne fermez pas cette page</p>
         </div>
@@ -241,7 +333,7 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <div className="sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="sticky top-0 z-10 pt-safe-area">
         <BookingStepIndicator currentStep="payment" completedSteps={['search', 'outbound-seat']} />
 
         {/* Header */}
@@ -365,15 +457,52 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
                 </div>
               )}
               
-              <div className="pt-3 border-t-2 border-gray-200 dark:border-gray-700">
-                <div className="flex justify-between items-center">
+              <div className="pt-3 border-t-2 border-gray-200 dark:border-gray-700 space-y-2">
+                {/* Discount line (if any) */}
+                {priceBreakdown.discountTotal > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Prix de base ({priceBreakdown.numPassengers} passager{priceBreakdown.numPassengers > 1 ? 's' : ''})</span>
+                      <span className="text-gray-500 dark:text-gray-400 line-through">{priceBreakdown.baseTotal.toLocaleString()} FCFA</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600 dark:text-green-400">Réduction promotion</span>
+                      <span className="text-green-600 dark:text-green-400">-{priceBreakdown.discountTotal.toLocaleString()} FCFA</span>
+                    </div>
+                  </>
+                )}
+                
+                {/* Ticket price line */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {priceBreakdown.discountTotal > 0 ? 'Prix après réduction' : `Billet${priceBreakdown.numPassengers > 1 ? 's' : ''} (${priceBreakdown.numPassengers})`}
+                  </span>
+                  <span className="text-gray-900 dark:text-white">{priceBreakdown.ticketPrice.toLocaleString()} FCFA</span>
+                </div>
+
+                {/* Service fee line */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Frais de service ({priceBreakdown.numPassengers} × {PLATFORM_SERVICE_FEE} FCFA)</span>
+                  <span className="text-gray-900 dark:text-white">{priceBreakdown.serviceFee.toLocaleString()} FCFA</span>
+                </div>
+
+                {/* Payment method fees (shown when method selected) */}
+                {paymentMethod && priceBreakdown.paymentFee > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Frais de paiement ({priceBreakdown.feePercentage}%)</span>
+                    <span className="text-gray-900 dark:text-white">{priceBreakdown.paymentFee.toLocaleString()} FCFA</span>
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
                   <span className="text-lg text-gray-900 dark:text-white">Total à payer</span>
                   <span className="text-2xl text-green-600 dark:text-green-400">
-                    {(reservationData.total_price || reservationData.price)?.toLocaleString()} FCFA
+                    {priceBreakdown.totalToPay.toLocaleString()} FCFA
                   </span>
                 </div>
                 {reservationData.is_round_trip && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-right">
                     Aller-retour
                   </p>
                 )}
@@ -405,12 +534,15 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
                   const getProviderColor = () => {
                     if (method.provider === 'orange') return 'bg-orange-500 dark:bg-orange-600';
                     if (method.provider === 'moov') return 'bg-blue-500 dark:bg-blue-600';
+                    if (method.provider === 'wave') return 'bg-cyan-500 dark:bg-cyan-600';
+                    if (method.provider === 'cash') return 'bg-yellow-500 dark:bg-yellow-600';
                     return 'bg-green-600 dark:bg-green-500';
                   };
                   
                   const getIcon = () => {
                     if (method.type === 'mobile_money') return <Smartphone className="w-6 h-6 text-white" />;
                     if (method.type === 'card') return <CreditCard className="w-6 h-6 text-white" />;
+                    if (method.type === 'cash') return <span className="text-2xl">💵</span>;
                     return <span className="text-2xl">{method.logo}</span>;
                   };
                   
@@ -437,9 +569,11 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
                       <div className="flex-1 text-left">
                         <p className="text-gray-900 dark:text-white">{method.name}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {method.type === 'mobile_money' ? 'Paiement mobile sécurisé' : 'Visa, Mastercard'}
-                          {method.fees_percentage && (
+                          {method.type === 'mobile_money' ? 'Paiement mobile sécurisé' : method.type === 'cash' ? 'Paiement en espèces au guichet' : 'Visa, Mastercard'}
+                          {method.fees_percentage ? (
                             <span className="ml-2 text-xs">• Frais {method.fees_percentage}%</span>
+                          ) : (
+                            <span className="ml-2 text-xs text-green-600 dark:text-green-400">• Sans frais</span>
                           )}
                         </p>
                       </div>
@@ -484,7 +618,7 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, onNavigate
                   Traitement...
                 </span>
               ) : (
-                `Payer ${(reservationData.total_price || reservationData.price)?.toLocaleString()} FCFA`
+                `Payer ${priceBreakdown.totalToPay.toLocaleString()} FCFA`
               )}
             </InteractiveButton>
 

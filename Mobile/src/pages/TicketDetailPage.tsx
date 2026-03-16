@@ -15,6 +15,7 @@ import { ArrowLeft, Download, XCircle, Calendar, MapPin, User } from 'lucide-rea
 import { saveTicketBlob, getTicketBlobUrl } from '../lib/offlineTickets';
 import * as api from '../lib/api';
 import { Ticket, MOCK_TICKETS } from '../data/models';
+import { storageService } from '../services/storage/localStorage.service';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useVehicleLiveTracking, useEmitLocation } from '../lib/hooks';
@@ -27,9 +28,44 @@ interface TicketDetailPageProps {
 }
 
 export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailPageProps) {
-  const [ticket] = useState<Ticket | undefined>(
-    MOCK_TICKETS.find(t => t.ticket_id === ticketId)
-  );
+  const [ticket] = useState<Ticket | undefined>(() => {
+    // 1. Check storageService first (tickets from real payment flow)
+    const storedTickets = storageService.get<any[]>('user_tickets') || [];
+    const stored = storedTickets.find(t => t.id === ticketId);
+    if (stored) {
+      // Map service ticket format to data model Ticket format
+      return {
+        ticket_id: stored.id,
+        trip_id: stored.tripId,
+        booking_id: stored.bookingId || '',
+        operator_id: stored.operatorId || '',
+        operator_name: stored.operatorName || '',
+        from_stop_id: stored.fromStopId || '',
+        to_stop_id: stored.toStopId || '',
+        from_stop_name: stored.fromStopName || '',
+        to_stop_name: stored.toStopName || '',
+        departure_time: stored.embarkationTime || '',
+        arrival_time: stored.arrivalTime || '',
+        passenger_name: stored.passengerName || '',
+        seat_number: stored.seatNumber || '',
+        status: stored.status === 'active' ? 'active' : stored.status,
+        qr_code: stored.qrCode || `QR_${stored.id}`,
+        alphanumeric_code: stored.alphanumericCode || stored.id?.replace('ticket_', '').slice(-6).toUpperCase() || '',
+        price: stored.price || 0,
+        currency: stored.currency || 'XOF',
+        payment_method: stored.paymentMethod || 'orange_money',
+        payment_id: stored.paymentId || '',
+        created_at: stored.createdAt || new Date().toISOString(),
+        updated_at: stored.updatedAt || new Date().toISOString(),
+        holder_downloaded: stored.holderDownloaded ?? false,
+        holder_presented: stored.holderPresented ?? false,
+        can_cancel: stored.canCancel ?? true,
+        can_transfer: stored.canTransfer ?? true,
+      } as Ticket;
+    }
+    // 2. Fallback to mock tickets
+    return MOCK_TICKETS.find(t => t.ticket_id === ticketId);
+  });
   const [showQR, setShowQR] = useState(true);
   const [offlineUrl, setOfflineUrl] = useState<string | null>(null);
   
@@ -40,17 +76,17 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
     lon: geoState.userPosition.lon 
   } : null;
   
-  // Load live vehicle tracking when EMBARKED
+  // Load live vehicle tracking when boarded
   useVehicleLiveTracking(
-    ticket?.status === 'EMBARKED' ? ticket?.trip_id : null,
+    ticket?.status === 'boarded' ? ticket?.trip_id : null,
     true
   );
 
-  // Emit location when EMBARKED (collaboratif: un seul passager suffit)
+  // Emit location when boarded (collaboratif: un seul passager suffit)
   useEmitLocation(
-    ticket?.status === 'EMBARKED' ? ticket?.ticket_id : null,
+    ticket?.status === 'boarded' ? ticket?.ticket_id : null,
     ticket?.trip_id || null,
-    ticket?.status === 'EMBARKED' ? 'in_progress' : null,
+    ticket?.status === 'boarded' ? 'in_progress' : null,
     userLocation
   );
 
@@ -73,10 +109,10 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
   };
 
   const expired = isExpired();
-  const canDownload = ticket.status === 'PAID' && !expired;
-  const canCancel = ticket.status === 'PAID' && !expired;
-  const canTrack = ticket.status === 'EMBARKED';
-  const isReadOnly = ticket.status === 'CANCELLED' || expired;
+  const canDownload = ticket.status === 'active' && !expired;
+  const canCancel = ticket.status === 'active' && !expired;
+  const canTrack = ticket.status === 'boarded';
+  const isReadOnly = ticket.status === 'cancelled' || expired;
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -152,18 +188,18 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
   }, [ticketId]);
 
   const getStatusBadge = () => {
-    if (expired && (ticket.status === 'PAID' || ticket.status === 'EMBARKED')) {
+    if (expired && (ticket.status === 'active' || ticket.status === 'boarded')) {
       return <Badge className="bg-gray-100 text-gray-700">Expiré</Badge>;
     }
     switch (ticket.status) {
-      case 'PAID':
+      case 'active':
         return <Badge className="bg-green-100 text-green-700">Actif</Badge>;
-      case 'EMBARKED':
+      case 'boarded':
         return <Badge className="bg-blue-100 text-blue-700">Embarqué</Badge>;
-      case 'CANCELLED':
+      case 'cancelled':
         return <Badge className="bg-red-100 text-red-700">Annulé</Badge>;
-      case 'HOLD':
-        return <Badge className="bg-amber-100 text-amber-700">En attente</Badge>;
+      case 'expired':
+        return <Badge className="bg-amber-100 text-amber-700">Expiré</Badge>;
       default:
         return null;
     }
@@ -172,7 +208,7 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 shadow-lg sticky top-0 z-10" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
+      <div className="bg-gradient-to-r from-red-600 via-amber-500 to-green-600 px-4 sm:px-6 py-6 shadow-lg sticky top-0 z-10 pt-safe-area-6">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}
@@ -337,7 +373,7 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
           {isReadOnly && (
             <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-4">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                {ticket.status === 'CANCELLED' 
+                {ticket.status === 'cancelled' 
                   ? "✋ Ce billet a été annulé. Aucune action disponible."
                   : "⏰ Ce billet a expiré. Vous ne pouvez plus l'utiliser."}
               </p>

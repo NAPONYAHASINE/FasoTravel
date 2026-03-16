@@ -1,22 +1,21 @@
-/**
+﻿/**
  * Service Promotions FasoTravel Admin
- * Backend-ready: Mock service qui peut être facilement remplacé par de vrais appels API
+ * Backend-ready: Mock service qui peut Ãªtre facilement remplacÃ© par de vrais appels API
  * 
- * GÈRE: Réductions de prix créées par les opérateurs (Societe app) ET par l'admin
- * L'admin supervise, approuve/rejette, crée, modifie, supprime, et voit les analytics
+ * GÃˆRE: RÃ©ductions de prix crÃ©Ã©es par les opÃ©rateurs (Societe app) ET par l'admin
+ * L'admin supervise, approuve/rejette, crÃ©e, modifie, supprime, et voit les analytics
  * 
- * RESPONSABILITÉS:
+ * RESPONSABILITÃ‰S:
  * - Fournir l'interface entre le frontend et le backend
- * - En mode MOCK: utilise les données de /lib/adminMockData.ts avec mutations locales
+ * - En mode MOCK: utilise les donnÃ©es de /lib/adminMockData.ts avec mutations locales
  * - En mode PRODUCTION: effectue de vrais appels API
- * - ZÉRO génération de données dans ce service
+ * - ZÃ‰RO gÃ©nÃ©ration de donnÃ©es dans ce service
  */
 
 import { AppConfig } from '../config/app.config';
 import { apiService } from './apiService';
 import {
   MOCK_PROMOTIONS,
-  MOCK_PROMOTION_STATS
 } from '../lib/adminMockData';
 import type { Promotion, PromotionStats } from '../shared/types/standardized';
 
@@ -24,13 +23,13 @@ import type { Promotion, PromotionStats } from '../shared/types/standardized';
 export type { Promotion, PromotionStats };
 
 // ============================================================================
-// TYPE POUR CRÉATION/MODIFICATION
+// TYPE POUR CRÃ‰ATION/MODIFICATION
 // ============================================================================
 
 export interface PromotionFormData {
   title: string;
   description?: string;
-  code?: string; // DEPRECATED: conservé pour rétro-compatibilité backend — non rempli depuis le formulaire admin
+  code?: string; // DEPRECATED: conservÃ© pour rÃ©tro-compatibilitÃ© backend â€” non rempli depuis le formulaire admin
   operatorId: string;
   operatorName: string;
   tripId?: string;
@@ -43,7 +42,7 @@ export interface PromotionFormData {
   usageLimitPerUser?: number;
   startDate: string;
   endDate: string;
-  // Story associée (contenu visuel mobile)
+  // Story associÃ©e (contenu visuel mobile)
   storyEnabled?: boolean;
   storyMediaType?: 'image' | 'video';
   storyMediaUrl?: string;
@@ -53,7 +52,7 @@ export interface PromotionFormData {
 }
 
 // ============================================================================
-// CACHE EN MÉMOIRE + DONNÉES MOCK MUTABLES
+// CACHE EN MÃ‰MOIRE + DONNÃ‰ES MOCK MUTABLES
 // ============================================================================
 
 let localPromotions: Promotion[] | null = null;
@@ -116,25 +115,32 @@ class PromotionService {
       return getMutablePromotions();
     }
     const response = await apiService.get<Promotion[]>('/admin/promotions');
-    return response;
+    return response.data!;
   }
 
   async getPromotionStats(): Promise<PromotionStats> {
     if (AppConfig.isMock) {
-      return recalculateStats();
+      if (cachedStats && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
+        return cachedStats;
+      }
+      const stats = recalculateStats();
+      cachedStats = stats;
+      cacheTimestamp = Date.now();
+      return stats;
     }
     const response = await apiService.get<PromotionStats>('/admin/promotions/stats');
-    return response;
+    return response.data!;
   }
 
   async getPromotionById(promoId: string): Promise<Promotion | null> {
     if (AppConfig.isMock) {
       return getMutablePromotions().find(p => p.id === promoId) || null;
     }
-    return await apiService.get<Promotion>(`/admin/promotions/${promoId}`);
+    const response = await apiService.get<Promotion>(`/admin/promotions/${promoId}`);
+    return response.data ?? null;
   }
 
-  // ==================== CRÉATION ====================
+  // ==================== CRÃ‰ATION ====================
 
   async createPromotion(data: PromotionFormData): Promise<Promotion> {
     if (AppConfig.isMock) {
@@ -166,7 +172,7 @@ class PromotionService {
         createdByName: 'Admin FasoTravel',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        // Story associée (contenu visuel mobile)
+        // Story associÃ©e (contenu visuel mobile)
         storyEnabled: data.storyEnabled,
         storyMediaType: data.storyMediaType,
         storyMediaUrl: data.storyMediaUrl,
@@ -178,7 +184,8 @@ class PromotionService {
       cachedStats = null;
       return newPromo;
     }
-    return await apiService.post<Promotion>('/admin/promotions', data);
+    const response = await apiService.post<Promotion>('/admin/promotions', data);
+    return response.data!;
   }
 
   // ==================== MODIFICATION ====================
@@ -196,7 +203,8 @@ class PromotionService {
       cachedStats = null;
       return promos[idx];
     }
-    return await apiService.patch<Promotion>(`/admin/promotions/${promoId}`, data);
+    const response = await apiService.patch<Promotion>(`/admin/promotions/${promoId}`, data);
+    return response.data!;
   }
 
   // ==================== APPROBATION ====================
@@ -218,7 +226,8 @@ class PromotionService {
       cachedStats = null;
       return promos[idx];
     }
-    return await apiService.patch<Promotion>(`/admin/promotions/${promoId}/approve`);
+    const approveResponse = await apiService.patch<Promotion>(`/admin/promotions/${promoId}/approve`);
+    return approveResponse.data!;
   }
 
   async rejectPromotion(promoId: string, reason: string): Promise<Promotion> {
@@ -239,7 +248,8 @@ class PromotionService {
       cachedStats = null;
       return promos[idx];
     }
-    return await apiService.patch<Promotion>(`/admin/promotions/${promoId}/reject`, { reason });
+    const rejectResponse = await apiService.patch<Promotion>(`/admin/promotions/${promoId}/reject`, { reason });
+    return rejectResponse.data!;
   }
 
   // ==================== ACTIVATION ====================
@@ -253,7 +263,8 @@ class PromotionService {
       cachedStats = null;
       return promos[idx];
     }
-    return await apiService.patch<Promotion>(`/admin/promotions/${promoId}/activate`);
+    const activateResponse = await apiService.patch<Promotion>(`/admin/promotions/${promoId}/activate`);
+    return activateResponse.data!;
   }
 
   async deactivatePromotion(promoId: string): Promise<Promotion> {
@@ -265,7 +276,8 @@ class PromotionService {
       cachedStats = null;
       return promos[idx];
     }
-    return await apiService.patch<Promotion>(`/admin/promotions/${promoId}/deactivate`);
+    const deactivateResponse = await apiService.patch<Promotion>(`/admin/promotions/${promoId}/deactivate`);
+    return deactivateResponse.data!;
   }
 
   // ==================== SUPPRESSION ====================

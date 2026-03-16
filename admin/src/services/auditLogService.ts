@@ -1,22 +1,22 @@
-/**
+﻿/**
  * Service Audit Logs FasoTravel Admin
- * Backend-ready: Mock service qui peut être facilement remplacé par de vrais appels API
+ * Backend-ready: Mock service qui peut Ãªtre facilement remplacÃ© par de vrais appels API
  * 
- * RESPONSABILITÉS:
+ * RESPONSABILITÃ‰S:
  * - Fournir l'interface entre le frontend et le backend pour les logs d'audit
- * - En mode MOCK: utilise les données de /lib/adminMockData.ts
+ * - En mode MOCK: utilise les donnÃ©es de /lib/adminMockData.ts
  * - En mode PRODUCTION: effectue de vrais appels API
- * - ZÉRO génération de données dans ce service
+ * - ZÃ‰RO gÃ©nÃ©ration de donnÃ©es dans ce service
  * 
  * ENDPOINTS PRODUCTION:
- * - GET /api/admin/audit-logs              → getAllLogs(params)
- * - GET /api/admin/audit-logs/:id          → getLogById(id)
- * - GET /api/admin/audit-logs/stats        → getStats(params)
- * - GET /api/admin/audit-logs/export       → exportLogs(params)
+ * - GET /api/admin/audit-logs              â†’ getAllLogs(params)
+ * - GET /api/admin/audit-logs/:id          â†’ getLogById(id)
+ * - GET /api/admin/audit-logs/stats        â†’ getStats(params)
+ * - GET /api/admin/audit-logs/export       â†’ exportLogs(params)
  */
 
 import { AppConfig } from '../config/app.config';
-import { apiService, type ApiResponse } from './apiService';
+import { apiService } from './apiService';
 import { ENDPOINTS } from './endpoints';
 import { MOCK_AUDIT_LOGS } from '../lib/adminMockData';
 import type { AuditLog } from '../shared/types/standardized';
@@ -73,7 +73,7 @@ export interface AuditStats {
 }
 
 // ============================================================================
-// HELPERS (ré-utilisées en mock ET production)
+// HELPERS (rÃ©-utilisÃ©es en mock ET production)
 // ============================================================================
 
 export function getActorType(userId: string): ActorType {
@@ -89,7 +89,7 @@ function enrichLogs(logs: AuditLog[]): EnrichedLog[] {
 }
 
 // ============================================================================
-// CACHE EN MÉMOIRE
+// CACHE EN MÃ‰MOIRE
 // ============================================================================
 
 let cachedLogs: EnrichedLog[] | null = null;
@@ -98,7 +98,7 @@ let cacheTimestamp: number = 0;
 const CACHE_DURATION = 60000; // 1 minute
 
 // ============================================================================
-// MOCK: FILTRAGE CÔTÉ CLIENT
+// MOCK: FILTRAGE CÃ”TÃ‰ CLIENT
 // ============================================================================
 
 function applyMockFilters(logs: EnrichedLog[], filters: AuditLogFilters): EnrichedLog[] {
@@ -229,27 +229,27 @@ function computeMockStats(logs: EnrichedLog[]): AuditStats {
 
 class AuditLogService {
   /**
-   * Récupère tous les logs enrichis (avec actorType)
+   * RÃ©cupÃ¨re tous les logs enrichis (avec actorType)
    * Mode MOCK: Enrichit MOCK_AUDIT_LOGS
-   * Mode PRODUCTION: Appel GET /api/admin/audit-logs (déjà enrichis côté backend)
+   * Mode PRODUCTION: Appel GET /api/admin/audit-logs (dÃ©jÃ  enrichis cÃ´tÃ© backend)
    */
   async getAllLogs(): Promise<EnrichedLog[]> {
     const now = Date.now();
     if (cachedLogs && cachedLogs.length > 0 && (now - cacheTimestamp < CACHE_DURATION)) {
-      console.log('[AuditLogService] Cache utilisé');
+      console.log('[AuditLogService] Cache utilisÃ©');
       return cachedLogs;
     }
 
     if (AppConfig.isMock) {
       console.log('[AuditLogService] Mode MOCK - Chargement depuis /lib/adminMockData.ts');
       const enriched = enrichLogs(MOCK_AUDIT_LOGS);
-      console.log(`[AuditLogService] ${enriched.length} logs chargés`);
+      console.log(`[AuditLogService] ${enriched.length} logs chargÃ©s`);
       cachedLogs = enriched;
       cacheTimestamp = now;
       return enriched;
     }
 
-    // MODE PRODUCTION: Appel API réel
+    // MODE PRODUCTION: Appel API rÃ©el
     console.log('[AuditLogService] Mode PRODUCTION - Appel API /admin/audit-logs');
     const response = await apiService.get<EnrichedLog[]>(ENDPOINTS.logs.list());
     if (response.success && response.data) {
@@ -261,8 +261,8 @@ class AuditLogService {
   }
 
   /**
-   * Récupère les logs filtrés et paginés
-   * Mode MOCK: Filtre côté client
+   * RÃ©cupÃ¨re les logs filtrÃ©s et paginÃ©s
+   * Mode MOCK: Filtre cÃ´tÃ© client
    * Mode PRODUCTION: Appel GET /api/admin/audit-logs?filters...&page=X&pageSize=Y
    */
   async getFilteredLogs(
@@ -280,7 +280,7 @@ class AuditLogService {
       return { data, total, page: pagination.page, pageSize: pagination.pageSize, totalPages };
     }
 
-    // MODE PRODUCTION: Filtres envoyés au backend
+    // MODE PRODUCTION: Filtres envoyÃ©s au backend
     console.log('[AuditLogService] Mode PRODUCTION - Appel API avec filtres', filters);
     const params: Record<string, any> = {
       page: pagination.page,
@@ -300,25 +300,26 @@ class AuditLogService {
     if (response.success && response.data) {
       return response.data;
     }
-    throw new Error(response.error || 'Erreur chargement logs filtrés');
+    throw new Error(response.error || 'Erreur chargement logs filtrÃ©s');
   }
 
   /**
-   * Récupère les statistiques d'audit
-   * Mode MOCK: Calcule côté client depuis les logs enrichis
-   * Mode PRODUCTION: Appel GET /api/admin/audit-logs/stats (agrégation SQL côté backend)
+   * RÃ©cupÃ¨re les statistiques d'audit
+   * Mode MOCK: Calcule cÃ´tÃ© client depuis les logs enrichis
+   * Mode PRODUCTION: Appel GET /api/admin/audit-logs/stats (agrÃ©gation SQL cÃ´tÃ© backend)
    */
   async getStats(filters?: AuditLogFilters): Promise<AuditStats> {
     if (AppConfig.isMock) {
+      if (cachedStats && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
+        return cachedStats;
+      }
       const allLogs = await this.getAllLogs();
-      // En mock, on calcule les stats sur tous les logs (pas filtrés)
-      // Les stats globales reflètent l'ensemble des données
       const stats = computeMockStats(allLogs);
       cachedStats = stats;
       return stats;
     }
 
-    // MODE PRODUCTION: Appel API — les stats sont calculées côté backend (agrégation SQL)
+    // MODE PRODUCTION: Appel API â€” les stats sont calculÃ©es cÃ´tÃ© backend (agrÃ©gation SQL)
     console.log('[AuditLogService] Mode PRODUCTION - Appel API /admin/audit-logs/stats');
     const params: Record<string, any> = {};
     if (filters?.dateRange && filters.dateRange !== 'all') {
@@ -336,7 +337,7 @@ class AuditLogService {
   }
 
   /**
-   * Récupère un log par ID
+   * RÃ©cupÃ¨re un log par ID
    * Mode MOCK: Recherche dans MOCK_AUDIT_LOGS
    * Mode PRODUCTION: Appel GET /api/admin/audit-logs/:id
    */
@@ -355,7 +356,7 @@ class AuditLogService {
 
   /**
    * Exporte les logs selon les filtres
-   * Mode MOCK: Retourne les logs filtrés en JSON
+   * Mode MOCK: Retourne les logs filtrÃ©s en JSON
    * Mode PRODUCTION: Appel GET /api/admin/audit-logs/export?format=csv|json
    */
   async exportLogs(
@@ -379,9 +380,9 @@ class AuditLogService {
   }
 
   /**
-   * Récupère les valeurs uniques pour les filtres
-   * Mode MOCK: Calcule côté client
-   * Mode PRODUCTION: Pourrait être un endpoint dédié ou calculé depuis getAllLogs
+   * RÃ©cupÃ¨re les valeurs uniques pour les filtres
+   * Mode MOCK: Calcule cÃ´tÃ© client
+   * Mode PRODUCTION: Pourrait Ãªtre un endpoint dÃ©diÃ© ou calculÃ© depuis getAllLogs
    */
   async getFilterOptions(): Promise<{
     entityTypes: string[];
@@ -404,13 +405,13 @@ class AuditLogService {
   }
 
   /**
-   * Invalide le cache (utile après une action qui génère un nouveau log)
+   * Invalide le cache (utile aprÃ¨s une action qui gÃ©nÃ¨re un nouveau log)
    */
   clearCache(): void {
     cachedLogs = null;
     cachedStats = null;
     cacheTimestamp = 0;
-    console.log('[AuditLogService] Cache invalidé');
+    console.log('[AuditLogService] Cache invalidÃ©');
   }
 }
 

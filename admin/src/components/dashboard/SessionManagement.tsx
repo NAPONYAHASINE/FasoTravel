@@ -101,7 +101,7 @@ function DeviceDistribution({ byDevice, total }: { byDevice: Record<DeviceType, 
 
 function RowActionsMenu({
   session,
-  suspicious,
+  suspicious: _suspicious,
   onShowDetails,
   onRevoke,
   onRevokeByUser,
@@ -712,6 +712,7 @@ export function SessionManagement() {
             {page.totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <button
+                  aria-label="Page précédente"
                   onClick={() => page.setCurrentPage(Math.max(1, page.currentPage - 1))}
                   disabled={page.currentPage === 1}
                   className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -722,6 +723,7 @@ export function SessionManagement() {
                   {page.currentPage} / {page.totalPages}
                 </span>
                 <button
+                  aria-label="Page suivante"
                   onClick={() => page.setCurrentPage(Math.min(page.totalPages, page.currentPage + 1))}
                   disabled={page.currentPage === page.totalPages}
                   className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

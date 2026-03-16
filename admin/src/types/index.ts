@@ -67,16 +67,13 @@ import type {
   TransportCompany as Operator,
   OperatorService,
   Advertisement,
-  Promotion,
   UserSession,
   OperatorPolicy,
   Payment,
   Ticket,
-  Review,
   Support,
   TicketStats,
   UserStats,
-  BookingCreateData,
   AuditLog,
   Notification
 } from '../shared/types/standardized';
@@ -132,7 +129,7 @@ export type DeviceType = UserSession['deviceType'];
 export type PaymentStatus = Payment['status'];
 export type PaymentMethod = Payment['method'];
 
-// Ticket status types (BILLETS: ACTIF, EMBARQUÉ, EXPIRÉ, ANNULÉ)
+// Ticket status types (BILLETS: active, boarded, expired, cancelled)
 export type TicketStatus = Ticket['status'];
 
 // User types

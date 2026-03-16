@@ -20,7 +20,7 @@ import {
   Search, Plus, FileText, Shield, Building2, Eye,
   Edit3, Trash2, CheckCircle, AlertTriangle, XCircle,
   ChevronLeft, ChevronRight, RotateCcw, Globe, Scale,
-  Send, Archive, Clock, Download, ChevronDown, ChevronUp,
+  Send, Archive, Download,
   BookOpen, Ban, ArrowLeftRight, Luggage, CircleDollarSign,
   Timer, ClipboardList, CalendarRange, DollarSign, Power,
 } from 'lucide-react';
@@ -110,7 +110,7 @@ function SimpleMarkdown({ content }: { content: string }) {
         if (line.startsWith('### ')) return <h4 key={i} className="text-gray-900 dark:text-white mt-4 mb-2">{line.slice(4)}</h4>;
         if (line.startsWith('## ')) return <h3 key={i} className="text-gray-900 dark:text-white mt-5 mb-2">{line.slice(3)}</h3>;
         if (line.startsWith('# ')) return <h2 key={i} className="text-gray-900 dark:text-white mt-6 mb-3">{line.slice(2)}</h2>;
-        if (line.startsWith('- ')) return <li key={i} className="text-sm text-gray-700 dark:text-gray-300 ml-4 list-disc">{line.slice(2)}</li>;
+        if (line.startsWith('- ')) return <ul key={i}><li className="text-sm text-gray-700 dark:text-gray-300 ml-4 list-disc">{line.slice(2)}</li></ul>;
         if (line.startsWith('**') && line.endsWith('**')) return <p key={i} className="text-sm text-gray-900 dark:text-white mt-2">{line.slice(2, -2)}</p>;
         if (line.trim() === '') return <div key={i} className="h-2" />;
         return <p key={i} className="text-sm text-gray-700 dark:text-gray-300">{line}</p>;
@@ -484,7 +484,7 @@ function PlatformPolicyEditor({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">Type</label>
-              <select value={type} onChange={(e) => setType(e.target.value as PlatformPolicy['type'])}
+              <select aria-label="Type de politique" value={type} onChange={(e) => setType(e.target.value as PlatformPolicy['type'])}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                 <option value="privacy">Politique de Confidentialite</option>
                 <option value="terms">Conditions Generales d'Utilisation</option>
@@ -493,7 +493,7 @@ function PlatformPolicyEditor({
             </div>
             <div>
               <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">Portee</label>
-              <select value={scope} onChange={(e) => setScope(e.target.value as PlatformPolicy['scope'])}
+              <select aria-label="Portée" value={scope} onChange={(e) => setScope(e.target.value as PlatformPolicy['scope'])}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                 <option value="global">Globale (page legale)</option>
                 <option value="company_addon">Ajoutee aux pages societes</option>
@@ -661,7 +661,7 @@ function PlatformTab({ page }: { page: ReturnType<typeof usePolicyManagement> })
               value={page.searchTerm} onChange={(e) => page.setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 text-sm" />
           </div>
-          <select value={page.statusFilter} onChange={(e) => page.setStatusFilter(e.target.value)}
+          <select aria-label="Filtrer par statut" value={page.statusFilter} onChange={(e) => page.setStatusFilter(e.target.value)}
             className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="all">Tous statuts</option>
             <option value="published">Publiees</option>
@@ -733,13 +733,13 @@ function CompaniesTab({ page }: { page: ReturnType<typeof usePolicyManagement> }
               value={page.searchTerm} onChange={(e) => page.setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 text-sm" />
           </div>
-          <select value={page.companyFilter}
+          <select aria-label="Filtrer par société" value={page.companyFilter}
             onChange={(e) => { page.setCompanyFilter(e.target.value); page.setCurrentPage(1); }}
             className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="all">Toutes societes</option>
             {COMPANY_NAMES.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
-          <select value={page.typeFilter}
+          <select aria-label="Filtrer par type" value={page.typeFilter}
             onChange={(e) => { page.setTypeFilter(e.target.value); page.setCurrentPage(1); }}
             className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="all">Tous types</option>
@@ -747,7 +747,7 @@ function CompaniesTab({ page }: { page: ReturnType<typeof usePolicyManagement> }
               <option key={key} value={key}>{label}</option>
             ))}
           </select>
-          <select value={page.complianceFilter}
+          <select aria-label="Filtrer par conformité" value={page.complianceFilter}
             onChange={(e) => { page.setComplianceFilter(e.target.value); page.setCurrentPage(1); }}
             className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="all">Conformite</option>
@@ -850,13 +850,13 @@ function CompaniesTab({ page }: { page: ReturnType<typeof usePolicyManagement> }
               {page.companyPolicies.length} politique(s)
             </p>
             <div className="flex items-center gap-2">
-              <button onClick={() => page.setCurrentPage(Math.max(1, page.currentPage - 1))}
+              <button aria-label="Page précédente" onClick={() => page.setCurrentPage(Math.max(1, page.currentPage - 1))}
                 disabled={page.currentPage === 1}
                 className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
                 <ChevronLeft size={16} />
               </button>
               <span className="text-sm text-gray-700 dark:text-gray-300">{page.currentPage} / {page.totalCompanyPages}</span>
-              <button onClick={() => page.setCurrentPage(Math.min(page.totalCompanyPages, page.currentPage + 1))}
+              <button aria-label="Page suivante" onClick={() => page.setCurrentPage(Math.min(page.totalCompanyPages, page.currentPage + 1))}
                 disabled={page.currentPage === page.totalCompanyPages}
                 className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
                 <ChevronRight size={16} />
@@ -904,7 +904,7 @@ function RulesTab({ page }: { page: ReturnType<typeof usePolicyManagement> }) {
               value={page.searchTerm} onChange={(e) => page.setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 text-sm" />
           </div>
-          <select value={page.typeFilter} onChange={(e) => page.setTypeFilter(e.target.value)}
+          <select aria-label="Filtrer par type" value={page.typeFilter} onChange={(e) => page.setTypeFilter(e.target.value)}
             className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="all">Tous types</option>
             {Object.entries(POLICY_TYPE_LABELS).map(([key, label]) => (

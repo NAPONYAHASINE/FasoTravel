@@ -280,7 +280,7 @@ export function IncidentManagement() {
       });
       if (res?.success) {
         const channelNames = channels.map(c => c === 'push' ? 'Push' : 'SMS').join(' + ');
-        toast.success(`Notification envoyée à ${res.data.notifiedCount} passager(s) via ${channelNames}`);
+        toast.success(`Notification envoyée à ${res.data?.notifiedCount ?? 0} passager(s) via ${channelNames}`);
         setShowNotifyModal(false);
       } else {
         toast.error("Erreur lors de l'envoi de la notification");
@@ -803,8 +803,9 @@ export function IncidentManagement() {
 
               {/* Type de notification */}
               <div>
-                <label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Type de notification</label>
+                <label htmlFor="notifyType" className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Type de notification</label>
                 <select
+                  id="notifyType"
                   value={notifyType}
                   onChange={(e) => setNotifyType(e.target.value as any)}
                   className="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 dark:text-white text-sm"
@@ -903,6 +904,7 @@ function SelectFilter({ icon, value, onChange, options }: {
     <div className="relative">
       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
       <select
+        aria-label={options[0]?.label || 'Filtre'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="pl-9 pr-8 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 dark:text-white appearance-none transition-colors min-w-[150px] text-sm"

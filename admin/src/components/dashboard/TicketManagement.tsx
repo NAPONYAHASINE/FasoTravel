@@ -18,9 +18,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Ticket as TicketIcon, Search, Download, Eye, CheckCircle, UserCheck, Clock, XCircle, RefreshCw } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Ticket as TicketIcon, Search, Download, Eye, CheckCircle, UserCheck, Clock, XCircle } from 'lucide-react';
 import { exportToCSV } from '../../lib/exportUtils';
 import { useTickets } from '../../hooks/useTickets';
 import type { Ticket } from '../../shared/types/standardized';
@@ -29,10 +27,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { StatCard } from '../ui/stat-card';
 import { PAGE_CLASSES } from '../../lib/design-system';
 
-type TicketStatusFilter = 'all' | 'ACTIF' | 'EMBARQUÉ' | 'EXPIRÉ' | 'ANNULÉ';
+type TicketStatusFilter = 'all' | 'active' | 'boarded' | 'expired' | 'cancelled';
 
 export function TicketManagement() {
-  const { tickets, stats, loading, error } = useTickets({ loadStats: true });
+  const { tickets, stats: _stats, loading: _loading, error } = useTickets({ loadStats: true });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TicketStatusFilter>('all');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -82,27 +80,27 @@ export function TicketManagement() {
 
   // Compteurs par statut
   const countByStatus = useMemo(() => ({
-    ACTIF: tickets.filter(t => t.status === 'ACTIF').length,
-    EMBARQUÉ: tickets.filter(t => t.status === 'EMBARQUÉ').length,
-    EXPIRÉ: tickets.filter(t => t.status === 'EXPIRÉ').length,
-    ANNULÉ: tickets.filter(t => t.status === 'ANNULÉ').length,
+    active: tickets.filter(t => t.status === 'active').length,
+    boarded: tickets.filter(t => t.status === 'boarded').length,
+    expired: tickets.filter(t => t.status === 'expired').length,
+    cancelled: tickets.filter(t => t.status === 'cancelled').length,
   }), [tickets]);
 
   const getStatusBadgeClasses = (status: Ticket['status']) => {
     switch (status) {
-      case 'ACTIF': return 'bg-green-500 text-white';
-      case 'EMBARQUÉ': return 'bg-blue-500 text-white';
-      case 'EXPIRÉ': return 'bg-gray-500 text-white';
-      case 'ANNULÉ': return 'bg-red-500 text-white';
+      case 'active': return 'bg-green-500 text-white';
+      case 'boarded': return 'bg-blue-500 text-white';
+      case 'expired': return 'bg-gray-500 text-white';
+      case 'cancelled': return 'bg-red-500 text-white';
     }
   };
 
   const getStatusIcon = (status: Ticket['status']) => {
     switch (status) {
-      case 'ACTIF': return <CheckCircle className="h-4 w-4" />;
-      case 'EMBARQUÉ': return <UserCheck className="h-4 w-4" />;
-      case 'EXPIRÉ': return <Clock className="h-4 w-4" />;
-      case 'ANNULÉ': return <XCircle className="h-4 w-4" />;
+      case 'active': return <CheckCircle className="h-4 w-4" />;
+      case 'boarded': return <UserCheck className="h-4 w-4" />;
+      case 'expired': return <Clock className="h-4 w-4" />;
+      case 'cancelled': return <XCircle className="h-4 w-4" />;
     }
   };
 
@@ -133,10 +131,10 @@ export function TicketManagement() {
 
       {/* Stats Cards - Statuts BILLETS */}
       <div className={PAGE_CLASSES.statsGrid}>
-        <StatCard title="Actifs" value={countByStatus.ACTIF} icon={CheckCircle} color="green" subtitle="Billets valides" />
-        <StatCard title="Embarqués" value={countByStatus.EMBARQUÉ} icon={UserCheck} color="blue" subtitle="En voyage actuellement" />
-        <StatCard title="Expirés" value={countByStatus.EXPIRÉ} icon={Clock} color="gray" subtitle="Voyages passés" />
-        <StatCard title="Annulés" value={countByStatus.ANNULÉ} icon={XCircle} color="red" subtitle="Billets annulés" />
+        <StatCard title="Actifs" value={countByStatus.active} icon={CheckCircle} color="green" subtitle="Billets valides" />
+        <StatCard title="Embarqués" value={countByStatus.boarded} icon={UserCheck} color="blue" subtitle="En voyage actuellement" />
+        <StatCard title="Expirés" value={countByStatus.expired} icon={Clock} color="gray" subtitle="Voyages passés" />
+        <StatCard title="Annulés" value={countByStatus.cancelled} icon={XCircle} color="red" subtitle="Billets annulés" />
       </div>
 
       {/* Filtres */}
@@ -161,15 +159,16 @@ export function TicketManagement() {
               className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009e49] bg-white dark:bg-gray-700 dark:text-white transition-colors"
             >
               <option value="all">Tous les statuts</option>
-              <option value="ACTIF">Actif</option>
-              <option value="EMBARQUÉ">Embarqué</option>
-              <option value="EXPIRÉ">Expiré</option>
-              <option value="ANNULÉ">Annulé</option>
+              <option value="active">Actif</option>
+              <option value="boarded">Embarqué</option>
+              <option value="expired">Expiré</option>
+              <option value="cancelled">Annulé</option>
             </select>
 
             <button 
               className="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" 
               onClick={handleExport}
+              title="Exporter"
             >
               <Download className="h-4 w-4" />
             </button>
@@ -260,6 +259,7 @@ export function TicketManagement() {
                       <button 
                         className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                         onClick={() => handleViewDetails(ticket)}
+                        title="Voir les détails"
                       >
                         <Eye className="h-4 w-4" />
                       </button>

@@ -3,7 +3,6 @@
  * Zéro duplication - utilisé dans DashboardHome et AnalyticsDashboard
  */
 
-import React from 'react';
 import { 
   DollarSign, 
   CreditCard, 
@@ -89,7 +88,7 @@ export interface FinancialKPICardProps {
 export function FinancialKPICard({ kpi, className = '' }: FinancialKPICardProps) {
   const Icon = kpi.icon ? ICON_MAP[kpi.icon] || DollarSign : DollarSign;
   const TrendIcon = kpi.trend === 'up' ? ArrowUp : ArrowDown;
-  const colors = COLOR_MAP[kpi.color || 'emerald'];
+  const colors = COLOR_MAP[(kpi.color || 'emerald') as keyof typeof COLOR_MAP] || COLOR_MAP.emerald;
 
   return (
     <div 

@@ -5,6 +5,8 @@
  */
 
 import { isDevelopment as _isDev } from '../shared/config/deployment';
+import { storageService } from './storage/localStorage.service';
+import { STORAGE_AUTH_TOKEN } from '../shared/constants/storage';
 
 // ============================================
 // ENVIRONMENT (ré-exporté depuis deployment.ts)
@@ -45,8 +47,8 @@ export const API_CONFIG = {
 // ============================================
 
 export const STORAGE_CONFIG = {
-  /** Préfixe pour les clés localStorage */
-  prefix: 'transport_bf_',
+  /** Préfixe pour les clés localStorage (vide pour cohérence avec admin + shared constants) */
+  prefix: '',
   
   /** TTL par défaut (ms) - 7 jours */
   defaultTTL: 7 * 24 * 60 * 60 * 1000,
@@ -79,6 +81,8 @@ export const API_ENDPOINTS = {
     logout: '/auth/logout',
     me: '/auth/me',
     refresh: '/auth/refresh-token',
+    verifyOtp: '/auth/verify-otp',
+    resendOtp: '/auth/resend-otp',
   },
   
   // Trips & Search
@@ -190,16 +194,13 @@ export function buildApiUrl(endpoint: string): string {
 }
 
 export function getAuthToken(): string | null {
-  const prefix = STORAGE_CONFIG.prefix;
-  return localStorage.getItem(`${prefix}auth_token`);
+  return storageService.get<string>(STORAGE_AUTH_TOKEN) || null;
 }
 
 export function setAuthToken(token: string): void {
-  const prefix = STORAGE_CONFIG.prefix;
-  localStorage.setItem(`${prefix}auth_token`, token);
+  storageService.set(STORAGE_AUTH_TOKEN, token);
 }
 
 export function clearAuthToken(): void {
-  const prefix = STORAGE_CONFIG.prefix;
-  localStorage.removeItem(`${prefix}auth_token`);
+  storageService.remove(STORAGE_AUTH_TOKEN);
 }

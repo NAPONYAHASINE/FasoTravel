@@ -26,7 +26,7 @@ export default function RefundPage() {
     const now = getCurrentDate();
     
     const validTickets = tickets.filter(ticket => {
-      if (ticket.status !== 'valid') return false;
+      if (ticket.status !== 'active') return false;
       if (ticket.cashierId !== user?.id) return false;
       
       // Vérifier délai de remboursement (2h avant départ)

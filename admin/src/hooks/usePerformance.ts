@@ -45,7 +45,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
   delay: number = 300
 ): (...args: Parameters<T>) => void {
   const callbackRef = useRef(callback);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     callbackRef.current = callback;
@@ -80,7 +80,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
 ): (...args: Parameters<T>) => void {
   const callbackRef = useRef(callback);
   const lastRunRef = useRef(0);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     callbackRef.current = callback;
@@ -129,7 +129,7 @@ export function useMemoWithLogging<T>(
   deps: React.DependencyList,
   label?: string
 ): T {
-  const previousDepsRef = useRef<React.DependencyList>();
+  const previousDepsRef = useRef<React.DependencyList | undefined>(undefined);
   const computeCountRef = useRef(0);
 
   const result = useMemo(() => {
@@ -171,7 +171,7 @@ export function useCallbackWithLogging<T extends (...args: any[]) => any>(
   deps: React.DependencyList,
   label?: string
 ): T {
-  const previousDepsRef = useRef<React.DependencyList>();
+  const previousDepsRef = useRef<React.DependencyList | undefined>(undefined);
   const recreateCountRef = useRef(0);
 
   return useCallback(
@@ -326,7 +326,7 @@ export function useRenderTime(componentName: string) {
  * useWhyDidYouUpdate('MyComponent', { prop1, prop2, state1 });
  */
 export function useWhyDidYouUpdate(componentName: string, props: Record<string, any>) {
-  const previousPropsRef = useRef<Record<string, any>>();
+  const previousPropsRef = useRef<Record<string, any> | undefined>(undefined);
 
   useEffect(() => {
     if (previousPropsRef.current) {

@@ -14,11 +14,12 @@ export function formatDate(date: Date | string, format: 'short' | 'long' | 'time
     return 'Date invalide';
   }
 
-  const options: Intl.DateTimeFormatOptions = {
+  const optionsMap: Record<string, Intl.DateTimeFormatOptions> = {
     short: { day: '2-digit', month: '2-digit', year: 'numeric' },
     long: { day: 'numeric', month: 'long', year: 'numeric' },
     time: { hour: '2-digit', minute: '2-digit' },
-  }[format];
+  };
+  const options = optionsMap[format];
 
   return d.toLocaleDateString('fr-FR', options);
 }

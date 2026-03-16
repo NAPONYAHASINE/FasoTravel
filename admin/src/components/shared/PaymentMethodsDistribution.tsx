@@ -3,7 +3,6 @@
  * Zéro duplication
  */
 
-import React from 'react';
 import { CreditCard } from 'lucide-react';
 import { PaymentMethodStats } from '../../types/financial';
 
@@ -21,7 +20,7 @@ export function PaymentMethodsDistribution({
   data,
   totalTransactions,
   successRate,
-  theme = 'light',
+  theme: _theme = 'light',
 }: PaymentMethodsDistributionProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors">

@@ -252,7 +252,7 @@ export default function CashManagementPage() {
           <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Mobile Money</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {formatCurrency(cashByMethod.mobile_money)}
+              {formatCurrency(cashByMethod.mobileMoney)}
             </p>
           </div>
           <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { 
   Bus, 
   MapPin, 
@@ -9,15 +8,10 @@ import {
   TrendingUp,
   Radio
 } from 'lucide-react';
-import { useAdminApp } from '../../context/AdminAppContext';
-import { PAGE_CLASSES } from '../../lib/design-system';
 
 export function GlobalMap() {
-  const { transportCompanies = [] } = useAdminApp();
-
   // Pour l'instant, aucune donnée de tracking GPS en temps réel
   // Cette fonctionnalité sera intégrée avec Google Maps API
-  const activeVehicles: any[] = [];
 
   return (
     <div className="h-full flex bg-gray-50 dark:bg-gray-900 transition-colors">

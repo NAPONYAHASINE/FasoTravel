@@ -5,16 +5,22 @@
  */
 
 import { AppConfig } from '../config/app.config';
+import {
+  STORAGE_AUTH_TOKEN,
+  STORAGE_REFRESH_TOKEN,
+  clearAuthStorage,
+} from '../shared/constants/storage';
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
 const API_CONFIG = {
-  baseURL: (typeof process !== 'undefined' && process.env?.REACT_APP_API_URL) || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   timeout: 30000,
   retryAttempts: 3,
   retryDelay: 1000,
+  refreshTokenEndpoint: '/auth/refresh-token',
 };
 
 // ============================================================================
@@ -93,6 +99,8 @@ class SimpleCache {
 class ApiService {
   private cache = new SimpleCache();
   private authToken: string | null = null;
+  private isRefreshing = false;
+  private refreshPromise: Promise<string | null> | null = null;
 
   /**
    * Vérifie si on est en mode mock (via AppConfig)
@@ -107,9 +115,9 @@ class ApiService {
   setAuthToken(token: string | null): void {
     this.authToken = token;
     if (token) {
-      localStorage.setItem('auth_token', token);
+      localStorage.setItem(STORAGE_AUTH_TOKEN, token);
     } else {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(STORAGE_AUTH_TOKEN);
     }
   }
 
@@ -118,9 +126,95 @@ class ApiService {
    */
   getAuthToken(): string | null {
     if (!this.authToken) {
-      this.authToken = localStorage.getItem('auth_token');
+      this.authToken = localStorage.getItem(STORAGE_AUTH_TOKEN);
     }
     return this.authToken;
+  }
+
+  /**
+   * Définit le refresh token
+   */
+  setRefreshToken(token: string | null): void {
+    if (token) {
+      localStorage.setItem(STORAGE_REFRESH_TOKEN, token);
+    } else {
+      localStorage.removeItem(STORAGE_REFRESH_TOKEN);
+    }
+  }
+
+  /**
+   * Récupère le refresh token
+   */
+  getRefreshToken(): string | null {
+    return localStorage.getItem(STORAGE_REFRESH_TOKEN);
+  }
+
+  /**
+   * Gère le rafraîchissement du token avec déduplication
+   */
+  private async handleTokenRefresh(): Promise<string | null> {
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = this._doRefreshToken();
+
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    }
+  }
+
+  private async _doRefreshToken(): Promise<string | null> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.handleAuthFailure();
+      return null;
+    }
+
+    try {
+      const url = new URL(`${API_CONFIG.baseURL}${API_CONFIG.refreshTokenEndpoint}`);
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        this.handleAuthFailure();
+        return null;
+      }
+
+      const data = await response.json();
+      const newToken = data.data?.token || data.token;
+      const newRefreshToken = data.data?.refreshToken || data.refreshToken;
+
+      if (newToken) {
+        this.setAuthToken(newToken);
+        if (newRefreshToken) {
+          this.setRefreshToken(newRefreshToken);
+        }
+        return newToken;
+      }
+
+      this.handleAuthFailure();
+      return null;
+    } catch {
+      this.handleAuthFailure();
+      return null;
+    }
+  }
+
+  /**
+   * Gère l'échec d'authentification (token expiré, refresh échoué)
+   */
+  private handleAuthFailure(): void {
+    this.authToken = null;
+    clearAuthStorage();
+    window.location.href = '/login';
   }
 
   /**
@@ -192,7 +286,8 @@ class ApiService {
    */
   async request<T = any>(
     endpoint: string,
-    config: RequestConfig = {}
+    config: RequestConfig = {},
+    _isRetryAfterRefresh = false,
   ): Promise<ApiResponse<T>> {
     const {
       method = 'GET',
@@ -213,13 +308,15 @@ class ApiService {
       }
     }
 
-    // MODE MOCK: retourne des données factices
+    // MODE MOCK: les services appelants DOIVENT gérer le mock AVANT d'appeler apiService.
+    // Si ce code est atteint en mock, c'est que le service n'a pas son propre mock branch.
     if (this.isMockMode) {
       await this.simulateDelay(200);
+      console.warn(`[apiService] ⚠️ Mock fallback pour ${method} ${endpoint} — le service appelant devrait gérer le mock.`);
       return {
-        success: true,
-        data: null as T,
-        message: 'Mock response (backend not connected)',
+        success: false,
+        data: undefined as unknown as T,
+        message: `Mock: aucune donnée pour ${endpoint}. Ajoutez un mock branch dans le service.`,
       };
     }
 
@@ -239,6 +336,19 @@ class ApiService {
       });
 
       clearTimeout(timeoutId);
+
+      // 401 Interception: try token refresh once
+      if (response.status === 401 && !_isRetryAfterRefresh) {
+        const newToken = await this.handleTokenRefresh();
+        if (newToken) {
+          return this.request<T>(endpoint, config, true);
+        }
+        return {
+          success: false,
+          error: 'Authentification requise',
+          statusCode: 401,
+        };
+      }
 
       const data = await response.json();
 

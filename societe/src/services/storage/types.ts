@@ -30,7 +30,9 @@ export type StorageKey =
   | 'priceSegments'
   | 'priceHistory'
   | 'auth_token'
-  | 'auth_user';
+  | 'auth_user'
+  | 'refresh_token'
+  | 'token_expires_at';
 
 /**
  * Mapping des clés vers leurs types
@@ -49,6 +51,8 @@ export interface StorageTypeMap {
   priceHistory: any[]; // Type à définir
   auth_token: string;
   auth_user: any; // Type User à définir
+  refresh_token: string;
+  token_expires_at: string;
 }
 
 /**

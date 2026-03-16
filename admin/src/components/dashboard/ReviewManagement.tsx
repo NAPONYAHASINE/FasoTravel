@@ -10,7 +10,7 @@
  * BACKEND-READY: Utilise useReviews() hook → reviewsService → apiService
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Star, Search, Eye, Building2, MapPin, Calendar, ThumbsUp, X, Trash2, Clock } from 'lucide-react';
 import { Review } from '../../shared/types/standardized';
 import { PAGE_CLASSES } from '../../lib/design-system';
@@ -211,6 +211,7 @@ export function ReviewManagement() {
 
           <div className="flex flex-wrap gap-2">
             <select
+              aria-label="Filtrer par société"
               value={companyFilter}
               onChange={(e) => setCompanyFilter(e.target.value)}
               className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#dc2626] bg-white dark:bg-gray-700 dark:text-white transition-colors"
@@ -222,6 +223,7 @@ export function ReviewManagement() {
             </select>
 
             <select
+              aria-label="Filtrer par note"
               value={ratingFilter}
               onChange={(e) => setRatingFilter(e.target.value as any)}
               className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#dc2626] bg-white dark:bg-gray-700 dark:text-white transition-colors"
@@ -350,6 +352,7 @@ export function ReviewManagement() {
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h2 className="text-xl text-gray-900 dark:text-white">Détails de l'avis</h2>
               <button
+                aria-label="Fermer"
                 onClick={() => setShowDetailDialog(false)}
                 className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >

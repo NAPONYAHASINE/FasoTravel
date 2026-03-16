@@ -11,7 +11,7 @@
  * 2. Ou appeler AppConfig.setMode('production')
  */
 
-import { ENV, logger } from './env';
+import { ENV, logger as _logger } from './env';
 
 // Safe access to import.meta.env
 const metaEnv: Record<string, string | undefined> = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env as any : {};

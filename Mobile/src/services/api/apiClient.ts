@@ -11,11 +11,12 @@
 
 import { storageService } from '../storage/localStorage.service';
 import { API_CONFIG } from '../config';
-import { STORAGE_AUTH_TOKEN } from '../../shared/constants/storage';
+import { STORAGE_AUTH_TOKEN, STORAGE_REFRESH_TOKEN } from '../../shared/constants/storage';
 
 export interface ApiClientOptions extends RequestInit {
   retry?: number;
   timeout?: number;
+  _isRetryAfterRefresh?: boolean;
 }
 
 export class ApiError extends Error {
@@ -34,6 +35,9 @@ export interface ApiClientConfig {
   timeout?: number;
   maxRetries?: number;
   getToken?: () => string | null;
+  getRefreshToken?: () => string | null;
+  onTokenRefresh?: () => Promise<string | null>;
+  onAuthFailure?: () => void;
   getHeaders?: () => Record<string, string>;
   logger?: {
     error: (msg: string, data?: any) => void;
@@ -47,14 +51,20 @@ class ApiClient {
   private timeout: number;
   private maxRetries: number;
   private getToken: () => string | null;
+  private onTokenRefresh: (() => Promise<string | null>) | null;
+  private onAuthFailure: (() => void) | null;
   private getHeaders: () => Record<string, string>;
   private logger: NonNullable<ApiClientConfig['logger']>;
+  private isRefreshing = false;
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl;
     this.timeout = config.timeout || 30000;
     this.maxRetries = config.maxRetries || 3;
     this.getToken = config.getToken || (() => null);
+    this.onTokenRefresh = config.onTokenRefresh || null;
+    this.onAuthFailure = config.onAuthFailure || null;
     this.getHeaders = config.getHeaders || (() => ({}));
     this.logger = config.logger || {
       error: () => {},
@@ -149,6 +159,16 @@ class ApiClient {
 
       // Gestion des erreurs HTTP
       if (!response.ok) {
+        // 401 Unauthorized — attempt token refresh once
+        if (response.status === 401 && this.onTokenRefresh && !options._isRetryAfterRefresh) {
+          this.logger.warn?.('🔄 Token expired, attempting refresh');
+          const newToken = await this.handleTokenRefresh();
+          if (newToken) {
+            return this.request<T>(url, { ...options, _isRetryAfterRefresh: true });
+          }
+          // Refresh failed — trigger auth failure
+          this.onAuthFailure?.();
+        }
         this.handleErrorResponse(response);
       }
 
@@ -179,6 +199,22 @@ class ApiClient {
 
       throw lastError;
     }
+  }
+
+  /**
+   * Handle token refresh with deduplication
+   * Multiple concurrent 401s will share the same refresh promise
+   */
+  private async handleTokenRefresh(): Promise<string | null> {
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+    this.isRefreshing = true;
+    this.refreshPromise = this.onTokenRefresh!().finally(() => {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    });
+    return this.refreshPromise;
   }
 
   /**
@@ -237,6 +273,20 @@ export const apiClient = new ApiClient({
   timeout: API_CONFIG.requestTimeout || 30000,
   maxRetries: API_CONFIG.maxRetries || 3,
   getToken: () => storageService.get<string>(STORAGE_AUTH_TOKEN) || null,
+  getRefreshToken: () => storageService.get<string>(STORAGE_REFRESH_TOKEN) || null,
+  onTokenRefresh: async () => {
+    // Dynamic import to avoid circular dependency with auth.service
+    const { authService } = await import('./auth.service');
+    try {
+      return await authService.refreshToken();
+    } catch {
+      return null;
+    }
+  },
+  onAuthFailure: () => {
+    storageService.remove(STORAGE_AUTH_TOKEN);
+    storageService.remove(STORAGE_REFRESH_TOKEN);
+  },
   getHeaders: () => ({}),
   logger: {
     error: (msg, data) => console.error(`[API] ${msg}`, data),

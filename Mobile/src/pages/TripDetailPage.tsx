@@ -287,7 +287,17 @@ export function TripDetailPage({ tripId, isRoundTrip = false, returnDate, passen
                 <span className="text-2xl">💰</span>
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">À partir de</p>
-                  <p className="text-xl text-green-600 dark:text-green-400">{trip.base_price.toLocaleString()} FCFA</p>
+                  {trip.promoted_price && trip.promoted_price < trip.base_price ? (
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm line-through text-gray-400 dark:text-gray-500">{trip.base_price.toLocaleString()} FCFA</p>
+                      <p className="text-xl text-green-600 dark:text-green-400">{trip.promoted_price.toLocaleString()} FCFA</p>
+                      <span className="text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full px-2 py-0.5">
+                        -{Math.round(((trip.base_price - trip.promoted_price) / trip.base_price) * 100)}%
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-xl text-green-600 dark:text-green-400">{trip.base_price.toLocaleString()} FCFA</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -335,8 +345,13 @@ export function TripDetailPage({ tripId, isRoundTrip = false, returnDate, passen
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Prix {isRoundTrip ? 'trajet aller' : 'total'}</p>
                 <p className="text-2xl text-gray-900 dark:text-white">
-                  {((trip.base_price * passengers) + (selectedBaggage ? (operator?.baggage_price || 0) : 0)).toLocaleString()} FCFA
+                  {(((trip.promoted_price ?? trip.base_price) * passengers) + (selectedBaggage ? (operator?.baggage_price || 0) : 0)).toLocaleString()} FCFA
                 </p>
+                {trip.promoted_price && trip.promoted_price < trip.base_price && (
+                  <p className="text-sm line-through text-gray-400 dark:text-gray-500">
+                    {((trip.base_price * passengers) + (selectedBaggage ? (operator?.baggage_price || 0) : 0)).toLocaleString()} FCFA
+                  </p>
+                )}
                 {isRoundTrip && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {passengers} passager{passengers > 1 ? 's' : ''} • Retour à sélectionner après

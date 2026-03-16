@@ -152,7 +152,14 @@ export default function App() {
     const storedUser = localStorage.getItem('auth_user');
     if (storedUser) {
       try {
-        const user = JSON.parse(storedUser);
+        const raw = JSON.parse(storedUser);
+        // Le localStorage stocke le PassengerUser brut (firstName/lastName) 
+        // mais l'app attend un champ `name`. On le construit si absent.
+        const user = {
+          ...raw,
+          name: raw.name || [raw.firstName, raw.lastName].filter(Boolean).join(' ') || raw.email || '',
+          phone: raw.phone || '',
+        };
         setAppState(prev => ({
           ...prev,
           user,
@@ -199,6 +206,32 @@ export default function App() {
     setDarkMode(enabled);
   };
 
+  const syncUserProfile = (data: { name: string; email: string; phone: string }) => {
+    setAppState(prev => {
+      if (!prev.user) {
+        return {
+          ...prev,
+          profileData: data,
+        };
+      }
+
+      const updatedUser = {
+        ...prev.user,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+      };
+
+      localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+
+      return {
+        ...prev,
+        user: updatedUser,
+        profileData: data,
+      };
+    });
+  };
+
   const navigateTo = (page: Page, data?: any) => {
     // Pages publiques (accessible sans authentification)
     const publicPages: Page[] = ['landing', 'auth', 'otp-verification', 'terms-conditions', 'home', 'nearby', 'search-results', 'operators', 'operator-detail'];
@@ -231,6 +264,10 @@ export default function App() {
         history: [...prev.history, prev.currentPage]
       }));
       return;
+    }
+
+    if (page === 'profile' && data && data.name) {
+      syncUserProfile(data);
     }
     
     setAppState(prev => ({
@@ -310,7 +347,10 @@ export default function App() {
       setAppState(prev => ({
         ...prev,
         currentPage: previousPage,
-        history: newHistory
+        history: newHistory,
+        // Quand on revient depuis le paiement, nettoyer reservationData pour éviter
+        // la corruption d'état (reservationData.passengers est un tableau, pas un nombre)
+        ...(prev.currentPage === 'payment' ? { reservationData: undefined } : {}),
       }));
     } else {
       // Default fallback - if authenticated go home, else landing
@@ -412,7 +452,7 @@ export default function App() {
         return appState.selectedTripId ? (
           <SeatSelectionPage
             tripId={appState.selectedTripId}
-            passengers={appState.reservationData?.passengers || appState.searchParams?.passengers || 1}
+            passengers={appState.searchParams?.passengers || 1}
             userName={appState.user?.name}
             userPhone={appState.user?.phone}
             isRoundTrip={appState.reservationData?.isRoundTrip || appState.searchParams?.type === 'ALLER_RETOUR'}
@@ -530,13 +570,15 @@ export default function App() {
         );
 
       case 'edit-profile':
+        const derivedUserName = appState.user?.name || [((appState.user as any)?.firstName || ''), ((appState.user as any)?.lastName || '')].filter(Boolean).join(' ');
         return (
           <EditProfilePage
             onNavigate={navigateTo}
             onBack={goBack}
-            initialName={appState.profileData?.name}
-            initialEmail={appState.profileData?.email}
-            initialPhone={appState.profileData?.phone}
+            onUpdateUser={syncUserProfile}
+            initialName={appState.profileData?.name || derivedUserName}
+            initialEmail={appState.profileData?.email || appState.user?.email}
+            initialPhone={appState.profileData?.phone || appState.user?.phone}
           />
         );
 

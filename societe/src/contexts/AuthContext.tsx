@@ -1,5 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { createLogger } from '../utils/logger';
+import { authService } from '../services/api/auth.service';
+import { storageService } from '../services/storage/localStorage.service';
+import { isDevelopment } from '../shared/config/deployment';
+import { STORAGE_CURRENT_USER, STORAGE_MANAGERS, STORAGE_CASHIERS } from '../shared/constants/storage';
 
 // Logger pour l'authentification
 const logger = createLogger('AuthContext', 'auth');
@@ -25,71 +29,107 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Map auth.service role ('cashier'/'manager'/'responsable') → AuthContext role */
+function mapRole(role: string): User['role'] {
+  if (role === 'cashier') return 'caissier';
+  if (role === 'manager') return 'manager';
+  return 'responsable';
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Vérifier si un utilisateur est déjà connecté (localStorage)
-    const storedUser = localStorage.getItem('transportbf_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Restore session from storage
+    const storedUser = storageService.get(STORAGE_CURRENT_USER) as User | null;
+    if (storedUser && (storedUser as any).societyId) {
+      setUser(storedUser);
+    } else if (storedUser) {
+      const raw = storedUser as any;
+      setUser({
+        id: raw.id,
+        name: raw.name || raw.email,
+        email: raw.email,
+        role: mapRole(raw.role),
+        societyId: raw.companyId || 'soc_1',
+        societyName: raw.companyName || 'TSR - Transport Sayouba Rasmané',
+        gareId: raw.gareId,
+        gareName: raw.gareName,
+      });
     }
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, otp?: string) => {
+  const login = async (email: string, password: string, _otp?: string) => {
     setLoading(true);
     logger.info('Tentative de connexion', { email });
     
     try {
-      // TODO: Remplacer par un vrai appel API
-      // Simulation pour le développement
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let authUser: User;
 
-      // Mock user based on email
-      let mockUser: User;
-      
-      if (email.includes('responsable')) {
-        mockUser = {
-          id: '1',
-          name: 'Jean Ouédraogo',
-          email: email,
-          role: 'responsable',
-          societyId: 'soc_1',
-          societyName: 'TSR - Transport Sayouba Rasmané'
-        };
-      } else if (email.includes('manager')) {
-        mockUser = {
-          id: '2',
-          name: 'Marie Kaboré',
-          email: email,
-          role: 'manager',
-          societyId: 'soc_1',
-          societyName: 'TSR - Transport Sayouba Rasmané',
-          gareId: 'gare_1',
-          gareName: 'Gare Routière de Ouagadougou'
-        };
+      if (isDevelopment()) {
+        // En dev, auth.service cherche dans managers/cashiers du localStorage.
+        // Pour le responsable, on vérifie si l'email contient 'responsable'
+        // ou données mockées de base.
+        const managers: any[] = storageService.get(STORAGE_MANAGERS) || [];
+        const cashiers: any[] = storageService.get(STORAGE_CASHIERS) || [];
+        const manager = managers.find((m: any) => m.email === email);
+        const cashier = cashiers.find((c: any) => c.email === email);
+
+        if (manager || cashier) {
+          // Utiliser auth.service qui vérifie aussi le password
+          const response = await authService.login({ email, password });
+          const u = response.user as any;
+          authUser = {
+            id: u.id,
+            name: u.name || email,
+            email: u.email,
+            role: mapRole(u.role),
+            societyId: u.companyId || 'soc_1',
+            societyName: u.companyName || 'TSR - Transport Sayouba Rasmané',
+            gareId: u.gareId,
+            gareName: u.gareName,
+          };
+        } else {
+          // Inférer le rôle depuis l'email pour les comptes démo
+          let inferredRole: User['role'] = 'responsable';
+          if (email.includes('manager')) inferredRole = 'manager';
+          else if (email.includes('caissier') || email.includes('cashier')) inferredRole = 'caissier';
+
+          authUser = {
+            id: inferredRole === 'manager' ? 'mgr_dev_1' : inferredRole === 'caissier' ? 'cash_dev_1' : 'resp_1',
+            name: inferredRole === 'manager' ? 'Manager Dev' : inferredRole === 'caissier' ? 'Caissier Dev' : 'Jean Ouédraogo',
+            email,
+            role: inferredRole,
+            societyId: 'soc_1',
+            societyName: 'TSR - Transport Sayouba Rasmané',
+            ...(inferredRole !== 'responsable' ? { gareId: 'gare_1', gareName: 'Gare Ouaga Centre' } : {}),
+          };
+        }
       } else {
-        mockUser = {
-          id: 'cash_1', // ✅ CORRIGÉ: doit correspondre aux IDs des transactions mockées
-          name: 'Ibrahim Sawadogo',
-          email: email,
-          role: 'caissier',
-          societyId: 'soc_1',
-          societyName: 'TSR - Transport Sayouba Rasmané',
-          gareId: 'gare_1',
-          gareName: 'Gare Routière de Ouagadougou'
+        // Production: utiliser auth.service
+        const response = await authService.login({ email, password });
+        const u = response.user as any;
+        authUser = {
+          id: u.id,
+          name: u.name || email,
+          email: u.email,
+          role: mapRole(u.role),
+          societyId: u.companyId || '',
+          societyName: u.companyName || '',
+          gareId: u.gareId,
+          gareName: u.gareName,
         };
       }
 
-      setUser(mockUser);
-      localStorage.setItem('transportbf_user', JSON.stringify(mockUser));
+      setUser(authUser);
+      storageService.set(STORAGE_CURRENT_USER, authUser);
       
       logger.info('✅ Connexion réussie', { 
-        userId: mockUser.id, 
-        role: mockUser.role,
-        gareId: mockUser.gareId 
+        userId: authUser.id, 
+        role: authUser.role,
+        gareId: authUser.gareId 
       });
     } catch (error) {
       logger.error('❌ Erreur lors de la connexion', error);
@@ -102,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     logger.info('Déconnexion', { userId: user?.id, role: user?.role });
     setUser(null);
-    localStorage.removeItem('transportbf_user');
+    authService.logout();
   };
 
   return (

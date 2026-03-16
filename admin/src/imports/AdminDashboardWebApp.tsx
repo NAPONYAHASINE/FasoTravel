@@ -1,3 +1,4 @@
+// @ts-nocheck - Auto-generated Figma export, not used in production
 import clsx from "clsx";
 import svgPaths from "./svg-prduse4yqi";
 import imgImg from "figma:asset/0b6bf11e217c8680f19d103b55a7b0561ce8035d.png";

@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { BarChart3, Users, Building2, MapPin } from 'lucide-react';
 import { useAdminApp } from '../../context/AdminAppContext';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { COLORS } from '../../lib/constants';
@@ -19,7 +17,7 @@ export function AnalyticsDashboard() {
   const { transportCompanies, passengers, supportTickets, stations, theme } = useAdminApp();
   
   // 🔥 UN SEUL STATE - Le hook gère tout
-  const { kpis: financialKPIs, metrics, loading, setPeriod, period } = useFinancialMetrics({
+  const { kpis: financialKPIs, metrics, loading: _loading, setPeriod, period } = useFinancialMetrics({
     period: TimePeriod.WEEK,
   });
 
@@ -117,6 +115,7 @@ export function AnalyticsDashboard() {
           </div>
           <div className={PAGE_CLASSES.headerActions}>
             <select
+              aria-label="Période d'analyse"
               value={period}
               onChange={(e) => handlePeriodChange(e.target.value as TimePeriod)}
               className="px-6 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-red-500 transition-all dark:text-white"

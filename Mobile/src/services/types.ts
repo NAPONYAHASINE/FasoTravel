@@ -15,15 +15,15 @@
 // ENUMS & TYPES UTILITAIRES
 // ============================================
 
-export type TicketStatus = 'AVAILABLE' | 'HOLD' | 'PAID' | 'EMBARKED' | 'CANCELLED' | 'REFUNDED';
-export type TripStatus = 'SCHEDULED' | 'BOARDING' | 'DEPARTED' | 'ARRIVED' | 'CANCELLED';
-export type BookingStatus = 'HOLD' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
-export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-export type PaymentMethod = 'ORANGE_MONEY' | 'MOOV_MONEY' | 'CARTE_BANCAIRE' | 'CASH';
+export type TicketStatus = 'active' | 'boarded' | 'expired' | 'cancelled' | 'refunded';
+export type TripStatus = 'scheduled' | 'boarding' | 'departed' | 'arrived' | 'cancelled';
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+export type PaymentMethod = 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'card';
 export type UserRole = 'PASSENGER' | 'OPERATOR' | 'ADMIN' | 'SUPPORT';
 export type SeatStatus = 'available' | 'hold' | 'paid' | 'offline_reserved' | 'selected';
-export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
-export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+export type IncidentStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 
 // ============================================
 // USER & AUTHENTICATION
@@ -215,16 +215,31 @@ export interface Ticket {
   bookingId?: string;
   tripId: string;
   userId: string;
+  operatorId?: string;
+  operatorName?: string;
+  fromStopId?: string;
+  fromStopName?: string;
+  toStopId?: string;
+  toStopName?: string;
   passengerName: string;
   passengerPhone: string;
+  passengerEmail?: string;
   seatNumber: string;
   price: number;
+  currency?: string;
   paymentMethod: PaymentMethod;
+  paymentId?: string;
   status: TicketStatus;
   qrCode?: string;
+  alphanumericCode?: string;
   embarkationTime?: string;
+  arrivalTime?: string;
   createdAt: string;
   updatedAt: string;
+  holderDownloaded?: boolean;
+  holderPresented?: boolean;
+  canCancel?: boolean;
+  canTransfer?: boolean;
 }
 
 export interface TicketTransfer {
@@ -389,7 +404,10 @@ export interface NearbyStationsParams {
 export interface CreateHoldBookingParams {
   tripId: string;
   numSeats: number;
+  unitPrice?: number;
   selectedServices?: string[];
+  passengerName?: string;
+  passengerPhone?: string;
 }
 
 export interface ConfirmBookingParams {

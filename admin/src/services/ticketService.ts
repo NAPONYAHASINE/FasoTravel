@@ -50,9 +50,9 @@ class TicketService {
     }
 
     const response = await apiService.get<Ticket[]>('/admin/tickets');
-    cachedTickets = response;
+    cachedTickets = response.data!;
     cacheTimestamp = now;
-    return response;
+    return response.data!;
   }
 
   /**
@@ -72,8 +72,8 @@ class TicketService {
     }
 
     const response = await apiService.get<TicketStats>('/admin/tickets/stats');
-    cachedStats = response;
-    return response;
+    cachedStats = response.data!;
+    return response.data!;
   }
 
   /**
@@ -85,7 +85,8 @@ class TicketService {
       return ticket || null;
     }
 
-    return await apiService.get<Ticket>(`/admin/tickets/${ticketId}`);
+    const response = await apiService.get<Ticket>(`/admin/tickets/${ticketId}`);
+    return response.data ?? null;
   }
 
   /**

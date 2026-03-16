@@ -123,7 +123,7 @@ export function StoriesCircle({ onNavigate }: StoriesCircleProps) {
           exit={{ opacity: 0 }}
         >
           {/* Progress Bar */}
-          <div className="absolute top-4 left-4 right-4 flex gap-1" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <div className="absolute top-4 left-4 right-4 flex gap-1 pt-safe-area">
             {stories.map((story) => (
               <div
                 key={story.id}

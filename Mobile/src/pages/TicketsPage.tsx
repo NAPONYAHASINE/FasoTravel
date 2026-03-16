@@ -50,15 +50,15 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
     const now = new Date();
     // Small grace period (minutes) after arrival to still consider recent trips as EMBARKED
     const embarkGraceMinutes = 30;
-    // For PAID tickets, expired means departure time is past
-    if (ticket.status === 'PAID' || ticket.status === 'HOLD') {
+    // For active tickets, expired means departure time is past
+    if (ticket.status === 'active') {
       const departureTime = ticket.departure_time ? new Date(ticket.departure_time) : null;
       if (!departureTime) return false;
       return departureTime < now;
     }
 
-    // For EMBARKED tickets, expired means the arrival time is past (trip finished)
-    if (ticket.status === 'EMBARKED') {
+    // For boarded tickets, expired means the arrival time is past (trip finished)
+    if (ticket.status === 'boarded') {
       const arrivalTime = ticket.arrival_time ? new Date(ticket.arrival_time) : null;
       if (!arrivalTime) return false;
       // Consider not expired if arrival is within the grace window
@@ -70,18 +70,18 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
     return false;
   };
 
-  // Actifs: PAID et NON expirés
-  const activeTickets = filteredTickets.filter(t => t.status === 'PAID' && !isTicketExpired(t));
+  // Actifs: active et NON expirés
+  const activeTickets = filteredTickets.filter(t => t.status === 'active' && !isTicketExpired(t));
   
-  // Embarqués: EMBARKED et NON expirés
-  const embarkedTickets = filteredTickets.filter(t => t.status === 'EMBARKED' && !isTicketExpired(t));
+  // Embarqués: boarded et NON expirés
+  const embarkedTickets = filteredTickets.filter(t => t.status === 'boarded' && !isTicketExpired(t));
   
-  // Annulés: CANCELLED
-  const cancelledTickets = filteredTickets.filter(t => t.status === 'CANCELLED');
+  // Annulés: cancelled
+  const cancelledTickets = filteredTickets.filter(t => t.status === 'cancelled');
   
-  // Expirés: (PAID ou EMBARKED) ET expirés (departure_time < now)
+  // Expirés: (active ou boarded) ET expirés (departure_time < now)
   const expiredTickets = filteredTickets.filter(t => {
-    return (t.status === 'PAID' || t.status === 'EMBARKED') && isTicketExpired(t);
+    return (t.status === 'active' || t.status === 'boarded') && isTicketExpired(t);
   });
 
   // ========== ACTIONS CONNECTÉES AUX VRAIES API ==========

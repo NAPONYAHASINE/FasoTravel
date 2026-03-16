@@ -82,9 +82,9 @@ class BookingService {
     // ✅ MODE PRODUCTION: Appel API réel
     console.log('[BookingService] 🌐 Mode PRODUCTION - Appel API /admin/bookings');
     const response = await apiService.get<Booking[]>('/admin/bookings');
-    cachedBookings = response;
+    cachedBookings = response.data!;
     cacheTimestamp = now;
-    return response;
+    return response.data!;
   }
 
   /**
@@ -111,8 +111,8 @@ class BookingService {
     // ✅ MODE PRODUCTION: Appel API réel
     console.log('[BookingService] 🌐 Mode PRODUCTION - Appel API /admin/bookings/stats');
     const response = await apiService.get<BookingStats>('/admin/bookings/stats');
-    cachedStats = response;
-    return response;
+    cachedStats = response.data!;
+    return response.data!;
   }
 
   /**
@@ -126,7 +126,8 @@ class BookingService {
       return booking || null;
     }
 
-    return await apiService.get<Booking>(`/admin/bookings/${bookingId}`);
+    const response = await apiService.get<Booking>(`/admin/bookings/${bookingId}`);
+    return response.data ?? null;
   }
 
   /**

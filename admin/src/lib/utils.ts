@@ -1,13 +1,13 @@
 import { COLORS, CURRENCY, TIME } from './constants';
-import type { 
-  BusStatus, 
-  TicketStatus, 
-  IncidentStatus, 
-  IntegrationStatus, 
-  LogLevel, 
-  TicketPriority,
-  IncidentSeverity 
-} from '../types';
+
+// Local type aliases for status/priority helpers
+type BusStatus = string;
+type TicketStatus = string;
+type IncidentStatus = string;
+type IntegrationStatus = string;
+type LogLevel = 'critical' | 'error' | 'warning' | 'info';
+type TicketPriority = 'urgent' | 'high' | 'medium' | 'low' | 'normal';
+type IncidentSeverity = 'critical' | 'high' | 'medium' | 'low';
 
 // ==================== COLOR UTILITIES ====================
 
@@ -20,10 +20,13 @@ export function getStatusColor(
     'en-route': COLORS.green,
     'confirmed': COLORS.green,
     'resolved': COLORS.green,
+    'departed': COLORS.green,
+    'arrived': COLORS.green,
     
     'delay': COLORS.yellow,
     'scheduled': COLORS.yellow,
     'in-progress': COLORS.yellow,
+    'boarding': COLORS.yellow,
     'pending': COLORS.yellow,
     
     'incident': COLORS.red,
@@ -252,7 +255,7 @@ export function sortByDate<T extends { createdAt: Date }>(
 }
 
 export function sortByPriority<T extends { priority: TicketPriority }>(items: T[]): T[] {
-  const priorityOrder = { 'urgent': 4, 'high': 3, 'medium': 2, 'low': 1 };
+  const priorityOrder: Record<TicketPriority, number> = { 'urgent': 4, 'high': 3, 'medium': 2, 'low': 1, 'normal': 1 };
   return [...items].sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
 }
 

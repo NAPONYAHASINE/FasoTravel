@@ -12,10 +12,10 @@ import { useState, useMemo, useRef, useCallback } from 'react';
 import {
   Plus, Eye, MousePointer, Megaphone, Image as ImageIcon,
   Play, Calendar, Edit2, StopCircle, Search, RefreshCw,
-  Loader2, TrendingUp, Target, Layout, ExternalLink, Clock,
-  CheckCircle, XCircle, Users, Percent, Gauge, Link, Globe,
-  Smartphone, Video, Palette, Star, Zap, X, Send, Archive,
-  Layers, MapPin, Sparkles, Radio, FileText, Hash, Upload,
+  Loader2, TrendingUp, Layout, Clock,
+  CheckCircle, XCircle, Users, Percent, Link, Globe,
+  Smartphone, Video, Palette, Star, X, Send,
+  Layers, Upload,
   Trash2, PlusCircle,
 } from 'lucide-react';
 import {
@@ -559,7 +559,6 @@ function AdsTab({ ads, stats, searchTerm, setSearchTerm, actionLoading, onView, 
 // ==================== STORY DETAIL ====================
 
 function StoryDetailContent({ story, circle }: { story: Story; circle?: StoryCircle }) {
-  const MediaIcon = MEDIA_TYPE_CONFIG[story.mediaType]?.icon || ImageIcon;
   const ctr = story.viewsCount > 0 ? ((story.clicksCount || 0) / story.viewsCount * 100) : 0;
 
   const getRemainingDuration = () => {
@@ -750,12 +749,12 @@ function FileUploadInput({ accept, value, onChange, label }: {
           <Upload size={16} /> Choisir un fichier
         </button>
         {value && (
-          <button type="button" onClick={() => onChange('')} className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+          <button type="button" aria-label="Supprimer le fichier" onClick={() => onChange('')} className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
             <Trash2 size={16} />
           </button>
         )}
       </div>
-      <input ref={inputRef} type="file" accept={accept} onChange={handleChange} className="hidden" />
+      <input ref={inputRef} type="file" accept={accept} onChange={handleChange} className="hidden" aria-label={label} />
       {value && accept.startsWith('image') && (
         <div className="mt-2 h-24 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
           <img src={value} alt="" className="w-full h-full object-cover" />
@@ -808,15 +807,15 @@ function CreateCircleModal({ onSubmit, onClose, actionLoading }: {
           <div>
             <label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Couleur 1</label>
             <div className="flex items-center gap-2">
-              <input type="color" value={color1} onChange={e => setColor1(e.target.value)} className="w-10 h-10 rounded-lg cursor-pointer border-0" />
-              <input type="text" value={color1} onChange={e => setColor1(e.target.value)} className={COMPONENTS.input + ' flex-1'} />
+              <input type="color" aria-label="Couleur 1" value={color1} onChange={e => setColor1(e.target.value)} className="w-10 h-10 rounded-lg cursor-pointer border-0" />
+              <input type="text" aria-label="Code couleur 1" value={color1} onChange={e => setColor1(e.target.value)} className={COMPONENTS.input + ' flex-1'} />
             </div>
           </div>
           <div>
             <label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Couleur 2</label>
             <div className="flex items-center gap-2">
-              <input type="color" value={color2} onChange={e => setColor2(e.target.value)} className="w-10 h-10 rounded-lg cursor-pointer border-0" />
-              <input type="text" value={color2} onChange={e => setColor2(e.target.value)} className={COMPONENTS.input + ' flex-1'} />
+              <input type="color" aria-label="Couleur 2" value={color2} onChange={e => setColor2(e.target.value)} className="w-10 h-10 rounded-lg cursor-pointer border-0" />
+              <input type="text" aria-label="Code couleur 2" value={color2} onChange={e => setColor2(e.target.value)} className={COMPONENTS.input + ' flex-1'} />
             </div>
           </div>
         </div>
@@ -997,7 +996,7 @@ function CreateEditModal({ activeTab, circles, editStory, editAd, isEditMode, ac
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Gradient CSS</label>
-              <input type="text" value={gradient} onChange={e => setGradient(e.target.value)} className={COMPONENTS.input} />
+              <input type="text" aria-label="CSS gradient" value={gradient} onChange={e => setGradient(e.target.value)} className={COMPONENTS.input} />
               {gradient && <div className="mt-2 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: gradient }}>{emoji || '✨'}</div>}
             </div>
             <div>
@@ -1025,7 +1024,7 @@ function CreateEditModal({ activeTab, circles, editStory, editAd, isEditMode, ac
           </div>
           <div>
             <label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Action au clic</label>
-            <select value={actionType} onChange={e => setActionType(e.target.value as any)} className={COMPONENTS.input}>
+            <select aria-label="Type d'action" value={actionType} onChange={e => setActionType(e.target.value as any)} className={COMPONENTS.input}>
               <option value="none">Aucune</option>
               <option value="internal">Page de l'app</option>
               <option value="external">Lien externe</option>
@@ -1098,10 +1097,10 @@ function CreateEditModal({ activeTab, circles, editStory, editAd, isEditMode, ac
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Priorité : <span className="text-gray-900 dark:text-white">{priority}</span>/10</label>
-                <input type="range" min={1} max={10} value={priority} onChange={e => setPriority(parseInt(e.target.value))} className="w-full accent-red-600" />
+                <input type="range" aria-label="Priorité" min={1} max={10} value={priority} onChange={e => setPriority(parseInt(e.target.value))} className="w-full accent-red-600" />
               </div>
               <div className="flex items-center gap-3 pt-6">
-                <button type="button" onClick={() => setTargetNewUsers(!targetNewUsers)}
+                <button type="button" aria-label="Cibler les nouveaux utilisateurs" onClick={() => setTargetNewUsers(!targetNewUsers)}
                   className={`relative w-12 h-6 rounded-full transition-colors ${targetNewUsers ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${targetNewUsers ? 'translate-x-6' : ''}`} />
                 </button>

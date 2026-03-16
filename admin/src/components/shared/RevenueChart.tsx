@@ -3,7 +3,6 @@
  * Zéro duplication - Chart configurable et réutilisable
  */
 
-import React from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, TrendingUp } from 'lucide-react';
 import { DailyRevenue, TimePeriod } from '../../types/financial';

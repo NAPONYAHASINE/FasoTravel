@@ -11,9 +11,11 @@ import { useFilteredData } from '../../hooks/useFilteredData';
 import { calculateTicketsRevenue, calculateCashBalance } from '../../utils/statsUtils';
 import { filterByToday } from '../../utils/dateUtils';
 import { toast } from 'sonner';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function CashiersPage() {
   const { cashiers, tickets, cashTransactions, addCashier, updateCashier, deleteCashier } = useFilteredData();
+  const { user } = useAuth();
   
   // États pour les dialogues
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -33,7 +35,7 @@ export default function CashiersPage() {
   // ✅ REFACTORISÉ: Filter today's tickets with centralized function
   const todayTickets = useMemo(() => {
     return filterByToday(tickets, 'purchaseDate').filter(
-      t => t.status === 'valid' || t.status === 'used'
+      t => t.status === 'active' || t.status === 'boarded'
     );
   }, [tickets]);
 
@@ -85,7 +87,14 @@ export default function CashiersPage() {
   };
 
   const handleAddCashier = () => {
-    addCashier(newCashier);
+    addCashier({
+      ...newCashier,
+      gareId: user?.gareId || '',
+      gareName: user?.gareName || '',
+      managerId: user?.id || '',
+      status: 'active' as const,
+      joinedDate: new Date().toISOString().split('T')[0],
+    });
     setIsAddDialogOpen(false);
     setNewCashier({
       name: '',
