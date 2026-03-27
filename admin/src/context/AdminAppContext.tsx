@@ -11,7 +11,7 @@
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import {
+import type {
   TransportCompany,
   PassengerUser,
   AdminUser,
@@ -381,6 +381,11 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      // Force a clean OTP flow even if a previous session was already authenticated.
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      localStorage.removeItem('adminUser');
+
       const result = await authService.login(email, password);
       
       if (!result.success) {
@@ -440,6 +445,21 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
     setOtpPending(false);
     setPendingUserEmail(null);
     setPendingAdmin(null);
+
+    // Backend-ready mode: Firebase is opt-in and disabled by default.
+    // Enable with VITE_ENABLE_FIREBASE_PUSH=true when backend + Firebase are ready.
+    if (import.meta.env.VITE_ENABLE_FIREBASE_PUSH === 'true') {
+      import('../config/firebase.config').then(({ onFCMMessage, getFCMToken }) => {
+        onFCMMessage((payload: unknown) => {
+          console.log('[FCM] Foreground notification:', payload);
+        });
+        if ('Notification' in window && Notification.permission === 'granted') {
+          getFCMToken().catch(console.warn);
+        }
+      }).catch(() => {
+        // Firebase not installed/configured yet.
+      });
+    }
   };
 
   // Renvoyer un nouveau code OTP

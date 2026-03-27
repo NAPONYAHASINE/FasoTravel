@@ -4,7 +4,7 @@ import type { Page } from '../App';
  * 
  * DEV NOTES:
  * - Endpoint: PATCH /users/me
- * - Validation: nom (min 3 chars), email (format), téléphone (format)
+ * - Validation: nom (min 3 chars), email (format), numéro WhatsApp (format)
  * - Succès: retour à ProfilePage avec notification
  * - Erreur: affichage message d'erreur
  */
@@ -219,7 +219,7 @@ export function EditProfilePage({
             {/* Phone Field */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Numéro de téléphone <span className="text-red-600">*</span>
+                Numéro WhatsApp <span className="text-red-600">*</span>
               </label>
               <input
                 type="tel"

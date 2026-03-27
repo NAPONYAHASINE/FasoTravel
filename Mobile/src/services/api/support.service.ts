@@ -28,7 +28,47 @@ interface CreateIncidentParams {
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 }
 
+export interface AssistantReply {
+  answer: string;
+  escalate: boolean;
+  confidence: number;
+  sources: string[];
+}
+
+interface AssistantRequestParams {
+  message: string;
+  conversationId?: string;
+  userEmail?: string;
+}
+
 class SupportService {
+  /**
+   * Première ligne de support: assistant virtuel (backend RAG-ready)
+   */
+  async askVirtualAssistant(params: AssistantRequestParams): Promise<AssistantReply> {
+    try {
+      return await apiClient.post<AssistantReply>(
+        API_ENDPOINTS.support.assistantChat,
+        {
+          message: params.message,
+          conversationId: params.conversationId,
+          metadata: {
+            userEmail: params.userEmail,
+            channel: 'mobile-app',
+          },
+        }
+      );
+    } catch {
+      // Backend-ready fallback: no local AI logic, only graceful degradation.
+      return {
+        answer: 'Le service assistant est temporairement indisponible. Je peux vous transferer vers un agent humain.',
+        escalate: true,
+        confidence: 0,
+        sources: [],
+      };
+    }
+  }
+
   /**
    * Envoie un message de support
    */
@@ -152,6 +192,7 @@ class SupportService {
 
     return incident;
   }
+
 }
 
 export const supportService = new SupportService();

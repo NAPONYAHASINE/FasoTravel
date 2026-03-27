@@ -10,7 +10,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { FormDialog } from '../../components/forms/FormDialog';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { toast } from 'sonner';
-import type { ScheduleTemplate } from '../../contexts/DataContext';
+import type { ScheduleTemplate, SeatLayout } from '../../contexts/DataContext';
+import { generateSeatGrid } from '../../utils/seatGenerator';
+
+type SeatPattern = '2_2' | '2_3' | '3_3';
+
+const SEAT_PATTERNS: Array<{ value: SeatPattern; label: string; leftSeats: number; rightSeats: number }> = [
+  { value: '2_2', label: '2 + 2', leftSeats: 2, rightSeats: 2 },
+  { value: '2_3', label: '2 + 3', leftSeats: 2, rightSeats: 3 },
+  { value: '3_3', label: '3 + 3', leftSeats: 3, rightSeats: 3 },
+];
+
+function buildSeatLayout(totalSeats: number, seatPattern: SeatPattern, serviceClass: 'standard' | 'vip'): SeatLayout {
+  const pattern = SEAT_PATTERNS.find((item) => item.value === seatPattern) || SEAT_PATTERNS[0];
+  const seatsPerRow = pattern.leftSeats + pattern.rightSeats;
+  const rows = Math.max(1, Math.ceil(totalSeats / seatsPerRow));
+
+  return {
+    id: `layout_${serviceClass}_${seatPattern}_${totalSeats}`,
+    name: `${serviceClass === 'vip' ? 'VIP' : 'Standard'} ${pattern.label} (${totalSeats} places)`,
+    type: serviceClass === 'vip' ? 'vip' : 'standard',
+    totalSeats,
+    structure: {
+      rows,
+      leftSeats: pattern.leftSeats,
+      rightSeats: pattern.rightSeats,
+    },
+  };
+}
+
+function getSeatPatternFromLayout(layout?: SeatLayout): SeatPattern {
+  const found = SEAT_PATTERNS.find(
+    (pattern) => pattern.leftSeats === layout?.structure.leftSeats && pattern.rightSeats === layout?.structure.rightSeats
+  );
+  return found?.value || '2_2';
+}
 
 const DAYS_OF_WEEK = [
   { value: 0, label: 'Dim', full: 'Dimanche' },
@@ -63,6 +97,7 @@ export default function SchedulesPage() {
     departureTime: '',
     serviceClass: 'standard' as 'standard' | 'vip',
     totalSeats: 45,
+    seatPattern: '2_2' as SeatPattern,
   });
 
   const resetForm = () => {
@@ -72,6 +107,7 @@ export default function SchedulesPage() {
       departureTime: '',
       serviceClass: 'standard',
       totalSeats: 45,
+      seatPattern: '2_2',
     });
     setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
   };
@@ -118,6 +154,7 @@ export default function SchedulesPage() {
       ...formData,
       daysOfWeek: selectedDays,
       gareName: gare.name,
+      seatLayout: buildSeatLayout(formData.totalSeats, formData.seatPattern, formData.serviceClass),
       status: 'active',
     });
 
@@ -169,6 +206,7 @@ export default function SchedulesPage() {
       ...formData,
       daysOfWeek: selectedDays,
       gareName: gare.name,
+      seatLayout: buildSeatLayout(formData.totalSeats, formData.seatPattern, formData.serviceClass),
     });
 
     toast.success('Horaire récurrent modifié avec succès');
@@ -202,6 +240,7 @@ export default function SchedulesPage() {
       departureTime: template.departureTime,
       serviceClass: template.serviceClass,
       totalSeats: template.totalSeats,
+      seatPattern: getSeatPatternFromLayout(template.seatLayout),
     });
     setSelectedDays(template.daysOfWeek);
     setIsEditDialogOpen(true);
@@ -244,6 +283,9 @@ export default function SchedulesPage() {
     acc[key].push(template);
     return acc;
   }, {} as Record<string, ScheduleTemplate[]>);
+
+  const layoutPreview = buildSeatLayout(formData.totalSeats, formData.seatPattern, formData.serviceClass);
+  const layoutPreviewGrid = generateSeatGrid(layoutPreview);
 
   return (
     <div className="p-6 space-y-6">
@@ -448,6 +490,13 @@ export default function SchedulesPage() {
                       </div>
 
                       <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Configuration</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {template.seatLayout ? `${template.seatLayout.structure.leftSeats}+${template.seatLayout.structure.rightSeats}` : '2+2'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600 dark:text-gray-400">Gare</span>
                         <span className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[150px]">
                           {template.gareName.split(' ')[0]}
@@ -567,9 +616,65 @@ export default function SchedulesPage() {
               type="number"
               min="1"
               max="100"
-              value={formData.totalSeats}
-              onChange={(e) => setFormData({ ...formData, totalSeats: parseInt(e.target.value) || 45 })}
+              value={formData.totalSeats || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') {
+                  setFormData({ ...formData, totalSeats: 0 });
+                } else {
+                  const num = parseInt(value, 10);
+                  if (!isNaN(num)) {
+                    setFormData({ ...formData, totalSeats: Math.min(Math.max(num, 1), 100) });
+                  }
+                }
+              }}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="seat-pattern">Configuration du car *</Label>
+            <Select value={formData.seatPattern} onValueChange={(value: SeatPattern) => setFormData({ ...formData, seatPattern: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SEAT_PATTERNS.map((pattern) => (
+                  <SelectItem key={pattern.value} value={pattern.value}>
+                    {pattern.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Aperçu de la configuration</Label>
+            <div className="mt-2 rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 space-y-2">
+              {layoutPreviewGrid.rows.slice(0, 8).map((row, index) => (
+                <div key={index} className="flex items-center justify-center gap-3">
+                  <div className="flex gap-2">
+                    {row.left.map((seat) => (
+                      <div key={seat} className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-200">
+                        {seat}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="w-6 h-px bg-gray-300 dark:bg-gray-600" />
+                  <div className="flex gap-2">
+                    {row.right.map((seat) => (
+                      <div key={seat} className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-200">
+                        {seat}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {layoutPreviewGrid.rows.length > 8 && (
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                  Aperçu tronqué: {layoutPreviewGrid.rows.length} rangées au total
+                </p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -664,9 +769,65 @@ export default function SchedulesPage() {
               type="number"
               min="1"
               max="100"
-              value={formData.totalSeats}
-              onChange={(e) => setFormData({ ...formData, totalSeats: parseInt(e.target.value) || 45 })}
+              value={formData.totalSeats || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') {
+                  setFormData({ ...formData, totalSeats: 0 });
+                } else {
+                  const num = parseInt(value, 10);
+                  if (!isNaN(num)) {
+                    setFormData({ ...formData, totalSeats: Math.min(Math.max(num, 1), 100) });
+                  }
+                }
+              }}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="edit-seat-pattern">Configuration du car *</Label>
+            <Select value={formData.seatPattern} onValueChange={(value: SeatPattern) => setFormData({ ...formData, seatPattern: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SEAT_PATTERNS.map((pattern) => (
+                  <SelectItem key={pattern.value} value={pattern.value}>
+                    {pattern.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Aperçu de la configuration</Label>
+            <div className="mt-2 rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 space-y-2">
+              {layoutPreviewGrid.rows.slice(0, 8).map((row, index) => (
+                <div key={index} className="flex items-center justify-center gap-3">
+                  <div className="flex gap-2">
+                    {row.left.map((seat) => (
+                      <div key={seat} className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-200">
+                        {seat}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="w-6 h-px bg-gray-300 dark:bg-gray-600" />
+                  <div className="flex gap-2">
+                    {row.right.map((seat) => (
+                      <div key={seat} className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-200">
+                        {seat}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {layoutPreviewGrid.rows.length > 8 && (
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                  Aperçu tronqué: {layoutPreviewGrid.rows.length} rangées au total
+                </p>
+              )}
+            </div>
           </div>
 
           <div>

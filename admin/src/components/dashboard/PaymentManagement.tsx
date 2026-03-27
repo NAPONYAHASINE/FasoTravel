@@ -428,6 +428,8 @@ export function PaymentManagement() {
               <button
                 onClick={() => setPage(pagination.page - 1)}
                 disabled={pagination.page <= 1 || loading}
+                title="Page précédente"
+                aria-label="Page précédente"
                 className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -451,6 +453,8 @@ export function PaymentManagement() {
               <button
                 onClick={() => setPage(pagination.page + 1)}
                 disabled={pagination.page >= pagination.totalPages || loading}
+                title="Page suivante"
+                aria-label="Page suivante"
                 className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="h-4 w-4" />

@@ -881,7 +881,7 @@ export function usePaymentMethods() {
             logo: '💳',
             enabled: true,
             min_amount: 500,
-            fees_percentage: 0
+            fees_percentage: 3.5
           }
         ];
         

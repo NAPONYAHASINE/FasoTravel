@@ -192,6 +192,14 @@ class AuthService {
   }
 
   private mockRegister(data: AuthRegisterData): AuthResponse {
+    // Generate referral code: FT-226-XXXX
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let suffix = '';
+    for (let i = 0; i < 4; i++) {
+      suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const referralCode = `FT-226-${suffix}`;
+
     const mockUser: PassengerUser = {
       id: `user_${Date.now()}`,
       email: data.email,
@@ -200,6 +208,11 @@ class AuthService {
       lastName: data.lastName,
       role: 'PASSENGER',
       status: 'active',
+      referralCode,
+      referredBy: data.referralCode || undefined,
+      referralPointsBalance: 0,
+      totalReferrals: 0,
+      badgeLevel: 'standard',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

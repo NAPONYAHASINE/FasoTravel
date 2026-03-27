@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Paperclip, Send, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { feedback } from '../lib/interactions';
+import { supportService } from '../services/api';
 
 interface ChatPageProps {
   onBack?: () => void;
@@ -23,6 +24,7 @@ interface ChatMessage {
   text: string;
   timestamp: Date;
   fileName?: string;
+  sources?: string[];
 }
 
 export function ChatPage({ onBack, user }: ChatPageProps) {
@@ -50,32 +52,50 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
     scrollToBottom();
   }, [messages, agentTyping]);
 
-  const addMessage = (sender: 'user' | 'bot' | 'agent', text: string, fileName?: string) => {
-    setMessages(prev => [...prev, { sender, text, timestamp: new Date(), fileName }]);
+  const addMessage = (
+    sender: 'user' | 'bot' | 'agent',
+    text: string,
+    fileName?: string,
+    sources?: string[]
+  ) => {
+    setMessages(prev => [...prev, { sender, text, timestamp: new Date(), fileName, sources }]);
   };
 
-  const simulateBotResponse = (userText: string) => {
-    const lower = userText.toLowerCase();
+  const ensureHumanEscalation = () => {
+    if (isEscalated) return;
 
-    // Check for escalation keywords
-    if (lower.includes('agent') || lower.includes('humain') || lower.includes('personne') || lower.includes('support')) {
-      addMessage('bot', 'Je transfère votre conversation à un agent humain...');
-      setTimeout(() => {
-        setIsEscalated(true);
-        setAgentTyping(true);
-        setTimeout(() => {
-          setAgentConnected(true);
-          addMessage('agent', 'Bonjour, je suis un agent du support FasoTravel. Comment puis-je vous aider ?');
-          setAgentTyping(false);
-        }, 1500);
-      }, 800);
-      return;
-    }
-
-    // Generic bot response
+    addMessage('bot', 'Je transfere votre conversation a un agent humain...');
     setTimeout(() => {
-      addMessage('bot', `Merci pour votre message. Nous avons noté: "${userText.slice(0, 80)}${userText.length > 80 ? '...' : ''}". Un agent vous répondra dans les 24 heures.`);
-    }, 600);
+      setIsEscalated(true);
+      setAgentTyping(true);
+      setTimeout(() => {
+        setAgentConnected(true);
+        addMessage('agent', 'Bonjour, je suis un agent du support FasoTravel. Comment puis-je vous aider ?');
+        setAgentTyping(false);
+      }, 1200);
+    }, 500);
+  };
+
+  const handleAssistantResponse = async (userText: string) => {
+    setAgentTyping(true);
+
+    try {
+      const assistant = await supportService.askVirtualAssistant({
+        message: userText,
+        userEmail: user?.email || email || undefined,
+      });
+
+      addMessage('bot', assistant.answer, undefined, assistant.sources);
+
+      if (assistant.escalate) {
+        ensureHumanEscalation();
+      }
+    } catch {
+      addMessage('bot', 'Je ne peux pas joindre le service intelligent pour le moment. Je vous transfere vers un agent.');
+      ensureHumanEscalation();
+    } finally {
+      setAgentTyping(false);
+    }
   };
 
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,7 +111,7 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     const trimmedMessage = inputMessage.trim();
 
     if (!trimmedMessage) {
@@ -117,15 +137,15 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
         addMessage('agent', 'Merci, un agent vous répondra dans quelques instants...');
       }, 600);
     } else {
-      // Bot response
-      simulateBotResponse(trimmedMessage);
+      // AI assistant response (backend-ready)
+      await handleAssistantResponse(trimmedMessage);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 
@@ -190,6 +210,11 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
                 }`}
               >
                 <div className="text-sm whitespace-pre-wrap break-words">{msg.text}</div>
+                {msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-2 text-[11px] opacity-80">
+                    Sources: {msg.sources.join(' • ')}
+                  </div>
+                )}
                 <div className={`text-[11px] mt-1 ${msg.sender === 'user' ? 'text-green-100' : 'text-gray-500 dark:text-gray-400'}`}>
                   {msg.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
@@ -270,7 +295,7 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
           />
 
           <button
-            onClick={handleSendMessage}
+            onClick={() => void handleSendMessage()}
             className="px-4 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors flex-shrink-0 shadow flex items-center gap-2"
             aria-label="Envoyer"
             title="Envoyer"

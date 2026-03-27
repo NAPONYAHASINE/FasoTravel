@@ -169,16 +169,40 @@ export const API_ENDPOINTS = {
     messages: '/support/messages',
     incidents: '/support/incidents',
     sendMessage: '/support/messages',
+    assistantChat: '/support/assistant/chat',
     myMessages: '/support/messages/my-messages',
     reportIncident: '/support/incidents',
     myIncidents: '/support/incidents/my-incidents',
     incidentDetail: (id: string) => `/support/incidents/${id}`,
     closeIncident: (id: string) => `/support/incidents/${id}/close`,
   },
+
+  // Platform policies
+  policies: {
+    platformPublished: '/policies/platform?status=published&scope=global',
+  },
+
+  // Referrals / Parrainage
+  referrals: {
+    myInfo: '/referrals/me',
+    convertPoints: '/referrals/convert',
+    myCoupons: '/referrals/coupons',
+    validate: '/referrals/validate',
+    validateCoupon: '/referrals/coupons/validate',
+    useCoupon: '/referrals/coupons/use',
+  },
   
   // Vehicle tracking
   vehicle: {
     location: (tripId: string) => `/vehicle/trips/${tripId}/location`,
+  },
+
+  // Ads / Publicités
+  ads: {
+    active: '/ads/active',
+    impression: (adId: string) => `/ads/${adId}/impression`,
+    click: (adId: string) => `/ads/${adId}/click`,
+    conversion: (adId: string) => `/ads/${adId}/conversion`,
   },
 } as const;
 

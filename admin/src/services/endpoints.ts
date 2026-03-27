@@ -152,12 +152,12 @@ export const ENDPOINTS = {
     testConnection: (id: string) => `/integrations/${id}/test`,
   },
 
-  // Infobip (SMS & OTP)
-  infobip: {
-    account: () => '/infobip/account',
-    testSms: () => '/infobip/test-sms',
-    health: () => '/infobip/health',
-    deliveryStats: () => '/infobip/delivery-stats',
+  // WhatsApp Business (OTP & Messages)
+  whatsapp: {
+    account: () => '/whatsapp/account',
+    testMessage: () => '/whatsapp/test-message',
+    health: () => '/whatsapp/health',
+    deliveryStats: () => '/whatsapp/delivery-stats',
   },
 
   // AWS (S3 + CloudFront + Lightsail)
@@ -269,6 +269,18 @@ export const ENDPOINTS = {
     platformDelete: (id: string) => `/policies/platform/${id}`,
     platformPublish: (id: string) => `/policies/platform/${id}/publish`,
     platformArchive: (id: string) => `/policies/platform/${id}/archive`,
+  },
+
+  // Referrals (Parrainage)
+  referrals: {
+    list: (params?: { page?: number; limit?: number; status?: string }) =>
+      `/admin/referrals${params ? buildQueryParams(params) : ''}`,
+    get: (id: string) => `/admin/referrals/${id}`,
+    stats: () => '/admin/referrals/stats',
+    config: () => '/admin/referrals/config',
+    coupons: (params?: { page?: number; limit?: number; status?: string }) =>
+      `/admin/referrals/coupons${params ? buildQueryParams(params) : ''}`,
+    userReferrals: (userId: string) => `/admin/referrals/user/${userId}`,
   },
 } as const;
 

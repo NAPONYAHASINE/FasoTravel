@@ -7,6 +7,65 @@
  * NEVER duplicate these types - always import from here
  */
 
+// ============= REFERRAL / PARRAINAGE TYPES =============
+
+export type ReferralBadgeLevel = 'standard' | 'ambassadeur' | 'super_ambassadeur' | 'legende';
+
+export interface Referral {
+  id: string;
+  referrerUserId: string;
+  referrerName: string;
+  referrerCode: string;
+  referredUserId: string;
+  referredName: string;
+  pointsAwarded: number;
+  status: 'validated';
+  validatedAt: string;
+  createdAt: string;
+}
+
+export interface ReferralCoupon {
+  id: string;
+  userId: string;
+  userName: string;
+  code: string;
+  amount: number;
+  pointsCost: number;
+  status: 'active' | 'used' | 'expired';
+  createdAt: string;
+  expiresAt: string;
+  usedAt?: string;
+}
+
+export interface ReferralConfig {
+  enabled: boolean;
+  pointsPerReferral: number;
+  disabledReason?: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface ReferralStats {
+  totalReferrals: number;
+  totalPointsDistributed: number;
+  totalCouponsGenerated: number;
+  totalCouponsUsed: number;
+  totalCouponsCost: number;
+  activeReferrers: number;
+  config: ReferralConfig;
+  badgeDistribution: Record<ReferralBadgeLevel, number>;
+  topReferrers: { userId: string; name: string; referrals: number; badge: ReferralBadgeLevel }[];
+}
+
+export const REFERRAL_BADGE_THRESHOLDS: Record<ReferralBadgeLevel, number> = {
+  standard: 0,
+  ambassadeur: 100,
+  super_ambassadeur: 250,
+  legende: 500,
+};
+
+export const POINTS_PER_REFERRAL = 10;
+
 // ============= USER TYPES =============
 
 /**
@@ -26,6 +85,12 @@ export interface PassengerUser {
   lastLoginAt?: string;
   verified?: boolean;
   totalBookings?: number;
+  // Referral / Parrainage
+  referralCode?: string;
+  referredBy?: string;
+  referralPointsBalance?: number;
+  totalReferrals?: number;
+  badgeLevel?: ReferralBadgeLevel;
   status: 'active' | 'inactive' | 'suspended' | 'pending';
   createdAt: string;
   updatedAt: string;
@@ -1020,9 +1085,9 @@ export interface IntegrationAlert {
 }
 
 /**
- * InfobipSmsResult - Resultat d'envoi SMS test
+ * WhatsAppMessageResult - Resultat d'envoi message WhatsApp Business test
  */
-export interface InfobipSmsResult {
+export interface WhatsAppMessageResult {
   success: boolean;
   messageId?: string;
   to: string;
@@ -1030,20 +1095,24 @@ export interface InfobipSmsResult {
   deliveryTime?: number;
   errorMessage?: string;
 }
+/** @deprecated Use WhatsAppMessageResult */
+export type InfobipSmsResult = WhatsAppMessageResult;
 
 /**
- * InfobipAccountInfo - Infos compte Infobip
+ * WhatsAppAccountInfo - Infos compte WhatsApp Business
  */
-export interface InfobipAccountInfo {
+export interface WhatsAppAccountInfo {
   balance: number;
   currency: string;
-  smsSentToday: number;
-  smsSentThisMonth: number;
+  messagesSentToday: number;
+  messagesSentThisMonth: number;
   deliveryRate: number;
   avgDeliveryTimeSec: number;
   templates: { id: string; name: string; type: string; enabled: boolean }[];
   supportedNetworks: string[];
 }
+/** @deprecated Use WhatsAppAccountInfo */
+export type InfobipAccountInfo = WhatsAppAccountInfo;
 
 /**
  * AwsHealthReport - Rapport sante complet AWS
@@ -1495,7 +1564,7 @@ export interface AudienceSegment {
  * ChannelStat - Statistiques d'envoi par canal
  */
 export interface ChannelStat {
-  channel: 'push' | 'email' | 'inApp';
+  channel: 'push' | 'email' | 'inApp' | 'whatsapp';
   label: string;
   percentage: number;
   totalSent: number;

@@ -198,7 +198,9 @@ export function PaymentSuccessPage({ reservationData, onNavigate }: PaymentSucce
             <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
               <span className="text-gray-900 dark:text-gray-100">Montant payé</span>
               <span className="text-lg sm:text-xl text-green-600 dark:text-green-400">
-                {(reservationData.totalPaid || reservationData.total_price || reservationData.price)?.toLocaleString()} FCFA
+                {reservationData.totalPaid !== undefined
+                  ? reservationData.totalPaid.toLocaleString() + ' FCFA'
+                  : <span className="text-red-600">Erreur: montant payé inconnu</span>}
               </span>
             </div>
           </div>

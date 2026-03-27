@@ -367,21 +367,9 @@ export interface Story {
   expiresAt?: string;
 }
 
-export interface Advertisement {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  placement: 'SEARCH_RESULTS' | 'TICKET_LIST' | 'OPERATOR_PROFILE' | 'HOME_FEED';
-  clickUrl?: string;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
-  impressions: number;
-  clicks: number;
-  conversions: number;
-  createdAt: string;
-}
+// Advertisement — canonique dans data/models.ts (standardized camelCase)
+// Supprimé ici pour éviter les duplications. Utiliser:
+// import type { Advertisement } from '../../data/models';
 
 // ============================================
 // REQUEST/RESPONSE DTOs

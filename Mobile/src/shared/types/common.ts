@@ -8,6 +8,53 @@
  */
 
 // ============================================
+// REFERRAL / PARRAINAGE TYPES
+// ============================================
+
+export type ReferralBadgeLevel = 'standard' | 'ambassadeur' | 'super_ambassadeur' | 'legende';
+
+export interface ReferralInfo {
+  referralCode: string;
+  pointsBalance: number;
+  totalReferrals: number;
+  badgeLevel: ReferralBadgeLevel;
+  referredUsers: ReferredUser[];
+  shareLink: string;
+}
+
+export interface ReferredUser {
+  id: string;
+  name: string;
+  joinedAt: string;
+  pointsEarned: number;
+}
+
+export interface ReferralCoupon {
+  id: string;
+  code: string;
+  amount: number;        // ex: 500 or 1000 FCFA
+  pointsCost: number;    // ex: 100 or 200
+  status: 'active' | 'used' | 'expired';
+  createdAt: string;
+  expiresAt: string;
+  usedAt?: string;
+}
+
+export const REFERRAL_BADGE_THRESHOLDS: Record<ReferralBadgeLevel, number> = {
+  standard: 0,
+  ambassadeur: 100,
+  super_ambassadeur: 250,
+  legende: 500,
+};
+
+export const REFERRAL_COUPON_TIERS = [
+  { pointsCost: 100, amount: 500, label: '500 FCFA' },
+  { pointsCost: 200, amount: 1000, label: '1 000 FCFA' },
+] as const;
+
+export const POINTS_PER_REFERRAL = 10;
+
+// ============================================
 // AUTHENTICATION TYPES
 // ============================================
 
@@ -32,6 +79,12 @@ export interface PassengerUser extends BaseUser {
   lastName: string;
   role: 'PASSENGER';
   profileImage?: string;
+  // Referral / Parrainage
+  referralCode?: string;
+  referredBy?: string;
+  referralPointsBalance?: number;
+  totalReferrals?: number;
+  badgeLevel?: ReferralBadgeLevel;
 }
 
 /**
@@ -88,6 +141,7 @@ export interface AuthRegisterData {
   phone: string;
   firstName: string;
   lastName: string;
+  referralCode?: string;  // Code de parrainage reçu
 }
 
 /**

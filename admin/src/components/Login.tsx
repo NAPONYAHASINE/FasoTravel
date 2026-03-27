@@ -30,13 +30,19 @@ export function Login() {
     setIsLoading(true);
     
     try {
-      if (loginFn) {
-        await loginFn(email, password);
+      // Si le contexte n'est pas encore prêt, attendre un court délai et réessayer
+      let fn = loginFn;
+      if (!fn) {
+        await new Promise(r => setTimeout(r, 500));
+        fn = ctx?.login;
+      }
+      
+      if (fn) {
+        await fn(email, password);
         toast.success('Code OTP envoyé ! Vérifiez votre email.');
         navigate('/verify-otp');
       } else {
-        // Contexte pas encore disponible (HMR) - réessayer après un court délai
-        setError('Initialisation en cours... Réessayez dans un instant.');
+        setError('Le système n\'est pas encore prêt. Veuillez rafraîchir la page.');
       }
     } catch (err: any) {
       setError(err.message);

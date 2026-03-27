@@ -72,7 +72,6 @@ export type StoryType =
   | 'ALERTE'
   | 'EVENT'
   | 'ACHIEVEMENT';
-export type AdPlacement = 'SEARCH_RESULTS' | 'TICKET_LIST' | 'OPERATOR_PROFILE' | 'HOME_FEED';
 export type DeviceType = 'MOBILE_APP' | 'MOBILE_WEB' | 'DESKTOP_WEB' | 'KIOSK';
 
 // Minimal operator policy model so frontend can safely type operator policies
@@ -388,31 +387,30 @@ export interface Payment {
 // ============================================
 
 export interface Advertisement {
-  ad_id: string;
-  advertiser_id: string;
+  id: string;
   title: string;
   description: string;
-  image_url?: string;
-  video_url?: string;
+  mediaType: 'image' | 'video' | 'gradient';
+  mediaUrl?: string;
   gradient?: string;
-  cta_text?: string;
-  cta_url?: string;
-  placement: AdPlacement;
-  target_audience?: {
-    locations?: string[];
-    age_range?: [number, number];
-    interests?: string[];
-  };
-  start_date: string;
-  end_date: string;
+  emoji?: string;
+  ctaText: string;
+  actionType: 'internal' | 'external' | 'none';
+  actionUrl?: string;
+  internalPage?: string;
+  internalData?: Record<string, unknown>;
+  targetPages: string[];
+  targetNewUsers: boolean;
   priority: number;
+  startDate: string;
+  endDate: string;
+  maxImpressions?: number;
+  maxClicks?: number;
   impressions: number;
   clicks: number;
-  budget: number;
-  budget_spent: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  status: 'active' | 'inactive' | 'expired';
+  createdAt: string;
+  updatedAt: string;
 }
 
 // OperatorStory is defined later (near mocks) — keep a single canonical definition there.
@@ -1941,6 +1939,98 @@ export const MOCK_SEAT_STATUSES: { [key: string]: SeatStatus } = {
   'D2': 'available',
   // ... autres sièges disponibles par défaut
 };
+
+// ============================================
+// MOCK ADVERTISEMENTS (Données centralisées)
+// ============================================
+
+export const MOCK_ADVERTISEMENTS: Advertisement[] = [
+  {
+    id: 'ad_001',
+    title: '🎉 Promotion Ouaga-Bobo',
+    description: 'Profitez de -30% sur tous les trajets Ouagadougou ↔ Bobo-Dioulasso ce mois-ci !',
+    mediaType: 'gradient',
+    gradient: 'linear-gradient(135deg, #EF2B2D 0%, #FCD116 50%, #009E49 100%)',
+    emoji: '🚌',
+    ctaText: 'Voir les offres',
+    actionType: 'internal',
+    internalPage: 'search-results',
+    internalData: { from: 'ouaga-1', to: 'bobo-1', type: 'ALLER_SIMPLE' },
+    targetPages: ['home', 'tickets'],
+    targetNewUsers: false,
+    priority: 8,
+    startDate: '2026-01-01T00:00:00Z',
+    endDate: '2026-12-31T23:59:59Z',
+    impressions: 245,
+    clicks: 32,
+    status: 'active',
+    createdAt: '2026-01-15T10:00:00Z',
+    updatedAt: '2026-01-15T10:00:00Z',
+  },
+  {
+    id: 'ad_002',
+    title: 'Nouveau : Tracking en temps réel',
+    description: 'Suivez votre bus en direct sur la carte ! Disponible sur tous nos trajets premium.',
+    mediaType: 'gradient',
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    emoji: '📍',
+    ctaText: 'Découvrir',
+    actionType: 'internal',
+    internalPage: 'operators',
+    targetPages: ['home', 'search-results'],
+    targetNewUsers: true,
+    priority: 6,
+    startDate: '2026-01-01T00:00:00Z',
+    endDate: '2026-12-31T23:59:59Z',
+    impressions: 120,
+    clicks: 18,
+    status: 'active',
+    createdAt: '2026-01-10T14:00:00Z',
+    updatedAt: '2026-01-10T14:00:00Z',
+  },
+  {
+    id: 'ad_003',
+    title: 'Parrainage : 5000 FCFA offerts',
+    description: 'Parrainez vos amis et recevez 5000 FCFA pour chaque inscription réussie !',
+    mediaType: 'gradient',
+    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    emoji: '🎁',
+    ctaText: 'Parrainer',
+    actionType: 'internal',
+    internalPage: 'referral',
+    targetPages: ['tickets', 'nearby'],
+    targetNewUsers: false,
+    priority: 5,
+    startDate: '2026-01-01T00:00:00Z',
+    endDate: '2026-12-31T23:59:59Z',
+    impressions: 89,
+    clicks: 12,
+    status: 'active',
+    createdAt: '2026-01-05T08:00:00Z',
+    updatedAt: '2026-01-05T08:00:00Z',
+  },
+  {
+    id: 'ad_004',
+    title: '🎉 Bienvenue ! Gagnez jusqu\'à 5000 FCFA',
+    description: 'Partagez votre code de parrainage avec vos proches. À chaque ami inscrit, vous gagnez 10 points. Convertissez vos points en coupons de réduction sur vos billets de bus !',
+    mediaType: 'gradient',
+    gradient: 'linear-gradient(135deg, #FCD116 0%, #009E49 50%, #EF2B2D 100%)',
+    emoji: '🤝',
+    ctaText: 'Découvrir le parrainage',
+    actionType: 'internal',
+    internalPage: 'referral',
+    targetPages: ['home'],
+    targetNewUsers: true,
+    priority: 10,
+    startDate: '2026-01-01T00:00:00Z',
+    endDate: '2030-12-31T23:59:59Z',
+    impressions: 0,
+    clicks: 0,
+    status: 'active',
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+  },
+];
 
 // ============================================
 // VALIDATION DES DONNÉES DE DÉMARRAGE

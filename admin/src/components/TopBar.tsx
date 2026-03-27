@@ -48,6 +48,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/analytics': 'Analytiques',
   '/sessions': 'Gestion des Sessions',
   '/policies': 'Politiques',
+  '/referrals': 'Parrainage',
   '/settings': 'Paramètres'
 };
 
@@ -58,24 +59,53 @@ const PAGE_TITLES: Record<string, string> = {
 export function TopBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, toggleTheme, supportTickets } = useAdminApp();
+  const {
+    theme,
+    toggleTheme,
+    notifications,
+    markNotificationAsRead,
+    refreshNotifications,
+  } = useAdminApp();
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // ✅ Backend-ready: Notifications depuis données centralisées
-  const notifications = supportTickets
-    .filter(t => t.status === 'open')
-    .slice(0, 5)
-    .map(ticket => ({
-      id: ticket.id,
-      message: `${ticket.userType === 'passenger' ? '📱' : '🏢'} Nouveau ticket: ${ticket.subject}`,
-      icon: ticket.priority === 'urgent' ? '🔥' : '💬',
-      time: 'Il y a quelques minutes',
-      read: false
-    }));
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const dropdownNotifications = notifications.slice(0, 5);
 
-  const unreadCount = notifications.length;
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'error':
+        return '🚨';
+      case 'warning':
+        return '⚠️';
+      case 'success':
+        return '✅';
+      default:
+        return '🔔';
+    }
+  };
+
+  const formatRelativeTime = (isoDate: string) => {
+    const date = new Date(isoDate);
+    const diffMs = Date.now() - date.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+
+    if (minutes < 1) return 'A l\'instant';
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Il y a ${hours} h`;
+    const days = Math.floor(hours / 24);
+    return `Il y a ${days} j`;
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const unread = notifications.filter((n) => !n.read);
+    if (unread.length === 0) return;
+
+    await Promise.allSettled(unread.map((n) => markNotificationAsRead(n.id)));
+    await refreshNotifications();
+  };
 
   // Détection du titre de page depuis l'URL
   const currentPageTitle = PAGE_TITLES[location.pathname] || 'FasoTravel Admin';
@@ -135,7 +165,13 @@ export function TopBar() {
             {/* Notifications */}
             <div className="relative">
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => {
+                  const next = !showNotifications;
+                  setShowNotifications(next);
+                  if (next) {
+                    void refreshNotifications();
+                  }
+                }}
                 className="relative p-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 aria-label="Notifications"
               >
@@ -164,7 +200,10 @@ export function TopBar() {
                             <p className="text-xs text-gray-500 dark:text-gray-400">{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</p>
                           )}
                         </div>
-                        <button className="text-xs text-[#dc2626] hover:underline font-medium">
+                        <button
+                          onClick={() => void handleMarkAllAsRead()}
+                          className="text-xs text-[#dc2626] hover:underline font-medium"
+                        >
                           Tout marquer
                         </button>
                       </div>
@@ -172,19 +211,29 @@ export function TopBar() {
 
                     {/* Notifications List */}
                     <div className="overflow-y-auto flex-1">
-                      {notifications.length > 0 ? (
-                        notifications.map((notif) => (
+                      {dropdownNotifications.length > 0 ? (
+                        dropdownNotifications.map((notif) => (
                           <div
                             key={notif.id}
+                            onClick={() => {
+                              if (!notif.read) {
+                                void markNotificationAsRead(notif.id);
+                              }
+                              if (notif.actionUrl) {
+                                setShowNotifications(false);
+                                navigate(notif.actionUrl);
+                              }
+                            }}
                             className={`group block p-4 rounded-lg transition-all ${
                               !notif.read ? 'bg-red-50 dark:bg-red-900/20' : ''
-                            } hover:bg-gray-50 dark:hover:bg-gray-800`}
+                            } hover:bg-gray-50 dark:hover:bg-gray-800 ${notif.actionUrl ? 'cursor-pointer' : ''}`}
                           >
                             <div className="flex items-start gap-3">
-                              <div className="text-2xl flex-shrink-0">{notif.icon}</div>
+                              <div className="text-2xl flex-shrink-0">{getNotificationIcon(notif.type)}</div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{notif.message}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notif.time}</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">{notif.title}</p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{notif.message}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatRelativeTime(notif.createdAt)}</p>
                               </div>
                               {!notif.read && (
                                 <div className="w-2 h-2 bg-[#dc2626] rounded-full flex-shrink-0 mt-1.5" />
@@ -201,12 +250,12 @@ export function TopBar() {
                     </div>
 
                     {/* Footer */}
-                    {notifications.length > 0 && (
+                    {dropdownNotifications.length > 0 && (
                       <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                         <button 
                           onClick={() => {
                             setShowNotifications(false);
-                            navigate('/notifications'); // ✅ Backend-ready: Navigation React Router
+                            navigate('/notifications?tab=inbox'); // Vue dédiée inbox admin
                           }}
                           className="text-xs text-[#dc2626] hover:underline font-medium"
                         >

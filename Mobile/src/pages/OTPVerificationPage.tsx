@@ -17,7 +17,7 @@ import { authService } from '../services/api/auth.service';
 import bgDay from 'figma:asset/bcca83482c8b3b02fad6bfe11da57e59506831e5.png';
 
 interface OTPVerificationPageProps {
-  identifier: string; // Phone or email
+  identifier: string; // WhatsApp number or email
   mode: 'auth' | 'payment'; // From auth flow or payment flow
   onVerified: (code: string) => void; // What to do after OTP verified
   onBack: () => void;
@@ -127,11 +127,9 @@ export function OTPVerificationPage({
     }
   };
 
-  const modeText = mode === 'auth' ? 'connexion' : 'paiement';
-  
   // Détect contact type
   const isEmail = identifier.includes('@');
-  const contactType = isEmail ? 'adresse e-mail' : 'numéro de téléphone';
+  const contactType = isEmail ? 'adresse e-mail' : 'numéro WhatsApp';
   
   const maskedIdentifier = isEmail 
     ? identifier.substring(0, 3) + '***' + identifier.substring(identifier.lastIndexOf('@') - 2)
@@ -340,7 +338,7 @@ export function OTPVerificationPage({
             className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
           >
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              💡 <strong>Conseil :</strong> Vérifiez aussi vos SMS et e-mails indésirables si vous ne recevez pas le code.
+              💡 <strong>Conseil :</strong> Vérifiez aussi WhatsApp et vos e-mails indésirables si vous ne recevez pas le code.
             </p>
           </motion.div>
         </div>
@@ -352,7 +350,7 @@ export function OTPVerificationPage({
           transition={{ delay: 0.6 }}
           className="text-center text-xs text-gray-600 dark:text-gray-400 mt-6"
         >
-          Vérification nécessaire pour votre {modeText}
+          Vérification nécessaire pour votre {mode === 'auth' ? 'connexion' : 'paiement'}
         </motion.p>
       </motion.div>
     </div>

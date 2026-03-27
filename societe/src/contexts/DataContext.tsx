@@ -56,6 +56,7 @@ export interface ScheduleTemplate {
   gareId: string;
   gareName: string;
   totalSeats: number;
+  seatLayout?: SeatLayout;
   status: 'active' | 'inactive';
   createdAt: string;
 }
@@ -115,6 +116,7 @@ export interface Trip {
   status: 'scheduled' | 'boarding' | 'departed' | 'arrived' | 'cancelled';
   gareId: string;
   gareName: string;
+  seatLayout?: SeatLayout;
   
   // ✅ Classe de service
   serviceClass: 'standard' | 'vip' | 'express';
@@ -1575,7 +1577,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             status: status,
             gareId: gare.id,
             gareName: gare.name,
-            serviceClass: 'standard',
+            seatLayout: template.seatLayout,
+            serviceClass: template.serviceClass,
           } as unknown as Trip);
         }
       });
@@ -1757,7 +1760,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           status: status,
           gareId: gare.id,
           gareName: gare.name,
-          serviceClass: 'standard',
+          seatLayout: template.seatLayout,
+          serviceClass: template.serviceClass,
         } as unknown as Trip);
       }
     });

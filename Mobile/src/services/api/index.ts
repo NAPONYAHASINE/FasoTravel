@@ -17,6 +17,9 @@ export { storyService } from './story.service';
 export { vehicleService } from './vehicle.service';
 export { reviewService } from './review.service';
 export { supportService } from './support.service';
+export { platformPolicyService } from './platformPolicy.service';
+export { referralService } from './referral.service';
+export { adsService } from './ads.service';
 
 // HTTP Client
 export { apiClient } from './apiClient';

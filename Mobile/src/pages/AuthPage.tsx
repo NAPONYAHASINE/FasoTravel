@@ -10,7 +10,7 @@
 
 import type { Page } from '../App';
 import { useState, useEffect } from 'react';
-import { Mail, Lock, Phone, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Phone, User, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -46,11 +46,13 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPhone, setRegisterPhone] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerReferralCode, setRegisterReferralCode] = useState('');
   const [registerErrors, setRegisterErrors] = useState<{
     name?: string;
     email?: string;
     phone?: string;
     password?: string;
+    referralCode?: string;
   }>({});
 
   // Déterminer l'heure pour choisir l'image des monuments
@@ -89,9 +91,9 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
     
     if (loginMethod === 'phone') {
       if (!loginPhone) {
-        errors.identifier = 'Numéro requis';
+        errors.identifier = 'Numéro WhatsApp requis';
       } else if (!validatePhone(loginPhone)) {
-        errors.identifier = 'Format: 8 chiffres (ex: 70123456)';
+        errors.identifier = 'Format WhatsApp: 8 chiffres (ex: 70123456)';
       }
     } else {
       if (!loginEmail) {
@@ -152,6 +154,7 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
       email?: string;
       phone?: string;
       password?: string;
+      referralCode?: string;
     } = {};
     
     if (!registerName) {
@@ -168,15 +171,23 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
     }
     
     if (!registerPhone) {
-      errors.phone = 'Téléphone requis';
+      errors.phone = 'Numéro WhatsApp requis';
     } else if (!validatePhone(registerPhone)) {
-      errors.phone = 'Format: 8 chiffres (ex: 70123456)';
+      errors.phone = 'Format WhatsApp: 8 chiffres (ex: 70123456)';
     }
     
     if (!registerPassword) {
       errors.password = 'Mot de passe requis';
     } else if (registerPassword.length < 6) {
       errors.password = 'Minimum 6 caractères';
+    }
+
+    // Validate referral code format if provided
+    if (registerReferralCode) {
+      const code = registerReferralCode.trim().toUpperCase();
+      if (!/^FT-226-[A-Z0-9]{4}$/.test(code)) {
+        errors.referralCode = 'Format invalide (ex: FT-226-ABCD)';
+      }
     }
     
     setRegisterErrors(errors);
@@ -193,6 +204,7 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
           email: registerEmail || `${registerPhone.replace(/\s/g, '')}@phone.transportbf.bf`,
           phone: registerPhone,
           password: registerPassword,
+          ...(registerReferralCode ? { referralCode: registerReferralCode.trim().toUpperCase() } : {}),
         });
 
         feedback.success();
@@ -371,7 +383,7 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
                           }`}
                         >
                           <Phone className="w-4 h-4 inline mr-1" />
-                          Téléphone
+                          WhatsApp
                         </button>
                         <button
                           onClick={() => {
@@ -400,7 +412,7 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
                                 setLoginPhone(e.target.value);
                                 setLoginErrors({ ...loginErrors, identifier: undefined });
                               }}
-                              placeholder="70123456"
+                              placeholder="Numéro WhatsApp (70123456)"
                               maxLength={8}
                               className={`pl-10 ${loginErrors.identifier ? 'border-red-500' : ''}`}
                             />
@@ -522,7 +534,7 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
                               setRegisterPhone(e.target.value);
                               setRegisterErrors({ ...registerErrors, phone: undefined });
                             }}
-                            placeholder="70123456"
+                            placeholder="Numéro WhatsApp (70123456)"
                             maxLength={8}
                             className={`pl-10 ${registerErrors.phone ? 'border-red-500' : ''}`}
                           />
@@ -575,6 +587,28 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
                         {registerErrors.password && (
                           <p className="text-xs text-red-500 mt-1">{registerErrors.password}</p>
                         )}
+                      </div>
+
+                      {/* Code de parrainage (optionnel) */}
+                      <div>
+                        <div className="relative">
+                          <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <Input
+                            type="text"
+                            value={registerReferralCode}
+                            onChange={(e) => {
+                              setRegisterReferralCode(e.target.value.toUpperCase());
+                              setRegisterErrors({ ...registerErrors, referralCode: undefined });
+                            }}
+                            placeholder="Code parrainage (optionnel)"
+                            maxLength={11}
+                            className={`pl-10 ${registerReferralCode ? 'uppercase' : ''} ${registerErrors.referralCode ? 'border-red-500' : ''}`}
+                          />
+                        </div>
+                        {registerErrors.referralCode && (
+                          <p className="text-xs text-red-500 mt-1">{registerErrors.referralCode}</p>
+                        )}
+                        <p className="text-xs text-gray-400 mt-1">Format: FT-226-XXXX</p>
                       </div>
 
                       <Button

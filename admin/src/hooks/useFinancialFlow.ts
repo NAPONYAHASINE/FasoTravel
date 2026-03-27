@@ -36,6 +36,8 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { financialService } from '../services/financialService';
+import { referralsService } from '../services/entitiesService';
+import type { ReferralStats } from '../shared/types/standardized';
 import { useAdminApp } from '../context/AdminAppContext';
 import {
   TimePeriod,
@@ -74,7 +76,7 @@ export const FASOTRAVEL_MODEL = {
 
 /** Coûts technologiques mensuels (base 1000 users actifs) */
 export const TECH_COSTS = [
-  { key: 'infobip', label: 'Infobip (SMS & OTP)', amount: 63000, color: '#3b82f6' },
+  { key: 'whatsapp', label: 'WhatsApp Business (OTP)', amount: 63000, color: '#3b82f6' },
   { key: 'googleMaps', label: 'Google Maps', amount: 20000, color: '#16a34a' },
   { key: 'aws', label: 'AWS (Lightsail + S3 + CDN)', amount: 35000, color: '#f97316' },
 ] as const;
@@ -99,8 +101,14 @@ export interface FinancialFlowData {
   platformRevenue: number;
   /** Montant reversé aux sociétés ((100 - commission)% du prix billet) */
   companyReversal: number;
-  /** Marge nette après coûts tech */
+  /** Coût total des coupons de parrainage */
+  referralCosts: number;
+  /** Stats complètes du parrainage (pour affichage détaillé) */
+  referralStats: ReferralStats | null;
+  /** Marge nette après coûts tech + parrainage */
   netMargin: number;
+  /** Total des dépenses (tech + parrainage) */
+  totalExpenses: number;
   /** Taux de croissance de la période */
   growthRate: number;
 
@@ -155,6 +163,7 @@ export function useFinancialFlow(
   const { transportCompanies } = useAdminApp();
 
   const [metrics, setMetrics] = useState<FinancialDashboardMetrics | null>(null);
+  const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<TimePeriod>(initialPeriod);
@@ -177,16 +186,20 @@ export function useFinancialFlow(
         includeDetails: true,
       };
 
-      const response = await financialService.getFinancialMetrics(
-        request,
-        transportCompanies
-      );
+      const [response, refResponse] = await Promise.all([
+        financialService.getFinancialMetrics(request, transportCompanies),
+        referralsService.getStats(),
+      ]);
 
       if (response.success) {
         setMetrics(response.data);
         setLastUpdated(new Date());
       } else {
         setError(response.error || 'Erreur lors de la récupération des données financières');
+      }
+
+      if (refResponse.success && refResponse.data) {
+        setReferralStats(refResponse.data);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -243,7 +256,9 @@ export function useFinancialFlow(
     const platformRevenue = commissionRevenue + serviceFeeRevenue;
     // Reversement sociétés = prix billet - commission (les 100F ne touchent jamais la société)
     const companyReversal = totalRevenue - commissionRevenue;
-    const netMargin = platformRevenue - TOTAL_TECH_COST;
+    const referralCosts = referralStats?.totalCouponsCost ?? 0;
+    const totalExpenses = TOTAL_TECH_COST + referralCosts;
+    const netMargin = platformRevenue - totalExpenses;
 
     // Filtrage canaux : séparer plateforme (PayDunya) vs audit (cash guichets)
     const allMethods = metrics.paymentMethods ?? [];
@@ -257,7 +272,10 @@ export function useFinancialFlow(
       serviceFeeRevenue,
       platformRevenue,
       companyReversal,
+      referralCosts,
+      referralStats,
       netMargin,
+      totalExpenses,
       growthRate,
       platformChannels,
       cashAudit,
@@ -265,7 +283,7 @@ export function useFinancialFlow(
       dailyRevenue: metrics.dailyRevenue ?? [],
       dataSource: metrics.dataSource ?? 'mock',
     };
-  }, [metrics, commissionRate, serviceFeePerTicket]);
+  }, [metrics, commissionRate, serviceFeePerTicket, referralStats]);
 
   // ==================== RETURN ====================
 

@@ -27,7 +27,8 @@ import {
   Settings,
   Menu,
   X,
-  GitBranch
+  GitBranch,
+  Gift
 } from 'lucide-react';
 import { useAdminApp } from '../context/AdminAppContext';
 import { usePermission } from '../hooks/usePermission';
@@ -89,6 +90,7 @@ export function Sidebar() {
     // 📢 MARKETING & PUBLICITÉ
     { path: '/advertising', label: 'Stories & Pubs', icon: Megaphone, category: 'Marketing', requiredPage: 'advertising' },
     { path: '/notifications', label: 'Notifications', icon: Bell, category: 'Marketing', requiredPage: 'notifications' },
+    { path: '/referrals', label: 'Parrainage', icon: Gift, category: 'Marketing', requiredPage: 'referrals' },
     
     // ⚙️ SYSTÈME & CONFIGURATION
     { path: '/integrations', label: 'Intégrations', icon: Puzzle, category: 'Système', requiredPage: 'integrations' },

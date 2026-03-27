@@ -19,49 +19,13 @@
  */
 import './styles.css';
 import type { Page } from '../App';
+import type { Advertisement } from '../data/models';
 import { useState, useEffect } from 'react';
 import { X, ExternalLink, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
-import { API_ENDPOINTS, buildUrl, shouldUseMock, getDefaultHeaders, ADS_CONFIG } from '../lib/config';
-
-export interface Advertisement {
-  id: string;
-  title: string;
-  description: string;
-  
-  // Media
-  media_type: 'image' | 'video' | 'gradient';
-  media_url?: string;
-  gradient?: string;
-  emoji?: string;
-  
-  // Actions
-  cta_text?: string;          // "Voir l'offre", "Réserver maintenant", etc.
-  action_type: 'internal' | 'external' | 'none';
-  action_url?: string;        // URL externe ou route interne
-  internal_page?: string;     // Page de l'app (ex: 'operators', 'search-results')
-  internal_data?: any;        // Données à passer (ex: opérateur spécifique)
-  
-  // Ciblage
-  target_pages?: string[];    // Pages où afficher ['home', 'tickets']
-  target_new_users?: boolean; // Uniquement nouveaux utilisateurs
-  priority: number;           // 1-10 (10 = haute priorité)
-  
-  // Programmation
-  start_date: string;
-  end_date: string;
-  max_impressions?: number;   // Limite d'affichages
-  max_clicks?: number;        // Limite de clics
-  
-  // Statistiques (en lecture seule)
-  impressions_count: number;
-  clicks_count: number;
-  
-  // Admin
-  created_by: string;
-  is_active: boolean;
-}
+import { ADS_CONFIG } from '../lib/config';
+import { adsService } from '../services/api/ads.service';
 
 interface AdModalProps {
   currentPage: string;        // Page actuelle pour ciblage
@@ -89,143 +53,75 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
       }
     }
 
-    // Récupérer les annonces actives depuis l'API
-    const ad = await fetchTargetedAd();
-    
-    if (ad) {
-      setCurrentAd(ad);
-      
-      // Délai avant affichage (moins agressif)
-      setTimeout(() => {
-        setIsVisible(true);
-        trackImpression(ad.id);
-        localStorage.setItem('last_ad_shown', Date.now().toString());
-      }, ADS_CONFIG.DISPLAY_DELAY);
-    }
-  };
-
-  const fetchTargetedAd = async (): Promise<Advertisement | null> => {
     try {
-      // MODE DEV: Utiliser données mock
-      if (shouldUseMock()) {
-        return getMockAd(currentPage, isNewUser);
-      }
-
-      // MODE PROD: Vraie requête API
-      const url = buildUrl(API_ENDPOINTS.ads.active, {
+      // Récupère les annonces ciblées via le service (mock ou API)
+      const ads = await adsService.getActiveAds({
         page: currentPage,
-        user_id: userId,
-        is_new: isNewUser
+        userId,
+        isNewUser,
       });
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getDefaultHeaders(false)
-      });
-      
-      if (!response.ok) return null;
-      
-      const ads: Advertisement[] = await response.json();
-      
-      // Sélectionner annonce selon priorité et ciblage
-      return selectBestAd(ads);
-      
+
+      const ad = selectBestAd(ads);
+
+      if (ad) {
+        setCurrentAd(ad);
+
+        // Délai avant affichage (moins agressif)
+        setTimeout(() => {
+          setIsVisible(true);
+          handleImpression(ad.id);
+          localStorage.setItem('last_ad_shown', Date.now().toString());
+        }, ADS_CONFIG.DISPLAY_DELAY);
+      }
     } catch (error) {
-      console.error('Error fetching ads:', error);
-      return null;
+      console.error('Error loading ads:', error);
     }
   };
 
   const selectBestAd = (ads: Advertisement[]): Advertisement | null => {
     if (ads.length === 0) return null;
-    
-    // Filtrer les annonces valides
+
+    // Filtrer les annonces pas vues récemment
+    const viewedAds = JSON.parse(localStorage.getItem('viewed_ads') || '[]');
     const validAds = ads.filter(ad => {
-      // Vérifier dates
-      const now = new Date();
-      const start = new Date(ad.start_date);
-      const end = new Date(ad.end_date);
-      if (now < start || now > end) return false;
-      
-      // Vérifier limites
-      if (ad.max_impressions && ad.impressions_count >= ad.max_impressions) return false;
-      if (ad.max_clicks && ad.clicks_count >= ad.max_clicks) return false;
-      
-      // Vérifier si pas déjà vue récemment
-      const viewedAds = JSON.parse(localStorage.getItem('viewed_ads') || '[]');
-      const recentlyViewed = viewedAds.find((v: any) => 
+      const recentlyViewed = viewedAds.find((v: any) =>
         v.ad_id === ad.id && Date.now() - v.timestamp < 24 * 60 * 60 * 1000
       );
-      if (recentlyViewed) return false;
-      
-      return true;
+      return !recentlyViewed;
     });
-    
+
     if (validAds.length === 0) return null;
-    
-    // Trier par priorité (décroissant)
+
+    // Trier par priorité
     validAds.sort((a, b) => b.priority - a.priority);
-    
-    // Retourner la plus prioritaire
     return validAds[0];
   };
 
-  const trackImpression = async (adId: string) => {
+  const handleImpression = async (adId: string) => {
     // Stocker localement
     const viewedAds = JSON.parse(localStorage.getItem('viewed_ads') || '[]');
     viewedAds.push({ ad_id: adId, timestamp: Date.now() });
-    localStorage.setItem('viewed_ads', JSON.stringify(viewedAds.slice(-50))); // Garder 50 dernières
+    localStorage.setItem('viewed_ads', JSON.stringify(viewedAds.slice(-50)));
 
-    // Envoyer au backend (skip si mode mock)
-    if (shouldUseMock()) return;
-    
-    try {
-      await fetch(API_ENDPOINTS.ads.impression(adId), {
-        method: 'POST',
-        headers: getDefaultHeaders(false),
-        body: JSON.stringify({ 
-          user_id: userId, 
-          page: currentPage,
-          device_type: /mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
-        })
-      });
-    } catch (error) {
-      console.error('Error tracking impression:', error);
-    }
-  };
-
-  const trackClick = async (adId: string) => {
-    // Skip si mode mock
-    if (shouldUseMock()) return;
-    
-    try {
-      await fetch(API_ENDPOINTS.ads.click(adId), {
-        method: 'POST',
-        headers: getDefaultHeaders(false),
-        body: JSON.stringify({ 
-          user_id: userId, 
-          page: currentPage,
-          action_type: currentAd?.action_type,
-          device_type: /mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
-        })
-      });
-    } catch (error) {
-      console.error('Error tracking click:', error);
-    }
+    // Track via service
+    adsService.trackImpression(adId, { userId, page: currentPage }).catch(() => {});
   };
 
   const handleAdClick = () => {
     if (!currentAd) return;
     
-    trackClick(currentAd.id);
+    // Track via service
+    adsService.trackClick(currentAd.id, {
+      userId,
+      page: currentPage,
+      actionType: currentAd.actionType,
+    }).catch(() => {});
     
-    if (currentAd.action_type === 'internal' && currentAd.internal_page) {
-      // Navigation interne
-  onNavigate?.(currentAd.internal_page as Page, currentAd.internal_data);
+    if (currentAd.actionType === 'internal' && currentAd.internalPage) {
+      onNavigate?.(currentAd.internalPage as Page, currentAd.internalData);
       handleClose();
-    } else if (currentAd.action_type === 'external' && currentAd.action_url) {
-      // Ouvrir URL externe
-      window.open(currentAd.action_url, '_blank');
+    } else if (currentAd.actionType === 'external' && currentAd.actionUrl) {
+      window.open(currentAd.actionUrl, '_blank');
       handleClose();
     }
   };
@@ -266,10 +162,10 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
             {/* Ad Card */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
               {/* Media Section */}
-              {currentAd.media_type === 'image' && currentAd.media_url && (
+              {currentAd.mediaType === 'image' && currentAd.mediaUrl && (
                 <div className="relative w-full h-64 bg-gray-100">
                   <img
-                    src={currentAd.media_url}
+                    src={currentAd.mediaUrl}
                     alt={currentAd.title}
                     className="w-full h-full object-cover"
                   />
@@ -281,7 +177,7 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
                 </div>
               )}
 
-              {currentAd.media_type === 'gradient' && (
+              {currentAd.mediaType === 'gradient' && (
                 <div
                   style={{ background: currentAd.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
                   className="relative w-full h-64 flex items-center justify-center"
@@ -315,13 +211,13 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
                     Passer
                   </Button>
                   
-                  {currentAd.action_type !== 'none' && (
+                  {currentAd.actionType !== 'none' && (
                     <Button
                       onClick={handleAdClick}
                       className="flex-1 bg-gradient-to-r from-red-600 via-amber-500 to-green-600 hover:from-red-700 hover:via-amber-600 hover:to-green-700 text-white"
                     >
-                      {currentAd.cta_text || 'En savoir plus'}
-                      {currentAd.action_type === 'external' ? (
+                      {currentAd.ctaText || 'En savoir plus'}
+                      {currentAd.actionType === 'external' ? (
                         <ExternalLink className="w-4 h-4 ml-2" />
                       ) : (
                         <ChevronRight className="w-4 h-4 ml-2" />
@@ -341,97 +237,4 @@ export function AdModal({ currentPage, onNavigate, userId, isNewUser }: AdModalP
       )}
     </AnimatePresence>
   );
-}
-
-/**
- * Mock data pour développement
- */
-function getMockAd(currentPage: string, isNewUser?: boolean): Advertisement | null {
-  const mockAds: Advertisement[] = [
-    {
-      id: 'ad-1',
-      title: '🎉 Promotion Ouaga-Bobo',
-      description: 'Profitez de -30% sur tous les trajets Ouagadougou ↔ Bobo-Dioulasso ce mois-ci !',
-      media_type: 'gradient',
-      gradient: 'linear-gradient(135deg, #EF2B2D 0%, #FCD116 50%, #009E49 100%)',
-      emoji: '🚌',
-      cta_text: 'Voir les offres',
-      action_type: 'internal',
-      internal_page: 'search-results',
-      internal_data: {
-        from: 'ouaga-1',
-        to: 'bobo-1',
-        type: 'ALLER_SIMPLE'
-      },
-      target_pages: ['home', 'tickets'],
-      target_new_users: false,
-      priority: 8,
-      start_date: '2026-01-01',
-      end_date: '2026-12-31',
-      impressions_count: 245,
-      clicks_count: 32,
-      created_by: 'admin',
-      is_active: true
-    },
-    {
-      id: 'ad-2',
-      title: 'Nouveau : Tracking en temps réel',
-      description: 'Suivez votre bus en direct sur la carte ! Disponible sur tous nos trajets premium.',
-      media_type: 'gradient',
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      emoji: '📍',
-      cta_text: 'Découvrir',
-      action_type: 'internal',
-      internal_page: 'operators',
-      target_pages: ['home', 'search-results'],
-      target_new_users: true,
-      priority: 6,
-      start_date: '2026-01-01',
-      end_date: '2026-12-31',
-      impressions_count: 120,
-      clicks_count: 18,
-      created_by: 'admin',
-      is_active: true
-    },
-    {
-      id: 'ad-3',
-      title: 'Parrainage : 5000 FCFA offerts',
-      description: 'Parrainez vos amis et recevez 5000 FCFA pour chaque inscription réussie !',
-      media_type: 'gradient',
-      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      emoji: '🎁',
-      cta_text: 'Parrainer',
-      action_type: 'internal',
-      internal_page: 'profile',
-      target_pages: ['tickets', 'profile'],
-      target_new_users: false,
-      priority: 5,
-      start_date: '2026-01-01',
-      end_date: '2026-12-31',
-      impressions_count: 89,
-      clicks_count: 12,
-      created_by: 'admin',
-      is_active: true
-    }
-  ];
-
-  // Filtrer par page
-  const targetedAds = mockAds.filter(ad => 
-    !ad.target_pages || ad.target_pages.includes(currentPage)
-  );
-
-  // Filtrer par nouveaux utilisateurs
-  const filteredAds = targetedAds.filter(ad =>
-    !ad.target_new_users || (ad.target_new_users && isNewUser)
-  );
-
-  // Retourner aléatoirement parmi les annonces ciblées
-  if (filteredAds.length === 0) return null;
-  
-  // Pondération par priorité
-  const weightedAds = filteredAds.flatMap(ad => 
-    Array(ad.priority).fill(ad)
-  );
-  
-  return weightedAds[Math.floor(Math.random() * weightedAds.length)];
 }

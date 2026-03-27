@@ -273,6 +273,8 @@ export function Settings() {
                       </div>
                       <button
                         onClick={() => setEmailNotifications(!emailNotifications)}
+                        title={emailNotifications ? 'Désactiver les notifications email' : 'Activer les notifications email'}
+                        aria-label={emailNotifications ? 'Désactiver les notifications email' : 'Activer les notifications email'}
                         className="relative inline-flex items-center cursor-pointer"
                       >
                         <div className={`w-14 h-7 rounded-full transition-all shadow-inner ${
@@ -298,6 +300,8 @@ export function Settings() {
                       </div>
                       <button
                         onClick={() => setPushNotifications(!pushNotifications)}
+                        title={pushNotifications ? 'Désactiver les notifications push' : 'Activer les notifications push'}
+                        aria-label={pushNotifications ? 'Désactiver les notifications push' : 'Activer les notifications push'}
                         className="relative inline-flex items-center cursor-pointer"
                       >
                         <div className={`w-14 h-7 rounded-full transition-all shadow-inner ${
@@ -323,6 +327,8 @@ export function Settings() {
                       </div>
                       <button
                         onClick={() => setMarketingEmails(!marketingEmails)}
+                        title={marketingEmails ? 'Désactiver les emails marketing' : 'Activer les emails marketing'}
+                        aria-label={marketingEmails ? 'Désactiver les emails marketing' : 'Activer les emails marketing'}
                         className="relative inline-flex items-center cursor-pointer"
                       >
                         <div className={`w-14 h-7 rounded-full transition-all shadow-inner ${

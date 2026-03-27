@@ -25,7 +25,7 @@ export default function Sidebar({ role }: SidebarProps) {
       { icon: LayoutDashboard, label: 'Dashboard', path: '/responsable' },
       { icon: Map, label: 'Carte & Trafic', path: '/responsable/trafic' },
       { icon: Calendar, label: 'Lignes & Trajets', path: '/responsable/lignes' },
-      { icon: Clock, label: 'Horaires', path: '/responsable/horaires' },
+      { icon: Clock, label: 'Horaires & Sièges', path: '/responsable/horaires' },
       { icon: DollarSign, label: 'Tarification', path: '/responsable/tarification' },
       { icon: Building2, label: 'Gares', path: '/responsable/gares' },
       { icon: Users, label: 'Managers', path: '/responsable/managers' },

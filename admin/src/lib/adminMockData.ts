@@ -52,11 +52,14 @@ import {
   SecurityEvent,
   IntegrationAlertRule,
   IntegrationAlert,
-  InfobipAccountInfo,
+  WhatsAppAccountInfo,
   PaydunyaChannelStats,
   PaydunyaWebhookLog,
   PaydunyaHealthStatus,
   AwsHealthReport,
+  Referral,
+  ReferralCoupon,
+  ReferralStats,
 } from '../shared/types/standardized';
 
 // ==================== TRANSPORT COMPANIES ====================
@@ -233,6 +236,10 @@ export const MOCK_PASSENGERS: PassengerUser[] = [
     phoneVerifiedAt: '2025-01-16T09:00:00Z',
     emailVerifiedAt: '2025-01-16T09:05:00Z',
     lastLoginAt: '2026-02-02T07:30:00Z',
+    referralCode: 'FT-226-JK01',
+    referralPointsBalance: 120,
+    totalReferrals: 12,
+    badgeLevel: 'ambassadeur',
     status: 'active',
     createdAt: '2025-01-15T10:30:00Z',
     updatedAt: '2026-02-02T07:30:00Z'
@@ -248,6 +255,11 @@ export const MOCK_PASSENGERS: PassengerUser[] = [
     phoneVerifiedAt: '2025-02-21T08:00:00Z',
     emailVerifiedAt: '2025-02-21T08:10:00Z',
     lastLoginAt: '2026-02-01T18:00:00Z',
+    referralCode: 'FT-226-MT02',
+    referredBy: 'FT-226-JK01',
+    referralPointsBalance: 50,
+    totalReferrals: 5,
+    badgeLevel: 'standard',
     status: 'active',
     createdAt: '2025-02-20T09:00:00Z',
     updatedAt: '2026-02-01T18:00:00Z'
@@ -261,6 +273,10 @@ export const MOCK_PASSENGERS: PassengerUser[] = [
     emailVerified: false,
     phoneVerifiedAt: '2025-03-11T10:00:00Z',
     lastLoginAt: '2026-02-01T12:45:00Z',
+    referralCode: 'FT-226-AS03',
+    referralPointsBalance: 260,
+    totalReferrals: 26,
+    badgeLevel: 'standard',
     status: 'active',
     createdAt: '2025-03-10T14:20:00Z',
     updatedAt: '2026-02-01T12:45:00Z'
@@ -276,6 +292,11 @@ export const MOCK_PASSENGERS: PassengerUser[] = [
     phoneVerifiedAt: '2025-04-06T11:00:00Z',
     emailVerifiedAt: '2025-04-06T11:15:00Z',
     lastLoginAt: '2026-01-30T15:20:00Z',
+    referralCode: 'FT-226-FK04',
+    referredBy: 'FT-226-JK01',
+    referralPointsBalance: 30,
+    totalReferrals: 3,
+    badgeLevel: 'standard',
     status: 'active',
     createdAt: '2025-04-05T16:30:00Z',
     updatedAt: '2026-01-30T15:20:00Z'
@@ -952,7 +973,7 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
   { id: 'log_051', userId: 'passenger_001', userName: 'Jean Kouamé', action: 'create', entityType: 'booking', entityId: 'BKG-2026-001289', details: 'PASSAGER (app mobile) — Réservation BKG-2026-001289 : Ouaga→Koudougou 10/03 14h00, Rakieta Transport, siège A2, 4 500 FCFA — paiement Orange Money', severity: 'info', category: 'operations', changes: { status: { oldValue: null, newValue: 'confirmed' }, paymentChannel: { oldValue: null, newValue: 'Orange Money' } }, ipAddress: '41.188.90.12', geoLocation: 'Ouagadougou, BF', userAgent: 'FasoTravel/2.1.0 (Android 14; Samsung Galaxy A54)', sessionId: 'sess_20260309_p001', durationMs: 3500, createdAt: '2026-03-09T07:45:00Z' },
   { id: 'log_050', userId: 'admin_001', userName: 'Moussa Diarra', action: 'login', entityType: 'session', entityId: 'sess_20260309_001', details: 'Connexion SUPER_ADMIN — dashboard admin FasoTravel depuis le bureau de Ouagadougou (MFA validé)', severity: 'info', category: 'security', ipAddress: '41.188.12.34', geoLocation: 'Ouagadougou, BF', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122', sessionId: 'sess_20260309_001', durationMs: 1200, createdAt: '2026-03-09T07:02:00Z' },
   { id: 'log_049', userId: 'system', userName: 'Système', action: 'health_check', entityType: 'integration', entityId: 'integration_paydunya', details: 'Health check PayDunya — 6/6 canaux opérationnels : Orange Money ✓, Moov Money ✓, Wave ✓, Sank Money ✓, Telecel Money ✓, Carte Bancaire ✓', severity: 'info', category: 'operations', ipAddress: '10.0.1.50', geoLocation: 'AWS eu-west-3', durationMs: 340, createdAt: '2026-03-09T06:00:00Z' },
-  { id: 'log_048', userId: 'admin_002', userName: 'Aminata Traoré', action: 'bulk_send', entityType: 'notification', entityId: 'notif_campaign_042', details: 'SUPPORT_ADMIN — Campagne push envoyée à 3 420 passagers actifs : "Nouveaux horaires Ouaga-Bobo mars 2026" — canaux : push + SMS via Infobip', severity: 'info', category: 'content', changes: { audience: { oldValue: null, newValue: '3 420 passagers actifs' }, channels: { oldValue: null, newValue: 'push + SMS (Infobip)' } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', sessionId: 'sess_20260309_002', durationMs: 4500, createdAt: '2026-03-09T05:30:00Z' },
+  { id: 'log_048', userId: 'admin_002', userName: 'Aminata Traoré', action: 'bulk_send', entityType: 'notification', entityId: 'notif_campaign_042', details: 'SUPPORT_ADMIN — Campagne push envoyée à 3 420 passagers actifs : "Nouveaux horaires Ouaga-Bobo mars 2026" — canaux : push + WhatsApp Business', severity: 'info', category: 'content', changes: { audience: { oldValue: null, newValue: '3 420 passagers actifs' }, channels: { oldValue: null, newValue: 'push + WhatsApp Business' } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', sessionId: 'sess_20260309_002', durationMs: 4500, createdAt: '2026-03-09T05:30:00Z' },
   { id: 'log_047', userId: 'operator_003', userName: 'Abdoul Kaboré', action: 'update', entityType: 'company', entityId: 'company_002', details: 'OPÉRATEUR (STAF Express, gare Bobo-Dioulasso) — Validation embarquement trajet STAF Bobo→Banfora 09h00 : 42/55 passagers embarqués, 3 no-show, départ confirmé à 09h05', severity: 'info', category: 'operations', changes: { passengersBoarded: { oldValue: 0, newValue: 42 }, noShows: { oldValue: 0, newValue: 3 } }, ipAddress: '41.188.78.90', geoLocation: 'Bobo-Dioulasso, BF', userAgent: 'FasoTravel-Operator/1.3.0 (Android 13)', sessionId: 'sess_20260309_op3', durationMs: 900, createdAt: '2026-03-09T09:05:00Z' },
   { id: 'log_046', userId: 'passenger_002', userName: 'Marie Traoré', action: 'update', entityType: 'booking', entityId: 'BKG-2026-001285', details: 'PASSAGER (app mobile) — Annulation réservation BKG-2026-001285 : Ouaga→Bobo 11/03, STAF Express — remboursement 7 000 FCFA via Wave (politique 100% si > 24h avant départ)', severity: 'warning', category: 'finance', changes: { status: { oldValue: 'confirmed', newValue: 'cancelled' }, refundAmount: { oldValue: 0, newValue: 7000 }, refundChannel: { oldValue: null, newValue: 'Wave' } }, ipAddress: '41.188.91.34', geoLocation: 'Ouagadougou, BF', userAgent: 'FasoTravel/2.1.0 (iOS 17.3; iPhone 14)', sessionId: 'sess_20260309_p002', durationMs: 2200, createdAt: '2026-03-09T10:20:00Z' },
 
@@ -963,7 +984,7 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
   { id: 'log_044', userId: 'passenger_003', userName: 'Abdoulaye Sana', action: 'create', entityType: 'support', entityId: 'support_new_001', details: 'PASSAGER (app mobile) — Nouveau ticket support : "Mon billet ne s\'affiche pas après paiement" — référence BKG-2026-001278, paiement Moov Money, montant 6 000 FCFA', severity: 'info', category: 'operations', changes: { status: { oldValue: null, newValue: 'open' }, priority: { oldValue: null, newValue: 'high' } }, ipAddress: '41.188.92.56', geoLocation: 'Koudougou, BF', userAgent: 'FasoTravel/2.1.0 (Android 12; Xiaomi Redmi Note 11)', sessionId: 'sess_20260308_p003', durationMs: 1500, createdAt: '2026-03-08T17:30:00Z' },
   { id: 'log_043', userId: 'operator_001', userName: 'Salif Ouattara', action: 'create', entityType: 'incident', entityId: 'incident_new_001', details: 'OPÉRATEUR (TSR Transport, gare Ouagadougou) — Incident signalé : retard 30min sur trajet Ouaga→Fada 14h00, cause embouteillage sortie Ouagadougou — 28 passagers à notifier', severity: 'warning', category: 'operations', changes: { type: { oldValue: null, newValue: 'delay' }, estimatedDelay: { oldValue: null, newValue: '30min' } }, ipAddress: '41.188.67.89', geoLocation: 'Ouagadougou, BF', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122', sessionId: 'sess_20260308_op1', durationMs: 600, createdAt: '2026-03-08T14:15:00Z' },
   { id: 'log_039', userId: 'admin_003', userName: 'Ibrahim Kaboré', action: 'approve', entityType: 'promotion', entityId: 'promo_002', details: 'FINANCE_ADMIN — Promotion "TSR Ouaga-Bobo -1 500 FCFA" (promo_002) approuvée — réduction fixe 1 500 FCFA, valide 15 fév-15 mars, usage max 500, marge opérateur vérifiée à 18%', severity: 'info', category: 'finance', changes: { approvalStatus: { oldValue: 'pending', newValue: 'approved' } }, ipAddress: '41.188.34.56', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260308_003', durationMs: 800, createdAt: '2026-03-08T16:45:00Z' },
-  { id: 'log_038', userId: 'admin_002', userName: 'Aminata Traoré', action: 'resolve', entityType: 'incident', entityId: 'incident_001', details: 'SUPPORT_ADMIN — Incident "Retard 45min Ouaga-Bobo" (TSR Transport, trip_123) résolu — 35 passagers notifiés par SMS Infobip, temps de résolution 6h15', severity: 'warning', category: 'operations', changes: { status: { oldValue: 'in-progress', newValue: 'resolved' }, passengersNotified: { oldValue: 0, newValue: 35 } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', sessionId: 'sess_20260308_002', durationMs: 2100, createdAt: '2026-03-08T15:20:00Z' },
+  { id: 'log_038', userId: 'admin_002', userName: 'Aminata Traoré', action: 'resolve', entityType: 'incident', entityId: 'incident_001', details: 'SUPPORT_ADMIN — Incident "Retard 45min Ouaga-Bobo" (TSR Transport, trip_123) résolu — 35 passagers notifiés par WhatsApp Business, temps de résolution 6h15', severity: 'warning', category: 'operations', changes: { status: { oldValue: 'in-progress', newValue: 'resolved' }, passengersNotified: { oldValue: 0, newValue: 35 } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', sessionId: 'sess_20260308_002', durationMs: 2100, createdAt: '2026-03-08T15:20:00Z' },
   { id: 'log_037', userId: 'admin_003', userName: 'Ibrahim Kaboré', action: 'refund', entityType: 'payment', entityId: 'payment_001', details: 'FINANCE_ADMIN — Remboursement 8 500 FCFA via Orange Money sur paiement payment_001 (passager Jean Kouamé, TSR Transport BKG-2026-001234) — motif : annulation > 24h avant départ, politique remboursement 100% appliquée', severity: 'warning', category: 'finance', changes: { status: { oldValue: 'completed', newValue: 'refunded' }, refundAmount: { oldValue: 0, newValue: 8500 } }, ipAddress: '41.188.34.56', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260308_003', durationMs: 3200, createdAt: '2026-03-08T14:10:00Z' },
   { id: 'log_036', userId: 'admin_001', userName: 'Moussa Diarra', action: 'update', entityType: 'company', entityId: 'company_001', details: 'SUPER_ADMIN — TSR Transport : commission maintenue à 5%, ajout service bagages 2 000 FCFA, contact mis à jour (Amadou Ouédraogo, +226 70 11 11 11)', severity: 'info', category: 'config', changes: { luggagePrice: { oldValue: null, newValue: 2000 }, amenities: { oldValue: 'wifi,coffee,ac,usb,toilet,tv', newValue: 'wifi,coffee,ac,usb,toilet,tv,luggage' } }, ipAddress: '41.188.12.34', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260308_001', durationMs: 950, createdAt: '2026-03-08T11:30:00Z' },
   { id: 'log_035', userId: 'system', userName: 'Système', action: 'alert_triggered', entityType: 'integration', entityId: 'integration_google_maps', details: 'Alerte Google Maps (billingType: usage) — quota API jour atteint à 85% (12 400/14 250 requêtes) — facturation à l\'usage, seuil d\'alerte 75% dépassé', severity: 'warning', category: 'operations', ipAddress: '10.0.1.50', geoLocation: 'AWS eu-west-3', durationMs: 50, createdAt: '2026-03-08T09:00:00Z' },
@@ -974,8 +995,8 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
   { id: 'log_034', userId: 'admin_002', userName: 'Aminata Traoré', action: 'assign', entityType: 'support', entityId: 'support_001', details: 'SUPPORT_ADMIN — Ticket support_001 "Problème de paiement mobile money" (passager Jean Kouamé, passenger_001) : auto-assigné, priorité haute — paiement débité sans ticket reçu', severity: 'info', category: 'operations', changes: { assignedTo: { oldValue: null, newValue: 'admin_002 (Aminata Traoré)' }, priority: { oldValue: 'medium', newValue: 'high' } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260307_002', durationMs: 450, createdAt: '2026-03-07T17:30:00Z' },
   { id: 'log_033', userId: 'admin_001', userName: 'Moussa Diarra', action: 'toggle', entityType: 'feature_flag', entityId: 'flag_live_tracking', details: 'SUPER_ADMIN — Feature flag "Live Tracking GPS" activé — rollout progressif 50% des passagers, monitoring Google Maps + WebSocket actif', severity: 'info', category: 'config', changes: { enabled: { oldValue: false, newValue: true }, rolloutPercentage: { oldValue: 0, newValue: 50 } }, ipAddress: '41.188.12.34', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260307_001', durationMs: 300, createdAt: '2026-03-07T16:00:00Z' },
   { id: 'log_032', userId: 'admin_002', userName: 'Aminata Traoré', action: 'publish', entityType: 'story', entityId: 'story_001', details: 'SUPPORT_ADMIN — Story "Nouvelle ligne Ouaga-Banfora" publiée dans cercle "Nouveautés" — image bus TSR, CTA "Réserver" → page recherche, créée par Moussa Diarra', severity: 'info', category: 'content', changes: { status: { oldValue: 'draft', newValue: 'published' } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260307_002', durationMs: 600, createdAt: '2026-03-07T14:20:00Z' },
-  { id: 'log_031', userId: 'admin_001', userName: 'Moussa Diarra', action: 'config_change', entityType: 'integration', entityId: 'integration_infobip', details: 'SUPER_ADMIN — Configuration Infobip (billingType: usage) mise à jour — senderId changé de "FASOTRAVEL" à "FasoTravel", template SMS billet FASOTRAVEL_TICKET modifié avec QR code', severity: 'info', category: 'config', changes: { senderId: { oldValue: 'FASOTRAVEL', newValue: 'FasoTravel' }, templateModified: { oldValue: null, newValue: 'FASOTRAVEL_TICKET' } }, ipAddress: '41.188.12.34', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260307_001', durationMs: 1100, createdAt: '2026-03-07T11:45:00Z' },
-  { id: 'log_030', userId: 'admin_002', userName: 'Aminata Traoré', action: 'verify', entityType: 'passenger', entityId: 'passenger_003', details: 'SUPPORT_ADMIN — Vérification manuelle passager Abdoulaye Sana (passenger_003) — téléphone +226 72 34 56 78 validé par OTP Infobip, email non vérifié (pas d\'adresse confirmée)', severity: 'info', category: 'security', changes: { phoneVerified: { oldValue: false, newValue: true } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260307_002', durationMs: 500, createdAt: '2026-03-07T10:00:00Z' },
+  { id: 'log_031', userId: 'admin_001', userName: 'Moussa Diarra', action: 'config_change', entityType: 'integration', entityId: 'integration_003', details: 'SUPER_ADMIN — Configuration WhatsApp Business (billingType: usage) mise à jour — senderId changé de "FASOTRAVEL" à "FasoTravel", template message billet FASOTRAVEL_TICKET modifié avec QR code', severity: 'info', category: 'config', changes: { senderId: { oldValue: 'FASOTRAVEL', newValue: 'FasoTravel' }, templateModified: { oldValue: null, newValue: 'FASOTRAVEL_TICKET' } }, ipAddress: '41.188.12.34', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260307_001', durationMs: 1100, createdAt: '2026-03-07T11:45:00Z' },
+  { id: 'log_030', userId: 'admin_002', userName: 'Aminata Traoré', action: 'verify', entityType: 'passenger', entityId: 'passenger_003', details: 'SUPPORT_ADMIN — Vérification manuelle passager Abdoulaye Sana (passenger_003) — téléphone +226 72 34 56 78 validé par OTP WhatsApp Business, email non vérifié (pas d\'adresse confirmée)', severity: 'info', category: 'security', changes: { phoneVerified: { oldValue: false, newValue: true } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20260307_002', durationMs: 500, createdAt: '2026-03-07T10:00:00Z' },
   { id: 'log_029', userId: 'admin_005', userName: 'Seydou Compaoré', action: 'update', entityType: 'company', entityId: 'company_002', details: 'OPERATOR_ADMIN (STAF Express) — Horaires STAF mis à jour sur l\'axe Bobo→Ouaga : départ 06h30 au lieu de 07h00, arrivée estimée 12h30 — modification limitée à company_002', severity: 'info', category: 'operations', changes: { departureTime: { oldValue: '07:00', newValue: '06:30' }, estimatedArrival: { oldValue: '13:00', newValue: '12:30' } }, ipAddress: '41.188.56.78', geoLocation: 'Bobo-Dioulasso, BF', userAgent: 'Mozilla/5.0 (Linux; Android 14; Samsung Galaxy A54)', sessionId: 'sess_20260307_005', durationMs: 750, createdAt: '2026-03-07T09:15:00Z' },
 
   // ═══════════════════════════════════════════════════════════════════
@@ -1051,7 +1072,7 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
   // ═══════════════════════════════════════════════════════════════════
   // 25 DÉCEMBRE 2025 — 1 entrée
   // ═══════════════════════════════════════════════════════════════════
-  { id: 'log_006', userId: 'admin_002', userName: 'Aminata Traoré', action: 'bulk_send', entityType: 'notification', entityId: 'notif_campaign_038', details: 'SUPPORT_ADMIN — SMS de vœux envoyé à 5 210 passagers via Infobip (billingType: usage) : "Joyeuses fêtes de la part de FasoTravel !" — coût estimé 26 050 FCFA (5 FCFA/SMS)', severity: 'info', category: 'content', changes: { audience: { oldValue: null, newValue: '5 210 passagers actifs' }, channels: { oldValue: null, newValue: 'SMS (Infobip)' }, estimatedCost: { oldValue: null, newValue: '26 050 FCFA' } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20251225_002', durationMs: 12000, createdAt: '2025-12-25T08:00:00Z' },
+  { id: 'log_006', userId: 'admin_002', userName: 'Aminata Traoré', action: 'bulk_send', entityType: 'notification', entityId: 'notif_campaign_038', details: 'SUPPORT_ADMIN — Message de vœux envoyé à 5 210 passagers via WhatsApp Business (billingType: usage) : "Joyeuses fêtes de la part de FasoTravel !" — coût estimé 26 050 FCFA (5 FCFA/message)', severity: 'info', category: 'content', changes: { audience: { oldValue: null, newValue: '5 210 passagers actifs' }, channels: { oldValue: null, newValue: 'WhatsApp Business' }, estimatedCost: { oldValue: null, newValue: '26 050 FCFA' } }, ipAddress: '41.188.23.45', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20251225_002', durationMs: 12000, createdAt: '2025-12-25T08:00:00Z' },
 
   // ═══════════════════════════════════════════════════════════════════
   // 20 DÉCEMBRE 2025 — 1 entrée (CRITIQUE)
@@ -1076,7 +1097,7 @@ export const MOCK_AUDIT_LOGS: AuditLog[] = [
   // ═══════════════════════════════════════════════════════════════════
   // 5 OCTOBRE 2025 — 1 entrée (PREMIÈRE ENTRÉE)
   // ═══════════════════════════════════════════════════════════════════
-  { id: 'log_001', userId: 'admin_001', userName: 'Moussa Diarra', action: 'create', entityType: 'system', entityId: 'platform_init', details: 'SUPER_ADMIN — Initialisation plateforme FasoTravel : connexion PayDunya (6 canaux, frais client), Infobip (SMS/OTP), AWS S3+CloudFront+Lightsail, Google Maps, Google Analytics — commission 5% + 100 FCFA/billet, split payment configuré', severity: 'info', category: 'config', ipAddress: '41.188.12.34', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20251005_001', durationMs: 15000, createdAt: '2025-10-05T08:00:00Z' },
+  { id: 'log_001', userId: 'admin_001', userName: 'Moussa Diarra', action: 'create', entityType: 'system', entityId: 'platform_init', details: 'SUPER_ADMIN — Initialisation plateforme FasoTravel : connexion PayDunya (6 canaux, frais client), WhatsApp Business (OTP/Messages), AWS S3+CloudFront+Lightsail, Google Maps, Google Analytics — commission 5% + 100 FCFA/billet, split payment configuré', severity: 'info', category: 'config', ipAddress: '41.188.12.34', geoLocation: 'Ouagadougou, BF', sessionId: 'sess_20251005_001', durationMs: 15000, createdAt: '2025-10-05T08:00:00Z' },
 ];
 
 // ==================== NOTIFICATIONS ====================
@@ -1407,19 +1428,20 @@ export const MOCK_INTEGRATIONS: Integration[] = [
   },
   {
     id: 'integration_003',
-    name: 'Infobip',
+    name: 'WhatsApp Business',
     type: 'sms',
-    provider: 'Infobip (SMS & OTP)',
+    provider: 'WhatsApp Business (OTP & Messages)',
     status: 'active',
     apiKey: 'ib_live_xxxxxxxxxxxxxxxxxxxxxx',
     apiSecret: 'ib_secret_xxxxxxxxxxxxxxxxxxxxxx',
-    webhookUrl: 'https://api.fasotravel.bf/webhooks/infobip',
-    docsUrl: 'https://www.infobip.com/docs/api',
-    dashboardUrl: 'https://portal.infobip.com',
+    webhookUrl: 'https://api.fasotravel.bf/webhooks/whatsapp',
+    docsUrl: 'https://developers.facebook.com/docs/whatsapp/',
+    dashboardUrl: 'https://business.facebook.com/wa/manage/',
     billingType: 'usage',
-    billingDetails: 'Facturation à l\'usage — ~30 FCFA/SMS envoyé',
+    billingDetails: 'Facturation à l\'usage — ~30 FCFA/message envoyé',
+
     config: {
-      baseUrl: 'https://xxxxx.api.infobip.com',
+      baseUrl: 'https://graph.facebook.com/v19.0',
       senderId: 'FasoTravel',
       supportedNetworks: ['Orange Burkina Faso', 'Moov Africa Burkina'],
       useCases: {
@@ -1439,7 +1461,7 @@ export const MOCK_INTEGRATIONS: Integration[] = [
       uptimePercent: 99.8,
       lastHealthCheck: '2026-03-09T08:00:00Z',
       extras: {
-        smsSentThisMonth: 2100,
+        messagesSentThisMonth: 2100,
         otpSent: 1450,
         ticketSmsSent: 520,
         reminderSmsSent: 130,
@@ -2471,7 +2493,7 @@ Vos données sont utilisées pour :
 Vos données sont partagées avec :
 - Les sociétés de transport (nom et numéro de siège uniquement)
 - PayDunya (pour le traitement des paiements)
-- Infobip (pour l'envoi de SMS/OTP)
+- WhatsApp Business (pour l'envoi de messages/OTP)
 
 ## 4. Sécurité
 Nous utilisons le chiffrement SSL/TLS et stockons vos données sur des serveurs sécurisés AWS au niveau international.
@@ -3838,11 +3860,37 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
     triggerEvent: 'user.created',
     triggerLabel: 'Inscription passager',
     template: { title: 'Bienvenue sur FasoTravel !', message: 'Bonjour {prenom}, bienvenue sur FasoTravel ! Découvrez les meilleurs trajets au Burkina Faso.' },
-    channels: ['push', 'email', 'inApp'],
+    channels: ['push', 'email', 'inApp', 'whatsapp'],
     isActive: true,
     sentCount: 1204,
     lastTriggered: '2026-03-07T14:22:00Z',
     category: 'onboarding',
+  },
+  {
+    id: 'auto_signup_otp_whatsapp',
+    name: 'OTP inscription via WhatsApp',
+    description: 'Envoi automatique du code OTP de création de compte sur WhatsApp',
+    triggerEvent: 'auth.signup_otp_requested',
+    triggerLabel: 'OTP inscription demandé',
+    template: { title: 'Code OTP inscription', message: '{prenom}, votre code de vérification FasoTravel est {otp}. Il expire dans 5 minutes.' },
+    channels: ['whatsapp', 'inApp'],
+    isActive: true,
+    sentCount: 3621,
+    lastTriggered: '2026-03-07T15:45:00Z',
+    category: 'onboarding',
+  },
+  {
+    id: 'auto_login_otp_whatsapp',
+    name: 'OTP connexion via WhatsApp',
+    description: 'Envoi automatique du code OTP de connexion sur WhatsApp',
+    triggerEvent: 'auth.login_otp_requested',
+    triggerLabel: 'OTP connexion demandé',
+    template: { title: 'Code OTP connexion', message: '{prenom}, votre code de connexion FasoTravel est {otp}. Il expire dans 5 minutes.' },
+    channels: ['whatsapp', 'inApp'],
+    isActive: true,
+    sentCount: 5187,
+    lastTriggered: '2026-03-07T16:18:00Z',
+    category: 'transactional',
   },
   {
     id: 'auto_booking_confirmed',
@@ -3851,7 +3899,7 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
     triggerEvent: 'booking.confirmed',
     triggerLabel: 'Réservation confirmée',
     template: { title: 'Réservation confirmée !', message: '{prenom}, votre réservation {trajet} du {date_depart} est confirmée. Billet n°{numero_billet}.' },
-    channels: ['push', 'email', 'inApp'],
+    channels: ['push', 'email', 'inApp', 'whatsapp'],
     isActive: true,
     sentCount: 8934,
     lastTriggered: '2026-03-07T16:05:00Z',
@@ -3860,11 +3908,11 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
   {
     id: 'auto_ticket_issued',
     name: 'Billet émis',
-    description: 'Notification avec le billet PDF quand le paiement est validé',
+    description: 'Notification avec le billet électronique (PDF) quand le paiement est validé',
     triggerEvent: 'ticket.issued',
     triggerLabel: 'Billet émis',
     template: { title: 'Votre billet est prêt !', message: '{prenom}, votre billet {numero_billet} pour {trajet} est disponible. Téléchargez-le dans l\'app.' },
-    channels: ['push', 'email'],
+    channels: ['push', 'email', 'whatsapp'],
     isActive: true,
     sentCount: 8712,
     lastTriggered: '2026-03-07T16:05:00Z',
@@ -3877,7 +3925,7 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
     triggerEvent: 'booking.departure_minus_24h',
     triggerLabel: '24h avant départ',
     template: { title: 'Rappel : Votre voyage approche !', message: '{prenom}, votre trajet {trajet} avec {compagnie} est demain à {heure_depart}. Gare de {gare_depart}, présentez-vous 30 min avant.' },
-    channels: ['push', 'inApp'],
+    channels: ['push', 'inApp', 'whatsapp'],
     isActive: true,
     sentCount: 6342,
     lastTriggered: '2026-03-07T08:00:00Z',
@@ -3890,7 +3938,7 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
     triggerEvent: 'booking.departure_minus_2h',
     triggerLabel: '2h avant départ',
     template: { title: 'Départ dans 2h !', message: '{prenom}, votre bus {trajet} part à {heure_depart}. N\'oubliez pas votre billet et vos bagages !' },
-    channels: ['push'],
+    channels: ['push', 'whatsapp'],
     isActive: true,
     sentCount: 5980,
     lastTriggered: '2026-03-07T14:00:00Z',
@@ -3903,7 +3951,7 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
     triggerEvent: 'refund.processed',
     triggerLabel: 'Remboursement effectué',
     template: { title: 'Remboursement effectué', message: '{prenom}, votre remboursement de {montant} FCFA pour le trajet {trajet} a été traité. Délai : 48-72h.' },
-    channels: ['push', 'email', 'inApp'],
+    channels: ['push', 'email', 'inApp', 'whatsapp'],
     isActive: true,
     sentCount: 423,
     lastTriggered: '2026-03-06T11:30:00Z',
@@ -3916,7 +3964,7 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
     triggerEvent: 'trip.delayed',
     triggerLabel: 'Trajet en retard',
     template: { title: 'Retard sur votre trajet', message: '{prenom}, le trajet {trajet} du {date_depart} a un retard estimé de {duree_retard}. Nouveau départ : {heure_depart}.' },
-    channels: ['push', 'email', 'inApp'],
+    channels: ['push', 'email', 'inApp', 'whatsapp'],
     isActive: true,
     sentCount: 187,
     lastTriggered: '2026-03-05T09:15:00Z',
@@ -3929,7 +3977,7 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
     triggerEvent: 'trip.cancelled',
     triggerLabel: 'Trajet annulé',
     template: { title: 'Trajet annulé', message: '{prenom}, le trajet {trajet} du {date_depart} est annulé. Remboursement automatique ou report gratuit disponible.' },
-    channels: ['push', 'email', 'inApp'],
+    channels: ['push', 'email', 'inApp', 'whatsapp'],
     isActive: true,
     sentCount: 56,
     lastTriggered: '2026-03-02T07:45:00Z',
@@ -3964,19 +4012,22 @@ export const MOCK_AUTOMATION_RULES: AutomationRule[] = [
 ];
 
 export const MOCK_SENT_HISTORY: SentCampaign[] = [
-  { id: 'hist_001', title: 'Réservation confirmée !', message: 'Fatimata, votre réservation Ouaga→Bobo du 07/03 est confirmée.', source: 'auto', sourceName: 'Confirmation de réservation', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'inApp'], sentAt: '2026-03-07T16:05:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 1, status: 'delivered' },
-  { id: 'hist_002', title: 'Votre billet est prêt !', message: 'Fatimata, votre billet BIL-2026-8934 pour Ouaga→Bobo est disponible.', source: 'auto', sourceName: 'Billet émis', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email'], sentAt: '2026-03-07T16:06:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 0, status: 'delivered' },
-  { id: 'hist_003', title: 'Bienvenue sur FasoTravel !', message: 'Bonjour Moussa, bienvenue sur FasoTravel !', source: 'auto', sourceName: 'Bienvenue nouveau passager', category: 'onboarding', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'inApp'], sentAt: '2026-03-07T14:22:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 1, status: 'delivered' },
-  { id: 'hist_004', title: 'Rappel : Votre voyage approche !', message: 'Ibrahim, votre trajet Ouaga→Koudougou avec TSR est demain à 06h30.', source: 'auto', sourceName: 'Rappel voyage J-1', category: 'reminder', audience: 'Passagers avec départ le 08/03', audienceCount: 147, channels: ['push', 'inApp'], sentAt: '2026-03-07T08:00:00Z', deliveredCount: 145, openedCount: 112, clickedCount: 34, status: 'delivered' },
-  { id: 'hist_005', title: 'Départ dans 2h !', message: 'Aïcha, votre bus Ouaga→Bobo part à 14h00.', source: 'auto', sourceName: 'Rappel voyage H-2', category: 'reminder', audience: 'Passagers avec départ 07/03 14h', audienceCount: 38, channels: ['push'], sentAt: '2026-03-07T12:00:00Z', deliveredCount: 37, openedCount: 35, clickedCount: 8, status: 'delivered' },
-  { id: 'hist_006', title: 'Retard sur votre trajet', message: 'Le trajet Ouaga→Fada du 06/03 a un retard estimé de 45 min.', source: 'auto', sourceName: 'Retard de trajet', category: 'alert', audience: 'Passagers trajet TRJ-2026-0456', audienceCount: 42, channels: ['push', 'email', 'inApp'], sentAt: '2026-03-06T15:30:00Z', deliveredCount: 42, openedCount: 41, clickedCount: 12, status: 'delivered' },
-  { id: 'hist_007', title: 'Remboursement effectué', message: 'Abdoulaye, votre remboursement de 8 500 FCFA a été traité.', source: 'auto', sourceName: 'Remboursement traité', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'inApp'], sentAt: '2026-03-06T11:30:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 1, status: 'delivered' },
-  { id: 'hist_008', title: 'Promo Tabaski -25% !', message: 'Profitez de -25% sur tous les trajets interurbains ce weekend ! Code TABASKI25.', source: 'manual', sourceName: 'Campagne admin', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push', 'email'], sentAt: '2026-03-06T09:00:00Z', deliveredCount: 12234, openedCount: 8756, clickedCount: 3421, status: 'delivered' },
+  { id: 'hist_016', title: 'Code OTP inscription', message: 'Moussa, votre code de vérification FasoTravel est 482931.', source: 'auto', sourceName: 'OTP inscription via WhatsApp', category: 'onboarding', audience: 'Passager individuel', audienceCount: 1, channels: ['whatsapp', 'inApp'], sentAt: '2026-03-07T15:45:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 0, status: 'delivered' },
+  { id: 'hist_017', title: 'Code OTP connexion', message: 'Moussa, votre code de connexion FasoTravel est 736204.', source: 'auto', sourceName: 'OTP connexion via WhatsApp', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['whatsapp', 'inApp'], sentAt: '2026-03-07T16:18:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 0, status: 'delivered' },
+  { id: 'hist_018', title: 'Votre billet électronique est prêt !', message: 'Fatimata, votre billet BIL-2026-8934 pour Ouaga→Bobo a été envoyé sur WhatsApp.', source: 'auto', sourceName: 'Billet émis', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'whatsapp'], sentAt: '2026-03-07T16:06:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 0, status: 'delivered' },
+  { id: 'hist_001', title: 'Réservation confirmée !', message: 'Fatimata, votre réservation Ouaga→Bobo du 07/03 est confirmée.', source: 'auto', sourceName: 'Confirmation de réservation', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'inApp', 'whatsapp'], sentAt: '2026-03-07T16:05:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 1, status: 'delivered' },
+  { id: 'hist_002', title: 'Votre billet est prêt !', message: 'Fatimata, votre billet BIL-2026-8934 pour Ouaga→Bobo est disponible.', source: 'auto', sourceName: 'Billet émis', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'whatsapp'], sentAt: '2026-03-07T16:06:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 0, status: 'delivered' },
+  { id: 'hist_003', title: 'Bienvenue sur FasoTravel !', message: 'Bonjour Moussa, bienvenue sur FasoTravel !', source: 'auto', sourceName: 'Bienvenue nouveau passager', category: 'onboarding', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'inApp', 'whatsapp'], sentAt: '2026-03-07T14:22:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 1, status: 'delivered' },
+  { id: 'hist_004', title: 'Rappel : Votre voyage approche !', message: 'Ibrahim, votre trajet Ouaga→Koudougou avec TSR est demain à 06h30.', source: 'auto', sourceName: 'Rappel voyage J-1', category: 'reminder', audience: 'Passagers avec départ le 08/03', audienceCount: 147, channels: ['push', 'inApp', 'whatsapp'], sentAt: '2026-03-07T08:00:00Z', deliveredCount: 145, openedCount: 112, clickedCount: 34, status: 'delivered' },
+  { id: 'hist_005', title: 'Départ dans 2h !', message: 'Aïcha, votre bus Ouaga→Bobo part à 14h00.', source: 'auto', sourceName: 'Rappel voyage H-2', category: 'reminder', audience: 'Passagers avec départ 07/03 14h', audienceCount: 38, channels: ['push', 'whatsapp'], sentAt: '2026-03-07T12:00:00Z', deliveredCount: 37, openedCount: 35, clickedCount: 8, status: 'delivered' },
+  { id: 'hist_006', title: 'Retard sur votre trajet', message: 'Le trajet Ouaga→Fada du 06/03 a un retard estimé de 45 min.', source: 'auto', sourceName: 'Retard de trajet', category: 'alert', audience: 'Passagers trajet TRJ-2026-0456', audienceCount: 42, channels: ['push', 'email', 'inApp', 'whatsapp'], sentAt: '2026-03-06T15:30:00Z', deliveredCount: 42, openedCount: 41, clickedCount: 12, status: 'delivered' },
+  { id: 'hist_007', title: 'Remboursement effectué', message: 'Abdoulaye, votre remboursement de 8 500 FCFA a été traité.', source: 'auto', sourceName: 'Remboursement traité', category: 'transactional', audience: 'Passager individuel', audienceCount: 1, channels: ['push', 'email', 'inApp', 'whatsapp'], sentAt: '2026-03-06T11:30:00Z', deliveredCount: 1, openedCount: 1, clickedCount: 1, status: 'delivered' },
+  { id: 'hist_008', title: 'Promo Tabaski -25% !', message: 'Profitez de -25% sur tous les trajets interurbains ce weekend ! Code TABASKI25.', source: 'manual', sourceName: 'Campagne admin', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push', 'email', 'whatsapp'], sentAt: '2026-03-06T09:00:00Z', deliveredCount: 12234, openedCount: 8756, clickedCount: 3421, status: 'delivered' },
   { id: 'hist_009', title: 'Maintenance système', message: 'L\'app FasoTravel sera en maintenance le 05/03 de 02h à 05h.', source: 'manual', sourceName: 'Campagne admin', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push', 'inApp'], sentAt: '2026-03-04T18:00:00Z', deliveredCount: 12320, openedCount: 9234, clickedCount: 1245, status: 'delivered' },
-  { id: 'hist_010', title: 'Nouvelle ligne Ouaga→Dédougou !', message: 'Réservez dès maintenant sur la nouvelle ligne à partir de 5 000 FCFA.', source: 'manual', sourceName: 'Campagne admin', audience: 'Voyageurs fréquents', audienceCount: 1245, channels: ['push', 'email', 'inApp'], sentAt: '2026-03-03T10:00:00Z', deliveredCount: 1230, openedCount: 987, clickedCount: 456, status: 'delivered' },
+  { id: 'hist_010', title: 'Nouvelle ligne Ouaga→Dédougou !', message: 'Réservez dès maintenant sur la nouvelle ligne à partir de 5 000 FCFA.', source: 'manual', sourceName: 'Campagne admin', audience: 'Voyageurs fréquents', audienceCount: 1245, channels: ['push', 'email', 'inApp', 'whatsapp'], sentAt: '2026-03-03T10:00:00Z', deliveredCount: 1230, openedCount: 987, clickedCount: 456, status: 'delivered' },
   { id: 'hist_011', title: 'Trajet annulé', message: 'Le trajet Bobo→Banfora du 02/03 est annulé. Remboursement automatique.', source: 'auto', sourceName: 'Annulation de trajet', category: 'alert', audience: 'Passagers trajet TRJ-2026-0398', audienceCount: 28, channels: ['push', 'email', 'inApp'], sentAt: '2026-03-02T07:45:00Z', deliveredCount: 28, openedCount: 28, clickedCount: 22, status: 'delivered' },
   { id: 'hist_012', title: 'Vous nous manquez !', message: 'Ça fait un moment ! Profitez de -15% avec le code RETOUR15.', source: 'auto', sourceName: 'Réengagement inactif 30j', category: 'engagement', audience: 'Passagers inactifs 30j', audienceCount: 4380, channels: ['push', 'email'], sentAt: '2026-03-01T10:00:00Z', deliveredCount: 4102, openedCount: 1845, clickedCount: 523, status: 'delivered' },
-  { id: 'hist_013', title: 'Alerte météo Sahel', message: 'Conditions météo difficiles : trajets vers Djibo et Dori suspendus.', source: 'manual', sourceName: 'Campagne admin', audience: 'Passagers récents (30j)', audienceCount: 3820, channels: ['push', 'email', 'inApp'], sentAt: '2026-02-27T14:00:00Z', deliveredCount: 3750, openedCount: 3456, clickedCount: 890, status: 'delivered' },
+  { id: 'hist_013', title: 'Alerte météo Sahel', message: 'Conditions météo difficiles : trajets vers Djibo et Dori suspendus.', source: 'manual', sourceName: 'Campagne admin', audience: 'Passagers récents (30j)', audienceCount: 3820, channels: ['push', 'email', 'inApp', 'whatsapp'], sentAt: '2026-02-27T14:00:00Z', deliveredCount: 3750, openedCount: 3456, clickedCount: 890, status: 'delivered' },
   { id: 'hist_014', title: 'Comment était votre voyage ?', message: 'Donnez votre avis sur votre trajet avec STAF Express.', source: 'auto', sourceName: 'Demande d\'avis post-voyage', category: 'engagement', audience: 'Passagers arrivés le 27/02', audienceCount: 89, channels: ['push', 'inApp'], sentAt: '2026-02-27T20:00:00Z', deliveredCount: 86, openedCount: 52, clickedCount: 31, status: 'delivered' },
   { id: 'hist_015', title: 'Offre flash 48h !', message: 'Jusqu\'à -30% sur les trajets longue distance. Réservez avant dimanche !', source: 'manual', sourceName: 'Campagne admin', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push'], sentAt: '2026-02-21T08:00:00Z', deliveredCount: 11890, openedCount: 7234, clickedCount: 2890, status: 'delivered' },
 ];
@@ -3989,8 +4040,8 @@ export const MOCK_NOTIF_TEMPLATES: NotifTemplate[] = [
 ];
 
 export const MOCK_SCHEDULED_NOTIFICATIONS: ScheduledNotification[] = [
-  { id: 'sch_1', title: 'Promo Tabaski -30%', message: 'Profitez de -30% sur tous les trajets interurbains pour la Tabaski !', scheduledAt: '2026-03-15T08:00:00Z', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push', 'email'], status: 'pending', createdAt: '2026-03-07T10:00:00Z' },
-  { id: 'sch_2', title: 'Maintenance système', message: 'L\'app FasoTravel sera en maintenance le 20/03 de 02h à 05h.', scheduledAt: '2026-03-20T02:00:00Z', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push', 'inApp'], status: 'pending', createdAt: '2026-03-07T11:00:00Z' },
+  { id: 'sch_1', title: 'Promo Tabaski -30%', message: 'Profitez de -30% sur tous les trajets interurbains pour la Tabaski !', scheduledAt: '2026-03-15T08:00:00Z', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push', 'email', 'whatsapp'], status: 'pending', createdAt: '2026-03-07T10:00:00Z' },
+  { id: 'sch_2', title: 'Maintenance système', message: 'L\'app FasoTravel sera en maintenance le 20/03 de 02h à 05h.', scheduledAt: '2026-03-20T02:00:00Z', audience: 'Tous les passagers', audienceCount: 12450, channels: ['push', 'inApp', 'whatsapp'], status: 'pending', createdAt: '2026-03-07T11:00:00Z' },
 ];
 
 export const MOCK_NOTIF_STATS: NotifStats = {
@@ -4022,6 +4073,7 @@ export const MOCK_AUDIENCE_SEGMENTS: AudienceSegment[] = [
 export const MOCK_CHANNEL_STATS: ChannelStat[] = [
   { channel: 'push', label: 'Push', percentage: 78, totalSent: 3097 },
   { channel: 'email', label: 'Email', percentage: 52, totalSent: 2065 },
+  { channel: 'whatsapp', label: 'WhatsApp', percentage: 74, totalSent: 2938 },
   { channel: 'inApp', label: 'In-App', percentage: 91, totalSent: 3614 },
 ];
 
@@ -4145,23 +4197,23 @@ export const MOCK_ALERT_RULES: IntegrationAlertRule[] = [
   { id: 'rule_003', integrationId: 'integration_006', type: 'memory_high', label: 'Memoire Lightsail > 75%', threshold: 75, currentValue: 42, unit: '%', severity: 'warning', enabled: true, notifyEmail: true, notifySms: false, createdAt: '2026-01-20T10:00:00Z' },
   { id: 'rule_004', integrationId: 'integration_006', type: 'storage_full', label: 'Stockage S3 > 80%', threshold: 80, currentValue: 5.6, unit: '%', severity: 'critical', enabled: true, notifyEmail: true, notifySms: true, createdAt: '2026-01-20T10:00:00Z' },
   { id: 'rule_005', integrationId: 'integration_003', type: 'error_rate', label: 'Taux echec SMS > 5%', threshold: 5, currentValue: 1.8, unit: '%', severity: 'warning', enabled: true, notifyEmail: true, notifySms: false, createdAt: '2026-02-01T10:00:00Z' },
-  { id: 'rule_006', integrationId: 'integration_003', type: 'high_latency', label: 'Latence Infobip > 500ms', threshold: 500, currentValue: 340, unit: 'ms', severity: 'info', enabled: false, notifyEmail: false, notifySms: false, createdAt: '2026-02-01T10:00:00Z' },
+  { id: 'rule_006', integrationId: 'integration_003', type: 'high_latency', label: 'Latence WhatsApp Business > 500ms', threshold: 500, currentValue: 340, unit: 'ms', severity: 'info', enabled: false, notifyEmail: false, notifySms: false, createdAt: '2026-02-01T10:00:00Z' },
   { id: 'rule_007', integrationId: 'integration_003', type: 'cost_spike', label: 'Cout SMS > 80 000 FCFA/mois', threshold: 80000, currentValue: 63000, unit: 'FCFA', severity: 'warning', enabled: true, notifyEmail: true, notifySms: false, createdAt: '2026-02-10T10:00:00Z' },
 ];
 
 export const MOCK_INTEGRATION_ALERTS: IntegrationAlert[] = [
   { id: 'alert_001', ruleId: 'rule_002', integrationId: 'integration_006', integrationName: 'AWS S3 + CloudFront', type: 'cpu_high', severity: 'critical', message: 'CPU Lightsail a atteint 82% (seuil: 80%)', currentValue: 82, threshold: 80, unit: '%', acknowledged: true, triggeredAt: '2026-03-05T14:23:00Z', acknowledgedAt: '2026-03-05T14:35:00Z' },
-  { id: 'alert_002', ruleId: 'rule_005', integrationId: 'integration_003', integrationName: 'Infobip', type: 'error_rate', severity: 'warning', message: 'Taux echec SMS a atteint 6.2% (seuil: 5%)', currentValue: 6.2, threshold: 5, unit: '%', acknowledged: true, triggeredAt: '2026-03-02T09:10:00Z', acknowledgedAt: '2026-03-02T09:45:00Z' },
+  { id: 'alert_002', ruleId: 'rule_005', integrationId: 'integration_003', integrationName: 'WhatsApp Business', type: 'error_rate', severity: 'warning', message: 'Taux echec messages WA a atteint 6.2% (seuil: 5%)', currentValue: 6.2, threshold: 5, unit: '%', acknowledged: true, triggeredAt: '2026-03-02T09:10:00Z', acknowledgedAt: '2026-03-02T09:45:00Z' },
   { id: 'alert_003', ruleId: 'rule_001', integrationId: 'integration_005', integrationName: 'Google Maps', type: 'quota_exceeded', severity: 'warning', message: 'Quota Google Maps a atteint 73% (seuil: 70%)', currentValue: 73, threshold: 70, unit: '%', acknowledged: false, triggeredAt: '2026-03-08T16:00:00Z' },
 ];
 
-// ==================== INFOBIP ACCOUNT ====================
+// ==================== WHATSAPP BUSINESS ACCOUNT ====================
 
-export const MOCK_INFOBIP_ACCOUNT: InfobipAccountInfo = {
+export const MOCK_WHATSAPP_ACCOUNT: WhatsAppAccountInfo = {
   balance: 187_500,
   currency: 'FCFA',
-  smsSentToday: 74,
-  smsSentThisMonth: 2100,
+  messagesSentToday: 74,
+  messagesSentThisMonth: 2100,
   deliveryRate: 97.5,
   avgDeliveryTimeSec: 4.2,
   templates: [
@@ -4217,17 +4269,17 @@ export const MOCK_PAYDUNYA_HEALTH: PaydunyaHealthStatus = {
 // ============================================================================
 
 // ============================================================================
-// INFOBIP DELIVERY STATS & HEALTH CHECK MOCK DATA
+// WHATSAPP BUSINESS DELIVERY STATS & HEALTH CHECK MOCK DATA
 // ============================================================================
 
-export const MOCK_INFOBIP_HEALTH_CHECK = {
+export const MOCK_WHATSAPP_HEALTH_CHECK = {
   apiReachable: true,
   latencyMs: 185,
   accountStatus: 'active',
   senderIdActive: true,
 };
 
-export const MOCK_INFOBIP_DELIVERY_STATS = {
+export const MOCK_WHATSAPP_DELIVERY_STATS = {
   today: { sent: 74, delivered: 72, failed: 1, pending: 1 },
   thisWeek: { sent: 485, delivered: 471, failed: 9 },
   thisMonth: { sent: 2100, delivered: 2048, failed: 38 },
@@ -4325,4 +4377,191 @@ export const MOCK_AWS_LIGHTSAIL_METRICS = {
   uptime: { hours: 820, lastRestart: '2026-02-07T03:00:00Z' },
   activeConnections: 35,
   apiEndpointsCount: 12,
+};
+
+// ==================== REFERRAL / PARRAINAGE ====================
+
+export const MOCK_REFERRALS: Referral[] = [
+  {
+    id: 'ref_001',
+    referrerUserId: 'passenger_001',
+    referrerName: 'Jean Kouamé',
+    referrerCode: 'FT-226-JK01',
+    referredUserId: 'passenger_002',
+    referredName: 'Marie Traoré',
+    pointsAwarded: 10,
+    status: 'validated',
+    validatedAt: '2025-02-20T09:00:00Z',
+    createdAt: '2025-02-20T09:00:00Z',
+  },
+  {
+    id: 'ref_002',
+    referrerUserId: 'passenger_001',
+    referrerName: 'Jean Kouamé',
+    referrerCode: 'FT-226-JK01',
+    referredUserId: 'passenger_004',
+    referredName: 'Fatima Kaboré',
+    pointsAwarded: 10,
+    status: 'validated',
+    validatedAt: '2025-04-05T16:30:00Z',
+    createdAt: '2025-04-05T16:30:00Z',
+  },
+  {
+    id: 'ref_003',
+    referrerUserId: 'passenger_003',
+    referrerName: 'Abdoulaye Sana',
+    referrerCode: 'FT-226-AS03',
+    referredUserId: 'passenger_005',
+    referredName: 'Aminata Belem',
+    pointsAwarded: 10,
+    status: 'validated',
+    validatedAt: '2025-05-01T14:00:00Z',
+    createdAt: '2025-05-01T14:00:00Z',
+  },
+  {
+    id: 'ref_004',
+    referrerUserId: 'passenger_001',
+    referrerName: 'Jean Kouamé',
+    referrerCode: 'FT-226-JK01',
+    referredUserId: 'passenger_006',
+    referredName: 'Ousmane Zoungrana',
+    pointsAwarded: 10,
+    status: 'validated',
+    validatedAt: '2026-02-01T10:00:00Z',
+    createdAt: '2026-02-01T10:00:00Z',
+  },
+  {
+    id: 'ref_005',
+    referrerUserId: 'passenger_002',
+    referrerName: 'Marie Traoré',
+    referrerCode: 'FT-226-MT02',
+    referredUserId: 'passenger_007',
+    referredName: 'Hamidou Compaoré',
+    pointsAwarded: 10,
+    status: 'validated',
+    validatedAt: '2026-01-15T12:00:00Z',
+    createdAt: '2026-01-15T12:00:00Z',
+  },
+  {
+    id: 'ref_006',
+    referrerUserId: 'passenger_001',
+    referrerName: 'Jean Kouamé',
+    referrerCode: 'FT-226-JK01',
+    referredUserId: 'passenger_008',
+    referredName: 'Salif Compaoré',
+    pointsAwarded: 10,
+    status: 'validated',
+    validatedAt: '2026-03-10T08:00:00Z',
+    createdAt: '2026-03-10T08:00:00Z',
+  },
+  {
+    id: 'ref_007',
+    referrerUserId: 'passenger_003',
+    referrerName: 'Abdoulaye Sana',
+    referrerCode: 'FT-226-AS03',
+    referredUserId: 'passenger_009',
+    referredName: 'Rasmata Ouédraogo',
+    pointsAwarded: 10,
+    status: 'validated',
+    validatedAt: '2026-03-12T14:30:00Z',
+    createdAt: '2026-03-12T14:30:00Z',
+  },
+];
+
+export const MOCK_REFERRAL_COUPONS: ReferralCoupon[] = [
+  {
+    id: 'rcoupon_001',
+    userId: 'passenger_001',
+    userName: 'Jean Kouamé',
+    code: 'FASO-JK5001',
+    amount: 500,
+    pointsCost: 100,
+    status: 'used',
+    createdAt: '2025-06-10T10:00:00Z',
+    expiresAt: '2025-09-10T10:00:00Z',
+    usedAt: '2025-07-15T09:30:00Z',
+  },
+  {
+    id: 'rcoupon_002',
+    userId: 'passenger_001',
+    userName: 'Jean Kouamé',
+    code: 'FASO-JK1002',
+    amount: 1000,
+    pointsCost: 200,
+    status: 'active',
+    createdAt: '2026-03-20T14:00:00Z',
+    expiresAt: '2026-06-20T14:00:00Z',
+  },
+  {
+    id: 'rcoupon_003',
+    userId: 'passenger_003',
+    userName: 'Abdoulaye Sana',
+    code: 'FASO-AS5003',
+    amount: 500,
+    pointsCost: 100,
+    status: 'active',
+    createdAt: '2026-03-22T08:00:00Z',
+    expiresAt: '2026-06-22T08:00:00Z',
+  },
+  {
+    id: 'rcoupon_004',
+    userId: 'passenger_002',
+    userName: 'Marie Traoré',
+    code: 'FASO-MT5004',
+    amount: 500,
+    pointsCost: 100,
+    status: 'expired',
+    createdAt: '2025-08-01T10:00:00Z',
+    expiresAt: '2025-11-01T10:00:00Z',
+  },
+  {
+    id: 'rcoupon_005',
+    userId: 'passenger_001',
+    userName: 'Jean Kouamé',
+    code: 'FASO-JK5005',
+    amount: 500,
+    pointsCost: 100,
+    status: 'active',
+    createdAt: '2026-02-15T10:00:00Z',
+    expiresAt: '2026-05-15T10:00:00Z',
+  },
+  {
+    id: 'rcoupon_006',
+    userId: 'passenger_003',
+    userName: 'Abdoulaye Sana',
+    code: 'FASO-AS1006',
+    amount: 1000,
+    pointsCost: 200,
+    status: 'used',
+    createdAt: '2026-01-10T10:00:00Z',
+    expiresAt: '2026-04-10T10:00:00Z',
+    usedAt: '2026-02-05T14:30:00Z',
+  },
+];
+
+export const MOCK_REFERRAL_STATS: ReferralStats = {
+  totalReferrals: 46,
+  totalPointsDistributed: 460,
+  totalCouponsGenerated: 10,
+  totalCouponsUsed: 3,
+  totalCouponsCost: 4000,
+  activeReferrers: 12,
+  config: {
+    enabled: true,
+    pointsPerReferral: 10,
+    updatedAt: '2025-01-01T00:00:00Z',
+    updatedBy: 'Admin FasoTravel',
+  },
+  badgeDistribution: {
+    standard: 35,
+    ambassadeur: 8,
+    super_ambassadeur: 2,
+    legende: 1,
+  },
+  topReferrers: [
+    { userId: 'passenger_003', name: 'Abdoulaye Sana', referrals: 26, badge: 'super_ambassadeur' },
+    { userId: 'passenger_001', name: 'Jean Kouamé', referrals: 12, badge: 'ambassadeur' },
+    { userId: 'passenger_002', name: 'Marie Traoré', referrals: 5, badge: 'standard' },
+    { userId: 'passenger_004', name: 'Fatima Kaboré', referrals: 3, badge: 'standard' },
+  ],
 };

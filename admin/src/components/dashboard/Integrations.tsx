@@ -7,7 +7,7 @@
  * - ZÉRO logique métier ici — UI thin layer uniquement
  * - Design-system FasoTravel (PAGE_CLASSES, StatCard, COMPONENTS)
  * - Tous les boutons fonctionnels (test connexion, delete avec confirm, toggle, config)
- * - Panneaux d'expansion spécifiques par API (Infobip, GA, Maps, AWS)
+ * - Panneaux d'expansion spécifiques par API (WhatsApp Business, GA, Maps, AWS)
  */
 
 import { useState } from 'react';
@@ -47,7 +47,7 @@ const TABS: { id: TabId; label: string; icon: any; badge?: (stats: any) => numbe
 ];
 
 const TYPE_LABELS: Record<string, string> = {
-  payment: 'Paiement', sms: 'SMS & OTP', email: 'Email', analytics: 'Analytics', mapping: 'Cartographie', storage: 'Stockage & CDN',
+  payment: 'Paiement', sms: 'WhatsApp & OTP', email: 'Email', analytics: 'Analytics', mapping: 'Cartographie', storage: 'Stockage & CDN',
 };
 
 const TYPE_ICONS: Record<string, any> = {
@@ -282,7 +282,7 @@ export function Integrations() {
                     className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                   >
                     <option value="all">Tous les types</option>
-                    <option value="sms">SMS & OTP</option>
+                    <option value="sms">WhatsApp & OTP</option>
                     <option value="email">Email</option>
                     <option value="analytics">Analytics</option>
                     <option value="mapping">Cartographie</option>
@@ -393,13 +393,13 @@ export function Integrations() {
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
-              <InputField label="Nom *" value={page.configForm.name} onChange={v => page.setConfigForm(f => ({ ...f, name: v }))} placeholder="Ex: Infobip" />
-              <InputField label="Fournisseur *" value={page.configForm.provider} onChange={v => page.setConfigForm(f => ({ ...f, provider: v }))} placeholder="Ex: Infobip Inc." />
+              <InputField label="Nom *" value={page.configForm.name} onChange={v => page.setConfigForm(f => ({ ...f, name: v }))} placeholder="Ex: WhatsApp Business" />
+              <InputField label="Fournisseur *" value={page.configForm.provider} onChange={v => page.setConfigForm(f => ({ ...f, provider: v }))} placeholder="Ex: Meta WhatsApp Business Platform" />
             </div>
             <div>
               <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Type *</label>
               <select value={page.configForm.type} onChange={e => page.setConfigForm(f => ({ ...f, type: e.target.value as any }))} className={COMPONENTS.input + ' appearance-none'}>
-                <option value="sms">SMS & OTP</option>
+                <option value="sms">WhatsApp & OTP</option>
                 <option value="email">Email</option>
                 <option value="analytics">Analytics</option>
                 <option value="mapping">Cartographie</option>
@@ -584,9 +584,9 @@ export function Integrations() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30"><Send size={20} className="text-blue-600" /></div>
-              Envoyer un SMS de test
+              Envoyer un message test
             </DialogTitle>
-            <DialogDescription>Verifier la connectivite Infobip avec un SMS reel</DialogDescription>
+            <DialogDescription>Verifier la connectivite WhatsApp Business avec un message reel</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <InputField label="Numero de telephone *" value={page.testSmsPhone} onChange={v => page.setTestSmsPhone(v)} placeholder="+226 70 00 00 00" />
@@ -704,16 +704,16 @@ function AlertsTab({ rules, alerts, integrations, onToggleRule, onDeleteRule, on
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         {rule.notifyEmail && <span className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">Email</span>}
-                        {rule.notifySms && <span className="px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400">SMS</span>}
+                        {rule.notifySms && <span className="px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400">WhatsApp</span>}
                         {!rule.notifyEmail && !rule.notifySms && <span className="text-gray-400">—</span>}
                       </div>
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => onToggleRule(rule.id)} className={`p-1.5 rounded-lg transition-colors ${rule.enabled ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+                        <button onClick={() => onToggleRule(rule.id)} title={rule.enabled ? 'Désactiver la règle' : 'Activer la règle'} aria-label={rule.enabled ? 'Désactiver la règle' : 'Activer la règle'} className={`p-1.5 rounded-lg transition-colors ${rule.enabled ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
                           {rule.enabled ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                         </button>
-                        <button onClick={() => onDeleteRule(rule.id)} className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors">
+                        <button onClick={() => onDeleteRule(rule.id)} title="Supprimer la règle" aria-label="Supprimer la règle" className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -1117,11 +1117,11 @@ function FeatureFlagsTab({ flags, onToggle, onAdd, onDelete }: {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => onToggle(flag.id)}
+                      <button onClick={() => onToggle(flag.id)} title={flag.enabled ? 'Désactiver le flag' : 'Activer le flag'} aria-label={flag.enabled ? 'Désactiver le flag' : 'Activer le flag'}
                         className={`p-2 rounded-lg transition-colors ${flag.enabled ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
                         {flag.enabled ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
                       </button>
-                      <button onClick={() => onDelete(flag.id)}
+                      <button onClick={() => onDelete(flag.id)} title="Supprimer le flag" aria-label="Supprimer le flag"
                         className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors">
                         <Trash2 size={16} />
                       </button>
@@ -1187,10 +1187,10 @@ function ServiceRow({
               <code className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono text-gray-600 dark:text-gray-400">
                 {apiKeyVisible ? integration.apiKey : maskKey(integration.apiKey)}
               </code>
-              <button onClick={onToggleApiKey} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              <button onClick={onToggleApiKey} title={apiKeyVisible ? 'Masquer la clé API' : 'Afficher la clé API'} aria-label={apiKeyVisible ? 'Masquer la clé API' : 'Afficher la clé API'} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                 {apiKeyVisible ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
-              <button onClick={() => onCopy(integration.apiKey!)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              <button onClick={() => onCopy(integration.apiKey!)} title="Copier la clé API" aria-label="Copier la clé API" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                 <Copy size={14} />
               </button>
             </div>
@@ -1220,7 +1220,7 @@ function ServiceRow({
             <button onClick={onDelete} className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors" title="Supprimer">
               <Trash2 size={16} />
             </button>
-            <button onClick={onToggleExpand} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <button onClick={onToggleExpand} title={expanded ? 'Réduire les détails' : 'Afficher les détails'} aria-label={expanded ? 'Réduire les détails' : 'Afficher les détails'} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           </div>
@@ -1318,22 +1318,22 @@ function IntegrationDetailPanel({ integration, onCopy, onTest, pageActions, serv
             {integration.webhookUrl && (
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-500 truncate flex-1">{integration.webhookUrl}</span>
-                <button onClick={() => onCopy(integration.webhookUrl!)} className="text-gray-400 hover:text-gray-600 shrink-0"><Copy size={11} /></button>
+                <button onClick={() => onCopy(integration.webhookUrl!)} title="Copier l'URL du webhook" aria-label="Copier l'URL du webhook" className="text-gray-400 hover:text-gray-600 shrink-0"><Copy size={11} /></button>
               </div>
             )}
             <button onClick={onTest} className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
               <TestTube size={12} /> Tester la connexion
             </button>
-            {/* Infobip-specific actions */}
+            {/* WhatsApp-specific actions */}
             {integration.type === 'sms' && (
               <>
-                <button onClick={() => pageActions.infobipHealthCheck()} disabled={serviceLoading.infobipHealth}
+                <button onClick={() => pageActions.whatsappHealthCheck()} disabled={serviceLoading.infobipHealth}
                   className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800 hover:bg-green-100 transition-colors">
-                  <Gauge size={12} /> {serviceLoading.infobipHealth ? 'Verification...' : 'Health check Infobip'}
+                  <Gauge size={12} /> {serviceLoading.infobipHealth ? 'Verification...' : 'Health check WhatsApp Business'}
                 </button>
                 <button onClick={() => pageActions.openTestSmsModal()}
                   className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition-colors">
-                  <Send size={12} /> Envoyer SMS test
+                  <Send size={12} /> Envoyer message test
                 </button>
               </>
             )}
@@ -1391,7 +1391,7 @@ function IntegrationDetailPanel({ integration, onCopy, onTest, pageActions, serv
       </div>
 
       {/* Row 2: API-Specific Panel */}
-      {integration.type === 'sms' && <InfobipPanel config={config} extras={extras} />}
+      {integration.type === 'sms' && <WhatsAppPanel config={config} extras={extras} />}
       {integration.type === 'analytics' && <AnalyticsPanel config={config} extras={extras} />}
       {integration.type === 'mapping' && <MapsPanel config={config} extras={extras} />}
       {integration.type === 'storage' && <AwsPanel config={config} extras={extras} />}
@@ -1399,17 +1399,17 @@ function IntegrationDetailPanel({ integration, onCopy, onTest, pageActions, serv
   );
 }
 
-// ── INFOBIP ──
-function InfobipPanel({ config, extras }: { config: Record<string, any>; extras: Record<string, any> }) {
+// ── WHATSAPP BUSINESS ──
+function WhatsAppPanel({ config, extras }: { config: Record<string, any>; extras: Record<string, any> }) {
   const useCases = config.useCases || {};
-  const total = extras.smsSentThisMonth || 1;
+  const total = extras.messagesSentThisMonth || extras.smsSentThisMonth || 1;
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1"><Send size={12} /> Repartition SMS ce mois</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1"><Send size={12} /> Repartition messages ce mois</p>
         <div className="space-y-2.5">
           {[
-            { label: 'OTP (verification)', value: extras.otpSent || 0, color: '#3b82f6', icon: Shield },
+            { label: 'OTP WhatsApp', value: extras.otpSent || 0, color: '#3b82f6', icon: Shield },
             { label: 'Billets envoyes', value: extras.ticketSmsSent || 0, color: '#22c55e', icon: FileText },
             { label: 'Rappels trajet', value: extras.reminderSmsSent || 0, color: '#f59e0b', icon: Clock },
           ].map(item => {
@@ -1441,7 +1441,7 @@ function InfobipPanel({ config, extras }: { config: Record<string, any>; extras:
               <span className={`w-2 h-2 rounded-full ${val.enabled ? 'bg-green-500' : 'bg-gray-400'}`} />
             </div>
           ))}
-          <div className="flex justify-between text-xs pt-1"><span className="text-gray-500">Sender ID</span><code className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">{config.senderId}</code></div>
+            <div className="flex justify-between text-xs pt-1"><span className="text-gray-500">Business Account</span><code className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">{config.senderId}</code></div>
         </div>
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
@@ -1456,7 +1456,7 @@ function InfobipPanel({ config, extras }: { config: Record<string, any>; extras:
             <div className="text-center p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800"><p className="text-xs text-blue-600 dark:text-blue-400">Livraison</p><p className="text-sm text-blue-700 dark:text-blue-300">{extras.deliveryRate || 0}%</p></div>
             <div className="text-center p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800"><p className="text-xs text-green-600 dark:text-green-400">Delai moy.</p><p className="text-sm text-green-700 dark:text-green-300">{extras.avgDeliveryTimeSec || 0}s</p></div>
           </div>
-          <div className="flex justify-between text-xs pt-1"><span className="text-gray-500">Cout / SMS</span><span className="text-gray-900 dark:text-white">{config.costPerSms || 0} FCFA</span></div>
+          <div className="flex justify-between text-xs pt-1"><span className="text-gray-500">Cout / message</span><span className="text-gray-900 dark:text-white">{config.costPerSms || 0} FCFA</span></div>
         </div>
       </div>
     </div>
@@ -1652,11 +1652,11 @@ function CredentialField({ label, value, masked, onCopy }: { label: string; valu
           {masked && !visible ? maskKey(value) : value || '—'}
         </code>
         {masked && (
-          <button onClick={() => setVisible(!visible)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <button onClick={() => setVisible(!visible)} title={visible ? 'Masquer la valeur' : 'Afficher la valeur'} aria-label={visible ? 'Masquer la valeur' : 'Afficher la valeur'} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             {visible ? <EyeOff size={12} /> : <Eye size={12} />}
           </button>
         )}
-        <button onClick={() => onCopy(value)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <button onClick={() => onCopy(value)} title="Copier la valeur" aria-label="Copier la valeur" className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <Copy size={12} />
         </button>
       </div>

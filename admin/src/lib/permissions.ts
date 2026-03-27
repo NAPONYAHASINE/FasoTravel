@@ -40,7 +40,8 @@ export type ResourceType =
   | 'SERVICES'
   | 'NOTIFICATIONS'
   | 'TICKETS'
-  | 'MAP';
+  | 'MAP'
+  | 'REFERRALS';
 
 export type ActionType =
   | 'CREATE'
@@ -104,6 +105,7 @@ export const SUPER_ADMIN_ROLE: RoleDefinition = {
     { resource: 'SERVICES', action: 'MANAGE', scope: 'ALL' },
     { resource: 'NOTIFICATIONS', action: 'MANAGE', scope: 'ALL' },
     { resource: 'TICKETS', action: 'MANAGE', scope: 'ALL' },
+    { resource: 'REFERRALS', action: 'MANAGE', scope: 'ALL' },
     { resource: 'MAP', action: 'READ', scope: 'ALL' }
   ]
 };
@@ -319,7 +321,8 @@ export function canAccessPage(role: UserRole, page: string): boolean {
     'settings': { resource: 'SETTINGS', action: 'READ' },
     'logs': { resource: 'LOGS', action: 'READ' },
     'integrations': { resource: 'INTEGRATIONS', action: 'READ' },
-    'map': { resource: 'MAP', action: 'READ' }
+    'map': { resource: 'MAP', action: 'READ' },
+    'referrals': { resource: 'REFERRALS', action: 'READ' }
   };
   
   const requiredPermission = PAGE_PERMISSIONS[page];
@@ -337,7 +340,7 @@ export function getAccessiblePages(role: UserRole): string[] {
     'bookings', 'payments', 'tickets', 'support', 'incidents',
     'advertising', 'promotions', 'reviews', 'services',
     'notifications', 'analytics', 'sessions', 'policies',
-    'settings', 'logs', 'integrations', 'map'
+    'settings', 'logs', 'integrations', 'map', 'referrals'
   ];
   
   return allPages.filter(page => canAccessPage(role, page));

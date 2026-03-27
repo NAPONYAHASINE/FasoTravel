@@ -24,7 +24,8 @@
  * - Types centralisés dans /shared/types/standardized.ts
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router';
 import {
   Send,
   Clock,
@@ -72,8 +73,8 @@ import type { Notification, AutomationRule, AutomationCategory, NotifTemplate } 
 // TYPES & CONSTANTS
 // ============================================================================
 
-type TabId = 'automatisations' | 'composer' | 'historique' | 'templates' | 'programmees' | 'statistiques';
-type ChannelId = 'push' | 'email' | 'inApp';
+type TabId = 'inbox' | 'automatisations' | 'composer' | 'historique' | 'templates' | 'programmees' | 'statistiques';
+type ChannelId = 'push' | 'email' | 'inApp' | 'whatsapp';
 
 interface QuickTemplate {
   id: string;
@@ -85,6 +86,7 @@ interface QuickTemplate {
 }
 
 const TABS: { id: TabId; label: string; icon: React.ElementType; badge?: string }[] = [
+  { id: 'inbox', label: 'Boite de reception', icon: Bell, badge: 'ADMIN' },
   { id: 'automatisations', label: 'Automatisations', icon: Zap, badge: 'SYSTÈME' },
   { id: 'composer', label: 'Campagne manuelle', icon: Send },
   { id: 'historique', label: 'Historique', icon: Clock },
@@ -146,6 +148,8 @@ const NOTIFICATION_TYPES = [
 
 const TRIGGER_OPTIONS: { event: string; label: string; category: AutomationCategory }[] = [
   { event: 'user.created', label: 'Inscription passager', category: 'onboarding' },
+  { event: 'auth.signup_otp_requested', label: 'OTP inscription demandé', category: 'onboarding' },
+  { event: 'auth.login_otp_requested', label: 'OTP connexion demandé', category: 'transactional' },
   { event: 'booking.confirmed', label: 'Réservation confirmée', category: 'transactional' },
   { event: 'ticket.issued', label: 'Billet émis', category: 'transactional' },
   { event: 'payment.success', label: 'Paiement réussi', category: 'transactional' },
@@ -177,6 +181,14 @@ const CATEGORY_CONFIG: Record<AutomationCategory, { icon: React.ElementType; col
   reminder: { icon: Clock, color: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-100 dark:bg-violet-800/40', label: 'Rappel' },
   alert: { icon: AlertTriangle, color: 'text-red-700 dark:text-red-300', bg: 'bg-red-100 dark:bg-red-800/40', label: 'Alerte' },
   engagement: { icon: Star, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-800/40', label: 'Engagement' },
+};
+
+const FALLBACK_TRENDS = {
+  autoSentTrend: '0%',
+  manualSentTrend: '0%',
+  deliveryTrend: '0%',
+  openRateTrend: '0%',
+  clickRateTrend: '0%',
 };
 
 // ============================================================================
@@ -332,7 +344,7 @@ function AutomationRuleCard({ rule, onToggle, onEdit, onDelete }: {
   onEdit: (rule: AutomationRule) => void;
   onDelete: (id: string) => void;
 }) {
-  const cat = CATEGORY_CONFIG[rule.category];
+  const cat = CATEGORY_CONFIG[rule.category] ?? CATEGORY_CONFIG.transactional;
   const CatIcon = cat.icon;
 
   return (
@@ -359,6 +371,8 @@ function AutomationRuleCard({ rule, onToggle, onEdit, onDelete }: {
           {/* Toggle */}
           <button
             onClick={() => onToggle(rule.id, !rule.isActive)}
+            title={rule.isActive ? 'Désactiver la règle' : 'Activer la règle'}
+            aria-label={rule.isActive ? 'Désactiver la règle' : 'Activer la règle'}
             className={`relative inline-flex h-6 w-11 items-center rounded-full shrink-0 transition-colors ${
               rule.isActive ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
             }`}
@@ -387,7 +401,8 @@ function AutomationRuleCard({ rule, onToggle, onEdit, onDelete }: {
               {ch === 'push' && <Bell className="h-3 w-3" />}
               {ch === 'email' && <Mail className="h-3 w-3" />}
               {ch === 'inApp' && <MessageSquare className="h-3 w-3" />}
-              {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : 'In-App'}
+              {ch === 'whatsapp' && <Smartphone className="h-3 w-3" />}
+              {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : ch === 'inApp' ? 'In-App' : 'WhatsApp'}
             </span>
           ))}
         </div>
@@ -431,7 +446,12 @@ function AutomationRuleCard({ rule, onToggle, onEdit, onDelete }: {
 // ============================================================================
 
 export function NotificationCenter() {
-  const { refreshNotifications } = useAdminApp();
+  const location = useLocation();
+  const {
+    notifications,
+    markNotificationAsRead,
+    refreshNotifications,
+  } = useAdminApp();
   const notifAdmin = useNotificationsAdmin();
   const [activeTab, setActiveTab] = useState<TabId>('automatisations');
 
@@ -442,7 +462,7 @@ export function NotificationCenter() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [audience, setAudience] = useState('all');
   const [notifType, setNotifType] = useState<Notification['type']>('info');
-  const [channels, setChannels] = useState<ChannelId[]>(['push', 'inApp']);
+  const [channels, setChannels] = useState<ChannelId[]>(['push', 'inApp', 'whatsapp']);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [actionLink, setActionLink] = useState('');
@@ -455,6 +475,13 @@ export function NotificationCenter() {
   const [newTplTitle, setNewTplTitle] = useState('');
   const [newTplMessage, setNewTplMessage] = useState('');
   const [newTplCategory, setNewTplCategory] = useState('Marketing');
+
+  useEffect(() => {
+    const tabParam = new URLSearchParams(location.search).get('tab');
+    if (tabParam === 'inbox') {
+      setActiveTab('inbox');
+    }
+  }, [location.search]);
 
   // Handlers
   const handleTemplateSelect = (tpl: QuickTemplate) => {
@@ -477,7 +504,7 @@ export function NotificationCenter() {
     setMessage('');
     setAudience('all');
     setNotifType('info');
-    setChannels(['push', 'inApp']);
+    setChannels(['push', 'inApp', 'whatsapp']);
     setActionLink('');
     setScheduleMode('immediate');
     setScheduledDate('');
@@ -552,7 +579,35 @@ export function NotificationCenter() {
 
   const selectedAudience = notifAdmin.audienceSegments.find(a => a.value === audience);
   const { stats } = notifAdmin;
+  const trends = stats?.trends ?? FALLBACK_TRENDS;
   const pendingScheduled = notifAdmin.scheduled.filter(s => s.status === 'pending');
+
+  const getTrendDirection = (value?: string, downOnMinus = false): 'up' | 'down' => {
+    if (!value) return 'up';
+    if (downOnMinus) return value.startsWith('-') ? 'down' : 'up';
+    return value.startsWith('+') ? 'up' : 'down';
+  };
+
+  const inboxItems = notifications
+    .slice()
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const unreadInboxCount = inboxItems.filter(n => !n.read).length;
+
+  const getInboxTypeBadge = (type: Notification['type']) => {
+    if (type === 'error') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+    if (type === 'warning') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+    if (type === 'success') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+    return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+  };
+
+  const handleMarkAllInboxRead = async () => {
+    const unread = inboxItems.filter(n => !n.read);
+    if (unread.length === 0) return;
+
+    await Promise.allSettled(unread.map(n => markNotificationAsRead(n.id)));
+    await refreshNotifications();
+  };
 
   return (
     <div className={PAGE_CLASSES.container}>
@@ -588,7 +643,7 @@ export function NotificationCenter() {
           value={(stats?.autoSent ?? 0).toLocaleString()}
           label="Auto (système)"
           sublabel={`${notifAdmin.activeRulesCount} règles actives`}
-          trend={stats?.trends.autoSentTrend.startsWith('+') ? 'up' : 'down'} trendValue={stats?.trends.autoSentTrend}
+          trend={getTrendDirection(trends.autoSentTrend)} trendValue={trends.autoSentTrend}
           color="#8b5cf6"
         />
         <NotifStatCard
@@ -596,7 +651,7 @@ export function NotificationCenter() {
           value={(stats?.manualSent ?? 0).toLocaleString()}
           label="Manuelles"
           sublabel="Campagnes admin"
-          trend={stats?.trends.manualSentTrend.startsWith('+') ? 'up' : 'down'} trendValue={stats?.trends.manualSentTrend}
+          trend={getTrendDirection(trends.manualSentTrend)} trendValue={trends.manualSentTrend}
           color="#3b82f6"
         />
         <NotifStatCard
@@ -604,7 +659,7 @@ export function NotificationCenter() {
           value={`${stats?.deliveryRate ?? 0}%`}
           label="Délivrance"
           sublabel={`${Math.round((stats?.totalSent ?? 0) * (stats?.deliveryRate ?? 0) / 100).toLocaleString()} délivrées`}
-          trend={stats?.trends.deliveryTrend.startsWith('+') ? 'up' : 'down'} trendValue={stats?.trends.deliveryTrend}
+          trend={getTrendDirection(trends.deliveryTrend)} trendValue={trends.deliveryTrend}
           color="#16a34a"
         />
         <NotifStatCard
@@ -612,7 +667,7 @@ export function NotificationCenter() {
           value={`${stats?.openRate ?? 0}%`}
           label="Ouverture"
           sublabel={`${Math.round((stats?.totalSent ?? 0) * (stats?.openRate ?? 0) / 100).toLocaleString()} lues`}
-          trend={stats?.trends.openRateTrend.startsWith('+') ? 'up' : 'down'} trendValue={stats?.trends.openRateTrend}
+          trend={getTrendDirection(trends.openRateTrend)} trendValue={trends.openRateTrend}
           color="#f59e0b"
         />
         <NotifStatCard
@@ -620,7 +675,7 @@ export function NotificationCenter() {
           value={`${stats?.clickRate ?? 0}%`}
           label="Taux de clic"
           sublabel={`${Math.round((stats?.totalSent ?? 0) * (stats?.clickRate ?? 0) / 100).toLocaleString()} clics`}
-          trend={stats?.trends.clickRateTrend.startsWith('-') ? 'down' : 'up'} trendValue={stats?.trends.clickRateTrend}
+          trend={getTrendDirection(trends.clickRateTrend, true)} trendValue={trends.clickRateTrend}
           color="#ef4444"
         />
         <NotifStatCard
@@ -662,6 +717,75 @@ export function NotificationCenter() {
           );
         })}
       </div>
+
+      {/* ============ TAB: AUTOMATISATIONS ============ */}
+      {activeTab === 'inbox' && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
+            <div>
+              <h3 className="text-gray-900 dark:text-white">Boite de reception admin</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {inboxItems.length} notification{inboxItems.length > 1 ? 's' : ''}, {unreadInboxCount} non lue{unreadInboxCount > 1 ? 's' : ''}
+              </p>
+            </div>
+            <button
+              onClick={() => void handleMarkAllInboxRead()}
+              className={`${COMPONENTS.buttonSecondary} text-sm !px-4 !py-2.5`}
+              disabled={unreadInboxCount === 0}
+            >
+              <CheckCheck className="h-4 w-4" />
+              Tout marquer lu
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {inboxItems.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/60 p-8 text-center">
+                <Bell className="mx-auto mb-3 text-gray-400 dark:text-gray-500" size={30} />
+                <p className="text-sm text-gray-500 dark:text-gray-400">Aucune notification pour le moment</p>
+              </div>
+            ) : (
+              inboxItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`rounded-xl border p-4 transition-colors ${
+                    item.read
+                      ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                      : 'bg-red-50/70 dark:bg-red-900/15 border-red-200 dark:border-red-800'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5">
+                      <Bell className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{item.title}</h4>
+                        <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${getInboxTypeBadge(item.type)}`}>
+                          {item.type}
+                        </span>
+                        {!item.read && <span className="w-2 h-2 rounded-full bg-red-600" />}
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{item.message}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: fr })}
+                      </p>
+                    </div>
+                    {!item.read && (
+                      <button
+                        onClick={() => void markNotificationAsRead(item.id)}
+                        className="text-xs text-red-600 dark:text-red-400 hover:underline whitespace-nowrap"
+                      >
+                        Marquer lu
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ============ TAB: AUTOMATISATIONS ============ */}
       {activeTab === 'automatisations' && (
@@ -733,7 +857,7 @@ export function NotificationCenter() {
                   triggerEvent: '',
                   triggerLabel: '',
                   template: { title: '', message: '' },
-                  channels: ['push', 'inApp'],
+                  channels: ['push', 'inApp', 'whatsapp'],
                   isActive: false,
                   sentCount: 0,
                   category: 'transactional',
@@ -785,7 +909,7 @@ export function NotificationCenter() {
                       <Settings2 className="h-5 w-5 text-violet-500" />
                       {isCreating ? 'Nouvelle automatisation' : `Modifier : ${editingRule.name}`}
                     </h3>
-                    <button onClick={() => setEditingRule(null)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                    <button onClick={() => setEditingRule(null)} title="Fermer" aria-label="Fermer" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                       <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     </button>
                   </div>
@@ -899,7 +1023,7 @@ export function NotificationCenter() {
                   <div className="mb-5">
                     <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">Canaux</label>
                     <div className="flex flex-wrap gap-2">
-                      {(['push', 'email', 'inApp'] as const).map(ch => (
+                      {(['push', 'email', 'inApp', 'whatsapp'] as const).map(ch => (
                         <button
                           key={ch}
                           onClick={() => {
@@ -917,7 +1041,8 @@ export function NotificationCenter() {
                           {ch === 'push' && <Bell className="h-3.5 w-3.5" />}
                           {ch === 'email' && <Mail className="h-3.5 w-3.5" />}
                           {ch === 'inApp' && <MessageSquare className="h-3.5 w-3.5" />}
-                          {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : 'In-App'}
+                          {ch === 'whatsapp' && <Smartphone className="h-3.5 w-3.5" />}
+                          {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : ch === 'inApp' ? 'In-App' : 'WhatsApp'}
                         </button>
                       ))}
                     </div>
@@ -1028,6 +1153,7 @@ export function NotificationCenter() {
                     <ChannelToggle id="push" label="Push" icon={Bell} active={channels.includes('push')} onChange={handleChannelToggle} />
                     <ChannelToggle id="email" label="Email" icon={Mail} active={channels.includes('email')} onChange={handleChannelToggle} />
                     <ChannelToggle id="inApp" label="In-App" icon={MessageSquare} active={channels.includes('inApp')} onChange={handleChannelToggle} />
+                    <ChannelToggle id="whatsapp" label="WhatsApp" icon={Smartphone} active={channels.includes('whatsapp')} onChange={handleChannelToggle} />
                   </div>
                 </div>
 
@@ -1285,7 +1411,8 @@ export function NotificationCenter() {
                                   {ch === 'push' && <Bell className="h-3 w-3" />}
                                   {ch === 'email' && <Mail className="h-3 w-3" />}
                                   {ch === 'inApp' && <MessageSquare className="h-3 w-3" />}
-                                  {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : 'In-App'}
+                                  {ch === 'whatsapp' && <Smartphone className="h-3 w-3" />}
+                                  {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : ch === 'inApp' ? 'In-App' : 'WhatsApp'}
                                 </span>
                               ))}
                             </div>
@@ -1394,7 +1521,7 @@ export function NotificationCenter() {
                       <FileText className="h-5 w-5 text-red-500" />
                       Nouveau template
                     </h3>
-                    <button onClick={() => setCreatingTemplate(false)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                    <button onClick={() => setCreatingTemplate(false)} title="Fermer" aria-label="Fermer" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                       <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     </button>
                   </div>
@@ -1480,7 +1607,7 @@ export function NotificationCenter() {
                           <div className="flex gap-1.5">
                             {item.channels.map(ch => (
                               <span key={ch} className="px-2.5 py-0.5 rounded-md text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
-                                {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : 'In-App'}
+                                {ch === 'push' ? 'Push' : ch === 'email' ? 'Email' : ch === 'inApp' ? 'In-App' : 'WhatsApp'}
                               </span>
                             ))}
                           </div>
@@ -1569,7 +1696,13 @@ export function NotificationCenter() {
                     </div>
                     <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${
-                        ch.channel === 'push' ? 'bg-blue-500' : ch.channel === 'email' ? 'bg-emerald-500' : 'bg-violet-500'
+                        ch.channel === 'push'
+                          ? 'bg-blue-500'
+                          : ch.channel === 'email'
+                            ? 'bg-emerald-500'
+                            : ch.channel === 'whatsapp'
+                              ? 'bg-green-500'
+                              : 'bg-violet-500'
                       }`} style={{ width: `${ch.percentage}%` }} />
                     </div>
                   </div>

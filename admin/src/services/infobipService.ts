@@ -1,22 +1,22 @@
 /**
  * @file infobipService.ts
- * @description Service dedie Infobip — SMS & OTP
+ * @description Service dedie WhatsApp Business — OTP & Messages
  * 
  * Architecture backend-ready :
  * - Mode mock : donnees simulees avec delais realistes
- * - Mode production : appels API vers /admin/infobip/*
+ * - Mode production : appels API vers /admin/whatsapp/*
  * 
  * ENDPOINTS MAPPES :
- * GET    /admin/infobip/account        → getAccountInfo()
- * POST   /admin/infobip/test-sms       → sendTestSms()
- * GET    /admin/infobip/health         → healthCheck()
- * GET    /admin/infobip/delivery-stats → getDeliveryStats()
+ * GET    /admin/whatsapp/account         → getAccountInfo()
+ * POST   /admin/whatsapp/test-message    → sendTestSms()
+ * GET    /admin/whatsapp/health          → healthCheck()
+ * GET    /admin/whatsapp/delivery-stats  → getDeliveryStats()
  */
 
 import { AppConfig } from '../config/app.config';
 import { apiService } from './apiService';
-import type { InfobipSmsResult, InfobipAccountInfo } from '../shared/types/standardized';
-import { MOCK_INFOBIP_ACCOUNT, MOCK_INFOBIP_HEALTH_CHECK, MOCK_INFOBIP_DELIVERY_STATS } from '../lib/adminMockData';
+import type { WhatsAppMessageResult, WhatsAppAccountInfo } from '../shared/types/standardized';
+import { MOCK_WHATSAPP_ACCOUNT, MOCK_WHATSAPP_HEALTH_CHECK, MOCK_WHATSAPP_DELIVERY_STATS } from '../lib/adminMockData';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -28,22 +28,22 @@ interface ApiResponse<T> {
 // SERVICE
 // ============================================================================
 
-class InfobipService {
+class WhatsAppBusinessService {
   /**
-   * Recuperer les infos du compte Infobip
+   * Recuperer les infos du compte WhatsApp Business
    */
-  async getAccountInfo(): Promise<ApiResponse<InfobipAccountInfo>> {
+  async getAccountInfo(): Promise<ApiResponse<WhatsAppAccountInfo>> {
     if (AppConfig.isMock) {
       await new Promise(r => setTimeout(r, 400));
-      return { success: true, data: { ...MOCK_INFOBIP_ACCOUNT } };
+      return { success: true, data: { ...MOCK_WHATSAPP_ACCOUNT } };
     }
-    return await apiService.get('/admin/infobip/account');
+    return await apiService.get('/admin/whatsapp/account');
   }
 
   /**
-   * Envoyer un SMS de test
+   * Envoyer un message WhatsApp de test
    */
-  async sendTestSms(phoneNumber: string, message?: string): Promise<ApiResponse<InfobipSmsResult>> {
+  async sendTestSms(phoneNumber: string, message?: string): Promise<ApiResponse<WhatsAppMessageResult>> {
     if (AppConfig.isMock) {
       await new Promise(r => setTimeout(r, 1200 + Math.random() * 800));
       // Simuler un echec si le numero est invalide
@@ -70,14 +70,14 @@ class InfobipService {
         },
       };
     }
-    return await apiService.post('/admin/infobip/test-sms', {
+    return await apiService.post('/admin/whatsapp/test-message', {
       to: phoneNumber,
-      message: message || '[FasoTravel] Ceci est un SMS de test depuis le dashboard admin.',
+      message: message || '[FasoTravel] Ceci est un message WhatsApp de test depuis le dashboard admin.',
     });
   }
 
   /**
-   * Health check Infobip
+   * Health check WhatsApp Business
    */
   async healthCheck(): Promise<ApiResponse<{
     apiReachable: boolean;
@@ -91,25 +91,27 @@ class InfobipService {
       return {
         success: true,
         data: {
-          ...MOCK_INFOBIP_HEALTH_CHECK,
+          ...MOCK_WHATSAPP_HEALTH_CHECK,
           latencyMs: Math.round(120 + Math.random() * 250),
           lastDelivery: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
         },
       };
     }
-    return await apiService.get('/admin/infobip/health');
+    return await apiService.get('/admin/whatsapp/health');
   }
 
   /**
    * Statistiques de livraison detaillees
    */
-  async getDeliveryStats(): Promise<ApiResponse<typeof MOCK_INFOBIP_DELIVERY_STATS>> {
+  async getDeliveryStats(): Promise<ApiResponse<typeof MOCK_WHATSAPP_DELIVERY_STATS>> {
     if (AppConfig.isMock) {
       await new Promise(r => setTimeout(r, 500));
-      return { success: true, data: { ...MOCK_INFOBIP_DELIVERY_STATS } };
+      return { success: true, data: { ...MOCK_WHATSAPP_DELIVERY_STATS } };
     }
-    return await apiService.get('/admin/infobip/delivery-stats');
+    return await apiService.get('/admin/whatsapp/delivery-stats');
   }
 }
 
-export const infobipService = new InfobipService();
+export const whatsappService = new WhatsAppBusinessService();
+/** @deprecated Use whatsappService */
+export const infobipService = whatsappService;

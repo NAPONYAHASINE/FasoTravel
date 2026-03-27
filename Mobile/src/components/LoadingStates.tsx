@@ -121,14 +121,13 @@ export function ProgressBar({ progress }: { progress: number }) {
   const normalizedProgress = Math.min(Math.max(progress, 0), 100);
   
   return (
-    <div 
-      className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
-      role="progressbar"
-      aria-valuenow={normalizedProgress}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={`Progression: ${normalizedProgress}%`}
-    >
+    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+      <progress
+        className="sr-only"
+        value={normalizedProgress}
+        max={100}
+        aria-label={`Progression: ${normalizedProgress}%`}
+      />
       <div
         className="h-full bg-gradient-to-r from-green-600 to-green-500 transition-all duration-500 ease-out progress-bar-fill"
         style={{ width: `${normalizedProgress}%` }}

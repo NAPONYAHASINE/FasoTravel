@@ -62,6 +62,7 @@ import SystemLogs from './components/dashboard/SystemLogs';
 import Integrations from './components/dashboard/Integrations';
 import SessionManagement from './components/dashboard/SessionManagement';
 import PolicyManagement from './components/dashboard/PolicyManagement';
+import ReferralManagement from './components/dashboard/ReferralManagement';
 import Settings from './components/dashboard/Settings';
 
 // Reviews
@@ -124,6 +125,7 @@ export default function App() {
             {/* Content */}
             <Route path="advertising" element={<AdvertisingManagement />} />
             <Route path="promotions" element={<PromotionManagement />} />
+            <Route path="referrals" element={<ReferralManagement />} />
             <Route path="notifications" element={<NotificationCenter />} />
 
             {/* Analytics */}

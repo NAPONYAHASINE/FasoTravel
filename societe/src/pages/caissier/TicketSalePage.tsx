@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Search, Users, MapPin, CreditCard, Printer, Check, CheckCircle2, ChevronRight, Clock } from 'lucide-react';
 import { useFilteredData } from '../../hooks/useFilteredData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,6 +14,8 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { toast } from 'sonner';
+import { generateSeatGrid, generateSeatsFromLayout } from '../../utils/seatGenerator';
+import type { SeatLayout } from '../../contexts/DataContext';
 
 interface PassengerInfo {
   seatNumber: string;
@@ -23,7 +25,7 @@ interface PassengerInfo {
 
 export default function TicketSalePage() {
   const { user } = useAuth();
-  const { trips, addTicket, tickets, updateTrip } = useFilteredData();
+  const { trips, addTicket, tickets } = useFilteredData();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrip, setSelectedTrip] = useState<string | null>(null);
@@ -58,20 +60,24 @@ export default function TicketSalePage() {
     [trips, selectedTrip]
   );
 
-  // Generate seat grid
-  const generateSeats = (totalSeats: number): string[] => {
-    const seats: string[] = [];
-    const seatsPerRow = 4;
-    const rows = Math.ceil(totalSeats / seatsPerRow);
-    
-    for (let row = 0; row < rows; row++) {
-      const rowLetter = String.fromCharCode(65 + row);
-      for (let col = 1; col <= seatsPerRow && seats.length < totalSeats; col++) {
-        seats.push(`${rowLetter}${col}`);
-      }
+  const currentSeatLayout = useMemo<SeatLayout>(() => {
+    if (currentTrip?.seatLayout) {
+      return currentTrip.seatLayout;
     }
-    return seats;
-  };
+
+    const totalSeats = currentTrip?.totalSeats || 45;
+    const rows = Math.max(1, Math.ceil(totalSeats / 4));
+    return {
+      id: `fallback_${totalSeats}`,
+      name: `Standard 2+2 (${totalSeats} places)`,
+      type: 'standard',
+      totalSeats,
+      structure: { rows, leftSeats: 2, rightSeats: 2 },
+    };
+  }, [currentTrip]);
+
+  const availableSeatGrid = useMemo(() => generateSeatGrid(currentSeatLayout), [currentSeatLayout]);
+  const allSeatNumbers = useMemo(() => generateSeatsFromLayout(currentSeatLayout), [currentSeatLayout]);
 
   // ✅ Get occupied seats from REAL tickets
   const occupiedSeats = useMemo(() => {
@@ -79,6 +85,34 @@ export default function TicketSalePage() {
     
     return getTripValidTickets(tickets, currentTrip.id).map(t => t.seatNumber);
   }, [currentTrip, tickets]);
+
+  const getNextAvailableSeat = (alreadyPicked: string[] = selectedSeats) => {
+    return allSeatNumbers.find((seatNumber) => !occupiedSeats.includes(seatNumber) && !alreadyPicked.includes(seatNumber));
+  };
+
+  useEffect(() => {
+    if (!currentTrip || selectedSeats.length > 0) return;
+
+    const firstSeat = getNextAvailableSeat([]);
+    if (!firstSeat) return;
+
+    setSelectedSeats([firstSeat]);
+    setCurrentPassengerIndex(0);
+  }, [currentTrip, allSeatNumbers, occupiedSeats, selectedSeats.length]);
+
+  const handleAddPassengerAuto = () => {
+    const nextSeat = getNextAvailableSeat();
+    if (!nextSeat) {
+      toast.error('Plus aucun siège disponible pour ce trajet');
+      return;
+    }
+
+    setSelectedSeats([...selectedSeats, nextSeat]);
+    setCurrentPassengerIndex(selectedSeats.length);
+    setCurrentName('');
+    setCurrentPhone('');
+    toast.success(`Siège ${nextSeat} attribué automatiquement`);
+  };
 
   const handleSeatSelect = (seatNumber: string) => {
     if (occupiedSeats.includes(seatNumber)) {
@@ -88,7 +122,8 @@ export default function TicketSalePage() {
 
     // Désélectionner
     if (selectedSeats.includes(seatNumber)) {
-      setSelectedSeats(selectedSeats.filter(s => s !== seatNumber));
+      const filteredSeats = selectedSeats.filter(s => s !== seatNumber);
+      setSelectedSeats(filteredSeats);
       setPassengers(passengers.filter(p => p.seatNumber !== seatNumber));
       
       // Réinitialiser si on retire le siège en cours de saisie
@@ -96,7 +131,31 @@ export default function TicketSalePage() {
         setCurrentName('');
         setCurrentPhone('');
       }
+
+      if (filteredSeats.length > 0) {
+        setCurrentPassengerIndex(Math.max(0, Math.min(currentPassengerIndex, filteredSeats.length - 1)));
+      }
       
+      return;
+    }
+
+    const currentSeat = selectedSeats[currentPassengerIndex];
+    if (currentSeat) {
+      const updatedSeats = [...selectedSeats];
+      updatedSeats[currentPassengerIndex] = seatNumber;
+      setSelectedSeats(updatedSeats);
+
+      const passengerIndex = passengers.findIndex(p => p.seatNumber === currentSeat);
+      if (passengerIndex >= 0) {
+        const updatedPassengers = [...passengers];
+        updatedPassengers[passengerIndex] = {
+          ...updatedPassengers[passengerIndex],
+          seatNumber,
+        };
+        setPassengers(updatedPassengers);
+      }
+
+      toast.success(`Siège ${seatNumber} attribué au passager en cours`);
       return;
     }
 
@@ -183,7 +242,12 @@ export default function TicketSalePage() {
       return;
     }
     
-    if (passengers.length !== selectedSeats.length) {
+    const allSelectedSeatsAreFilled = selectedSeats.every((seat) => {
+      const passenger = passengers.find(p => p.seatNumber === seat);
+      return !!passenger?.name?.trim() && !!passenger?.phone?.trim();
+    });
+
+    if (!allSelectedSeatsAreFilled) {
       toast.error('Veuillez renseigner tous les passagers');
       return;
     }
@@ -218,11 +282,6 @@ export default function TicketSalePage() {
           departureTime: currentTrip.departureTime,
         });
       }
-
-      // Mettre à jour la disponibilité
-      updateTrip(currentTrip.id, {
-        availableSeats: currentTrip.availableSeats - passengers.length
-      });
 
       await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -359,7 +418,7 @@ export default function TicketSalePage() {
                   2. Sélectionnez les sièges
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {currentTrip.departure} → {currentTrip.arrival}
+                  {currentTrip.departure} → {currentTrip.arrival} · attribution automatique activée
                 </p>
               </div>
               <Button variant="outline" onClick={() => {
@@ -395,36 +454,70 @@ export default function TicketSalePage() {
             </div>
 
             {/* Grille */}
-            <div className="grid grid-cols-4 gap-3">
-              {generateSeats(currentTrip.totalSeats).map((seatNumber: any) => {
-                const isOccupied = occupiedSeats.includes(seatNumber);
-                const isSelected = selectedSeats.includes(seatNumber);
-                const isValidated = passengers.some(p => p.seatNumber === seatNumber);
+            <div className="space-y-3">
+              {availableSeatGrid.rows.map((row, index) => (
+                <div key={index} className="flex items-center justify-center gap-4">
+                  <div className="flex gap-3">
+                    {row.left.map((seatNumber) => {
+                      const isOccupied = occupiedSeats.includes(seatNumber);
+                      const isSelected = selectedSeats.includes(seatNumber);
+                      const isValidated = passengers.some(p => p.seatNumber === seatNumber);
 
-                return (
-                  <button
-                    key={seatNumber}
-                    onClick={() => handleSeatSelect(seatNumber)}
-                    disabled={isOccupied}
-                    className={`
-                      h-12 rounded-lg border-2 transition-all relative
-                      ${isOccupied
-                        ? 'bg-gray-400 dark:bg-gray-500 border-gray-500 dark:border-gray-600 opacity-50 cursor-not-allowed text-gray-700 dark:text-gray-300'
-                        : isValidated
-                        ? 'bg-[#16a34a] border-[#15803d] text-white shadow-lg'
-                        : isSelected
-                        ? 'bg-[#f59e0b] border-[#d97706] text-white shadow-lg scale-105'
-                        : 'bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:border-[#f59e0b] hover:scale-105 text-gray-900 dark:text-white'
-                      }
-                    `}
-                  >
-                    {seatNumber}
-                    {isValidated && (
-                      <CheckCircle2 size={14} className="absolute top-1 right-1" />
-                    )}
-                  </button>
-                );
-              })}
+                      return (
+                        <button
+                          key={seatNumber}
+                          onClick={() => handleSeatSelect(seatNumber)}
+                          disabled={isOccupied}
+                          className={`
+                            h-12 w-12 rounded-lg border-2 transition-all relative
+                            ${isOccupied
+                              ? 'bg-gray-400 dark:bg-gray-500 border-gray-500 dark:border-gray-600 opacity-50 cursor-not-allowed text-gray-700 dark:text-gray-300'
+                              : isValidated
+                              ? 'bg-[#16a34a] border-[#15803d] text-white shadow-lg'
+                              : isSelected
+                              ? 'bg-[#f59e0b] border-[#d97706] text-white shadow-lg scale-105'
+                              : 'bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:border-[#f59e0b] hover:scale-105 text-gray-900 dark:text-white'
+                            }
+                          `}
+                        >
+                          {seatNumber}
+                          {isValidated && <CheckCircle2 size={14} className="absolute top-1 right-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="w-8 h-px bg-gray-300 dark:bg-gray-600" />
+                  <div className="flex gap-3">
+                    {row.right.map((seatNumber) => {
+                      const isOccupied = occupiedSeats.includes(seatNumber);
+                      const isSelected = selectedSeats.includes(seatNumber);
+                      const isValidated = passengers.some(p => p.seatNumber === seatNumber);
+
+                      return (
+                        <button
+                          key={seatNumber}
+                          onClick={() => handleSeatSelect(seatNumber)}
+                          disabled={isOccupied}
+                          className={`
+                            h-12 w-12 rounded-lg border-2 transition-all relative
+                            ${isOccupied
+                              ? 'bg-gray-400 dark:bg-gray-500 border-gray-500 dark:border-gray-600 opacity-50 cursor-not-allowed text-gray-700 dark:text-gray-300'
+                              : isValidated
+                              ? 'bg-[#16a34a] border-[#15803d] text-white shadow-lg'
+                              : isSelected
+                              ? 'bg-[#f59e0b] border-[#d97706] text-white shadow-lg scale-105'
+                              : 'bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:border-[#f59e0b] hover:scale-105 text-gray-900 dark:text-white'
+                            }
+                          `}
+                        >
+                          {seatNumber}
+                          {isValidated && <CheckCircle2 size={14} className="absolute top-1 right-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </Card>
 
@@ -440,6 +533,14 @@ export default function TicketSalePage() {
                 <h3 className="text-lg text-gray-900 dark:text-white mb-4">
                   3. Passagers ({passengers.length}/{selectedSeats.length})
                 </h3>
+                <div className="mb-4 rounded-xl border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+                    Les sièges sont attribués automatiquement. Cliquez dans le plan uniquement si le client demande un siège précis.
+                  </p>
+                  <Button type="button" variant="outline" onClick={handleAddPassengerAuto}>
+                    Ajouter un passager (siège auto)
+                  </Button>
+                </div>
 
                 {/* Liste des sièges avec statut */}
                 <div className="mb-6 space-y-2">
@@ -506,7 +607,7 @@ export default function TicketSalePage() {
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="+226 XX XX XX XX"
+                        placeholder="Numéro WhatsApp du passager"
                         value={currentPhone}
                         onChange={(e) => setCurrentPhone(e.target.value)}
                       />

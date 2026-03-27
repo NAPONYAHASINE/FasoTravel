@@ -24,7 +24,7 @@ import {
   BookOpen, Ban, ArrowLeftRight, Luggage, CircleDollarSign,
   Timer, ClipboardList, CalendarRange, DollarSign, Power,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   usePolicyManagement,
   POLICY_TYPE_LABELS,
@@ -75,7 +75,7 @@ const TABS: { key: PolicyTab; label: string; icon: typeof FileText }[] = [
 
 function TabBar({ active, onChange }: { active: PolicyTab; onChange: (tab: PolicyTab) => void }) {
   return (
-    <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-6">
+    <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-6 border border-gray-200 dark:border-gray-700">
       {TABS.map(tab => {
         const Icon = tab.icon;
         const isActive = active === tab.key;
@@ -83,10 +83,10 @@ function TabBar({ active, onChange }: { active: PolicyTab; onChange: (tab: Polic
           <button
             key={tab.key}
             onClick={() => onChange(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               isActive
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-600'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-750'
             }`}
           >
             <Icon size={16} />
@@ -125,12 +125,12 @@ function SimpleMarkdown({ content }: { content: string }) {
 
 function PlatformStatusBadge({ status }: { status: PlatformPolicy['status'] }) {
   const config: Record<string, string> = {
-    draft: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    published: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-    archived: 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+    draft: 'bg-yellow-100 text-yellow-800 border border-yellow-300 dark:bg-yellow-900 dark:text-yellow-300 dark:border-yellow-700',
+    published: 'bg-green-100 text-green-800 border border-green-300 dark:bg-green-900 dark:text-green-300 dark:border-green-700',
+    archived: 'bg-gray-100 text-gray-600 border border-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600',
   };
   const labels: Record<string, string> = { draft: 'Brouillon', published: 'Publiee', archived: 'Archivee' };
-  return <span className={`px-2 py-0.5 rounded-full text-xs ${config[status]}`}>{labels[status]}</span>;
+  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${config[status]}`}>{labels[status]}</span>;
 }
 
 function ComplianceBadge({ status }: { status: ComplianceStatus }) {
@@ -140,7 +140,7 @@ function ComplianceBadge({ status }: { status: ComplianceStatus }) {
 
 function PolicyTypeBadge({ type }: { type: CompanyPolicyType }) {
   return (
-    <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
       {POLICY_TYPE_LABELS[type]}
     </span>
   );
@@ -190,19 +190,19 @@ function PlatformPolicyRow({
       </td>
       <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center gap-1">
-          <button onClick={onView} className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-colors" title="Lire">
+          <button onClick={onView} className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded transition-colors" title="Lire">
             <Eye size={15} />
           </button>
-          <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors" title="Modifier">
+          <button onClick={onEdit} className="p-1.5 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 rounded transition-colors" title="Modifier">
             <Edit3 size={15} />
           </button>
           {policy.status === 'draft' && (
-            <button onClick={onPublish} className="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400 rounded transition-colors" title="Publier">
+            <button onClick={onPublish} className="p-1.5 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 rounded transition-colors" title="Publier">
               <Send size={15} />
             </button>
           )}
           {policy.status === 'published' && (
-            <button onClick={onArchive} className="p-1.5 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 rounded transition-colors" title="Archiver">
+            <button onClick={onArchive} className="p-1.5 text-gray-500 hover:text-yellow-600 dark:text-gray-400 dark:hover:text-yellow-400 rounded transition-colors" title="Archiver">
               <Archive size={15} />
             </button>
           )}
@@ -244,7 +244,7 @@ function PlatformPolicyViewModal({
           </div>
 
           {policy.summary && (
-            <div className="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <div className="bg-blue-50 dark:bg-blue-900/50 border-l-4 border-blue-500 p-4 rounded-r-lg">
               <p className="text-sm text-blue-800 dark:text-blue-300">{policy.summary}</p>
             </div>
           )}
@@ -271,6 +271,7 @@ function PlatformPolicyViewModal({
           </div>
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-5">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Contenu de la politique</h4>
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
               {policy.content ? <SimpleMarkdown content={policy.content} /> : (
                 <p className="text-sm text-gray-400 italic">Aucun contenu redige</p>
@@ -450,7 +451,7 @@ function PlatformPolicyEditor({
 
   // Sync form when policy changes
   const policyId = policy?.id;
-  useState(() => {
+  useEffect(() => {
     if (policy) {
       setTitle(policy.title);
       setSummary(policy.summary);
@@ -458,8 +459,15 @@ function PlatformPolicyEditor({
       setType(policy.type);
       setScope(policy.scope);
       setVersion(policy.version);
+    } else {
+      setTitle('');
+      setSummary('');
+      setContent('');
+      setType('platform_rule');
+      setScope('global');
+      setVersion('1.0');
     }
-  });
+  }, [policyId, open]);
 
   const handleSave = () => {
     if (!title.trim() || !content.trim()) {
@@ -820,12 +828,12 @@ function CompaniesTab({ page }: { page: ReturnType<typeof usePolicyManagement> }
                   <td className="px-4 py-4 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       <button onClick={() => page.handleShowDetails(policy)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-colors" title="Details">
+                        className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded transition-colors" title="Details">
                         <Eye size={15} />
                       </button>
                       {policy.complianceStatus !== 'compliant' && (
                         <button onClick={() => { page.updateComplianceStatus(policy.id, 'compliant'); toast.success('Marque conforme'); }}
-                          className="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400 rounded transition-colors" title="Marquer conforme">
+                          className="p-1.5 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 rounded transition-colors" title="Marquer conforme">
                           <CheckCircle size={15} />
                         </button>
                       )}
@@ -962,17 +970,17 @@ function RulesTab({ page }: { page: ReturnType<typeof usePolicyManagement> }) {
                   <td className="px-4 py-4 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       <button onClick={() => page.handleShowDetails(rule)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-colors" title="Details">
+                        className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded transition-colors" title="Details">
                         <Eye size={15} />
                       </button>
                       <button
                         onClick={() => { page.togglePolicyStatus(rule.id); toast.success(`Regle ${rule.status === 'active' ? 'desactivee' : 'activee'}`); }}
-                        className="p-1.5 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 rounded transition-colors"
+                        className="p-1.5 text-gray-500 hover:text-yellow-600 dark:text-gray-400 dark:hover:text-yellow-400 rounded transition-colors"
                         title={rule.status === 'active' ? 'Desactiver' : 'Activer'}>
                         <Power size={15} />
                       </button>
                       <button onClick={() => setConfirmDelete(rule.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors" title="Supprimer">
+                        className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded transition-colors" title="Supprimer">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -1016,13 +1024,13 @@ export function PolicyManagement() {
   const page = usePolicyManagement();
 
   return (
-    <div className={PAGE_CLASSES.container}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 transition-colors">
       <div className={PAGE_CLASSES.content}>
         {/* Header */}
         <div className={PAGE_CLASSES.header}>
           <div className={PAGE_CLASSES.headerContent}>
             <div className={PAGE_CLASSES.headerTexts}>
-              <h2 className="text-3xl text-gray-900 dark:text-white mb-2">Politiques & Conditions</h2>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Politiques & Conditions</h2>
               <p className="text-gray-600 dark:text-gray-400">
                 Pages legales, politiques societes et regles plateforme
               </p>

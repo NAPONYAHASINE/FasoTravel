@@ -74,6 +74,7 @@ import { OperatorDetailPage } from './pages/OperatorDetailPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { RatingReviewPage } from './pages/RatingReviewPage';
 import { OTPVerificationPage } from './pages/OTPVerificationPage';
+import { ReferralPage } from './pages/ReferralPage';
 import { Toaster } from './components/ui/sonner';
 import { AdModal } from './components/AdModal';
 
@@ -99,6 +100,7 @@ export type Page =
   | 'edit-profile'
   | 'rating-review'
   | 'terms-conditions'
+  | 'referral'
   | 'chat';
 
 interface User {
@@ -111,6 +113,17 @@ interface User {
   loginIdentifier?: string;
 }
 
+export interface PaymentPreparationData {
+  paymentMethod: string;
+  payerPhone?: string;
+  payerLabel?: string;
+  cardHolderName?: string;
+  cardNumber?: string;
+  cardExpiry?: string;
+  cardCvv?: string;
+  appliedCoupon?: any; // Coupon applied on PaymentPage, preserved through OTP flow
+}
+
 interface AppState {
   currentPage: Page;
   user: User | null;
@@ -121,11 +134,13 @@ interface AppState {
   selectedTicketId?: string;
   selectedOperatorId?: string;
   selectedPaymentMethod?: string; // Payment method selected before OTP
+  selectedPaymentPayload?: PaymentPreparationData;
   reservationData?: any;
   trackingTripId?: string; // For tracking live vehicle location from ticket detail
   profileData?: { name: string; email: string; phone: string }; // Updated profile data
   tripData?: { trip_id: string; operator_id: string; operator_name: string; from_stop_name: string; to_stop_name: string; departure_time: string; arrival_time: string; ticket_id: string }; // Trip data for rating page
-  otpData?: { identifier: string; mode: 'auth' | 'payment'; returnPage: Page; paymentMethod?: string }; // OTP verification data
+  otpData?: { identifier: string; mode: 'auth' | 'payment'; returnPage: Page; paymentMethod?: string; paymentPayload?: PaymentPreparationData }; // OTP verification data
+  pendingCoupon?: any; // Coupon pre-applied from ReferralPage "Utiliser"
   history: Page[];
 }
 
@@ -237,7 +252,7 @@ export default function App() {
     const publicPages: Page[] = ['landing', 'auth', 'otp-verification', 'terms-conditions', 'home', 'nearby', 'search-results', 'operators', 'operator-detail'];
     
     // Pages protégées (nécessitent authentification)
-    const protectedPages: Page[] = ['trip-detail', 'seat-selection', 'payment', 'tickets', 'support', 'profile', 'edit-profile', 'rating-review'];
+    const protectedPages: Page[] = ['trip-detail', 'seat-selection', 'payment', 'tickets', 'support', 'profile', 'edit-profile', 'rating-review', 'referral'];
     
     // Si c'est une page protégée et l'utilisateur n'est pas connecté, rediriger vers auth
     if (protectedPages.includes(page) && !appState.user) {
@@ -282,7 +297,8 @@ export default function App() {
       } : {}),
       ...(page === 'payment' && data ? { 
         reservationData: data.paymentMethod ? prev.reservationData : data,
-        selectedPaymentMethod: data.paymentMethod
+        selectedPaymentMethod: data.paymentMethod,
+        selectedPaymentPayload: data.paymentPayload
       } : {}),
       ...(page === 'payment-success' && data ? { reservationData: data } : {}),
       ...(page === 'otp-verification' && data ? { otpData: data } : {}),
@@ -291,6 +307,10 @@ export default function App() {
       ...(page === 'nearby' && data ? { trackingTripId: data } : {}), // Pass tripId for tracking
       ...(page === 'profile' && data && data.name ? { profileData: data } : {}), // Save updated profile data
       ...(page === 'rating-review' && data ? { tripData: data } : {}), // Pass trip data for rating page
+      // Persist pendingCoupon from referral page
+      ...(page === 'home' && data?.pendingCoupon ? { pendingCoupon: data.pendingCoupon } : {}),
+      // Clear pendingCoupon on payment success
+      ...(page === 'payment-success' ? { pendingCoupon: undefined } : {}),
     }));
   };
 
@@ -351,6 +371,7 @@ export default function App() {
         // Quand on revient depuis le paiement, nettoyer reservationData pour éviter
         // la corruption d'état (reservationData.passengers est un tableau, pas un nombre)
         ...(prev.currentPage === 'payment' ? { reservationData: undefined } : {}),
+        ...(prev.currentPage === 'payment' ? { selectedPaymentMethod: undefined, selectedPaymentPayload: undefined } : {}),
       }));
     } else {
       // Default fallback - if authenticated go home, else landing
@@ -399,7 +420,8 @@ export default function App() {
               } else if (appState.otpData!.mode === 'payment') {
                 // Continue to return page for payment with preserved paymentMethod
                 navigateTo(appState.otpData!.returnPage, { 
-                  paymentMethod: appState.otpData!.paymentMethod 
+                  paymentMethod: appState.otpData!.paymentMethod,
+                  paymentPayload: appState.otpData!.paymentPayload,
                 });
               }
             }}
@@ -470,6 +492,8 @@ export default function App() {
           <PaymentPage
             reservationData={appState.reservationData}
             selectedPaymentMethod={appState.selectedPaymentMethod}
+            selectedPaymentPayload={appState.selectedPaymentPayload}
+            pendingCoupon={appState.pendingCoupon}
             onNavigate={navigateTo}
             onBack={goBack}
           />
@@ -595,6 +619,14 @@ export default function App() {
           <RatingReviewPage
             onNavigate={navigateTo}
             tripData={appState.tripData}
+          />
+        );
+
+      case 'referral':
+        return (
+          <ReferralPage
+            onNavigate={navigateTo}
+            onBack={goBack}
           />
         );
 

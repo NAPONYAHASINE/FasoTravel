@@ -33,6 +33,9 @@ import {
   AudienceSegment,
   ChannelStat,
   WeeklyNotifStat,
+  Referral,
+  ReferralCoupon,
+  ReferralStats,
 } from '../shared/types/standardized';
 
 // Import mock data
@@ -63,6 +66,9 @@ import {
   MOCK_AUDIENCE_SEGMENTS,
   MOCK_CHANNEL_STATS,
   MOCK_WEEKLY_NOTIF_STATS,
+  MOCK_REFERRALS,
+  MOCK_REFERRAL_COUPONS,
+  MOCK_REFERRAL_STATS,
 } from '../lib/adminMockData';
 
 // ============================================================================
@@ -1439,6 +1445,86 @@ class OperatorServicesService {
 }
 
 // ============================================================================
+// REFERRALS SERVICE (Parrainage)
+// ============================================================================
+
+class ReferralsService {
+  private mockData = MOCK_REFERRALS;
+  private mockCoupons = MOCK_REFERRAL_COUPONS;
+
+  private createAuditLog(action: string, entityId: string, changes?: any) {
+    if (AppConfig.isMock) {
+      const newLog: AuditLog = {
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: 'admin_001',
+        userName: 'Admin FasoTravel',
+        action,
+        entityType: 'referral',
+        entityId,
+        changes,
+        ipAddress: '127.0.0.1',
+        userAgent: navigator.userAgent || 'Unknown',
+        createdAt: new Date().toISOString()
+      };
+      MOCK_AUDIT_LOGS.unshift(newLog);
+    }
+  }
+
+  async getAll(): Promise<ApiResponse<Referral[]>> {
+    if (AppConfig.isMock) {
+      return { success: true, data: this.mockData };
+    }
+    return await apiService.get('/admin/referrals');
+  }
+
+  async getById(id: string): Promise<ApiResponse<Referral>> {
+    if (AppConfig.isMock) {
+      const item = this.mockData.find(r => r.id === id);
+      if (!item) return { success: false, error: 'Parrainage non trouvé' };
+      return { success: true, data: item };
+    }
+    return await apiService.get(`/admin/referrals/${id}`);
+  }
+
+  /** Get all referrals where a specific user is the referrer */
+  async getUserReferrals(userId: string): Promise<ApiResponse<Referral[]>> {
+    if (AppConfig.isMock) {
+      const items = this.mockData.filter(r => r.referrerUserId === userId);
+      return { success: true, data: items };
+    }
+    return await apiService.get(`/admin/referrals/user/${userId}`);
+  }
+
+  /** Toggle referral system on/off */
+  async toggleConfig(enabled: boolean, reason?: string): Promise<ApiResponse<ReferralStats>> {
+    if (AppConfig.isMock) {
+      MOCK_REFERRAL_STATS.config.enabled = enabled;
+      MOCK_REFERRAL_STATS.config.updatedAt = new Date().toISOString();
+      MOCK_REFERRAL_STATS.config.updatedBy = 'Admin FasoTravel';
+      if (!enabled && reason) MOCK_REFERRAL_STATS.config.disabledReason = reason;
+      else delete MOCK_REFERRAL_STATS.config.disabledReason;
+      this.createAuditLog('referral_config_toggle', 'config', { enabled, reason });
+      return { success: true, data: MOCK_REFERRAL_STATS };
+    }
+    return await apiService.post('/admin/referrals/config', { enabled, reason });
+  }
+
+  async getStats(): Promise<ApiResponse<ReferralStats>> {
+    if (AppConfig.isMock) {
+      return { success: true, data: MOCK_REFERRAL_STATS };
+    }
+    return await apiService.get('/admin/referrals/stats');
+  }
+
+  async getCoupons(): Promise<ApiResponse<ReferralCoupon[]>> {
+    if (AppConfig.isMock) {
+      return { success: true, data: this.mockCoupons };
+    }
+    return await apiService.get('/admin/referrals/coupons');
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -1460,6 +1546,7 @@ export const reviewsService = new ReviewsService();
 export const userSessionsService = new UserSessionsService();
 export const operatorPoliciesService = new OperatorPoliciesService();
 export const operatorServicesService = new OperatorServicesService();
+export const referralsService = new ReferralsService();
 
 // Re-export notification types for backward compatibility
 export type { AutomationRule, SentCampaign, NotifTemplate, ScheduledNotification, NotifStats, AudienceSegment, ChannelStat, WeeklyNotifStat } from '../shared/types/standardized';

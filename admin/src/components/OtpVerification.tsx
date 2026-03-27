@@ -5,7 +5,7 @@
  * FLUX: Login (email/password) → OTP Verification → Dashboard
  * 
  * En mode Mock: le code OTP est affiché dans la console + accepte "000000"
- * En production: le code est envoyé par email via Infobip
+ * En production: le code est envoyé via WhatsApp Business ou email selon le canal
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -52,7 +52,7 @@ export function OtpVerification() {
   if (!ctx?.otpPending && !ctx?.isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  if (ctx?.isAuthenticated && !success) {
+  if (ctx?.isAuthenticated && !ctx?.otpPending && !success) {
     return <Navigate to="/" replace />;
   }
 
@@ -355,7 +355,7 @@ export function OtpVerification() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500 dark:text-gray-500">
-              © 2026 FasoTravel · Sécurisé par Infobip
+              © 2026 FasoTravel · Sécurisé par WhatsApp Business
             </p>
           </div>
         </div>

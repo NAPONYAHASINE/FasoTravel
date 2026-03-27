@@ -18,7 +18,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { MOCK_TRIPS } from '../data/models';
 import { BookingStepIndicator } from '../components/BookingStepIndicator';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
 import { useSeats } from '../lib/hooks';
 
@@ -129,7 +129,8 @@ export function SeatSelectionPage({
     };
     setPassengersInfo(updatedPassengers);
 
-    if (choice === 'self') {
+    // If profile name is missing, force manual entry even for "self"
+    if (choice === 'self' && autoName) {
       setStep('seat-selection');
     } else {
       setStep('passenger-info');
@@ -189,10 +190,18 @@ export function SeatSelectionPage({
 
   const handleNextPassenger = () => {
     const currentSeat = selectedSeats[currentPassengerIndex];
+    const currentPassenger = passengersInfo[currentPassengerIndex];
     
     if (!currentSeat) {
       feedback.error();
       alert('Veuillez sélectionner un siège pour ce passager');
+      return;
+    }
+
+    if (!isReturnLeg && !currentPassenger.name.trim()) {
+      feedback.error();
+      alert(`Veuillez renseigner les informations du passager ${currentPassengerIndex + 1}`);
+      setStep('passenger-info');
       return;
     }
 
@@ -217,10 +226,10 @@ export function SeatSelectionPage({
     }
 
     const normalizedPassengersInfo = passengersInfo.map((passenger) => {
-      if (passenger.bookingFor === 'self' && !passenger.name.trim()) {
+      if (passenger.bookingFor === 'self' && !passenger.name.trim() && resolvedUserName) {
         return {
           ...passenger,
-          name: resolvedUserName || 'Passager FasoTravel',
+          name: resolvedUserName,
           phone: passenger.phone || resolvedUserPhone,
         };
       }
@@ -229,9 +238,9 @@ export function SeatSelectionPage({
 
     for (let i = 0; i < passengers; i++) {
       const passenger = normalizedPassengersInfo[i];
-      if (!passenger.name) {
+      if (!passenger.name?.trim()) {
         feedback.error();
-        alert(`Veuillez renseigner le nom du passager ${i + 1}`);
+        alert(`Veuillez renseigner les informations du passager ${i + 1}`);
         return;
       }
       // phone remains optional — no blocking validation
@@ -420,13 +429,18 @@ export function SeatSelectionPage({
             </div>
           </motion.div>
 
+          {/* STEP 1 / 2 / 3 – wrapped in AnimatePresence to prevent removeChild crash */}
+          <AnimatePresence mode="wait">
+
           {/* STEP 1: Pour qui réservez-vous ? (seulement pour le trajet aller) */}
           {step === 'booking-for' && !isReturnLeg && (
             <motion.div 
+              key={`booking-for-${currentPassengerIndex}`}
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.18 }}
             >
               <div className="flex items-center gap-2 mb-4">
                 <User className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -479,9 +493,12 @@ export function SeatSelectionPage({
           {/* STEP 2: Informations passager (si 'other' et pas trajet retour) */}
           {step === 'passenger-info' && !isReturnLeg && (
             <motion.div 
+              key={`passenger-info-${currentPassengerIndex}`}
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.18 }}
             >
               <div className="flex items-center gap-2 mb-4">
                 <User className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -541,7 +558,13 @@ export function SeatSelectionPage({
 
           {/* STEP 3: Sélection des sièges */}
           {step === 'seat-selection' && (
-            <>
+            <motion.div
+              key={`seat-selection-${currentPassengerIndex}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
               <SeatMap
                 layout={seatLayout || undefined}  // ✅ Configuration dynamique depuis backend
                 occupiedSeats={{
@@ -659,8 +682,10 @@ export function SeatSelectionPage({
                   }
                 </p>
               </motion.div>
-            </>
+            </motion.div>
           )}
+
+          </AnimatePresence>
         </div>
       </motion.div>
     </div>

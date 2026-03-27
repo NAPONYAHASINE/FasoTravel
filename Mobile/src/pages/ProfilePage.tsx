@@ -11,7 +11,7 @@ import type { Page } from '../App';
  */
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, User, Globe, Bell, MapPin, Download, LogOut, Shield } from 'lucide-react';
+import { ArrowLeft, User, Globe, Bell, MapPin, Download, LogOut, Shield, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
 import { setLanguage, Language } from '../lib/i18n';
@@ -339,6 +339,31 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
           </motion.div>
 
           {/* About */}
+          
+          {/* Parrainage */}
+          <motion.div 
+            className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-5 sm:p-6 shadow-lg cursor-pointer"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.53 }}
+            onClick={() => {
+              feedback.tap();
+              onNavigate('referral');
+            }}
+          >
+            <div className="flex items-center gap-3 text-white">
+              <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-xl">
+                🎁
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold">Parrainage</h3>
+                <p className="text-xs text-white/80">Invite tes amis et gagne des réductions</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/60" />
+            </div>
+          </motion.div>
+
+          {/* About old */}
           <motion.div 
             className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl p-5 sm:p-6 shadow-lg"
             initial={{ opacity: 0, y: 20 }}

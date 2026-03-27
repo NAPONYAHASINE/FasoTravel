@@ -23,7 +23,9 @@ import {
   ArrowUpRight, ArrowDownRight, Minus,
   RefreshCw, Download, PieChart, GitBranch, Zap, Shield,
   AlertTriangle, CircleDollarSign, Info, Edit3, Check, X,
+  Gift,
 } from 'lucide-react';
+import type { ReferralStats } from '../../shared/types/standardized';
 import { PAGE_CLASSES, COMPONENTS } from '../../lib/design-system';
 import {
   useFinancialFlow,
@@ -186,7 +188,7 @@ function FlowKPIGrid({ data, model }: {
     {
       label: 'Marge Nette',
       value: formatCFA(data.netMargin),
-      sub: `Après coûts tech ${formatCFA(TOTAL_TECH_COST)}/mois`,
+      sub: `Après dépenses ${formatCFA(data.totalExpenses)}/mois (tech + parrainage)`,
       iconColor: data.netMargin > 0 ? 'text-emerald-500' : 'text-red-500',
       bgColor: data.netMargin > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20',
       trend: (data.netMargin > 0 ? 'up' : 'down') as 'up' | 'down',
@@ -471,6 +473,60 @@ function PayDunyaChannels({ channels, cashAudit }: {
   );
 }
 
+/** Dépenses Parrainage (coupons approuvés/utilisés) */
+function ReferralCostCard({ referralStats }: { referralStats: ReferralStats | null }) {
+  if (!referralStats) return null;
+
+  const { totalCouponsCost, totalCouponsGenerated, totalCouponsUsed, config } = referralStats;
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`p-2.5 rounded-xl text-white ${
+          config.enabled
+            ? 'bg-gradient-to-br from-green-500 to-emerald-600'
+            : 'bg-gradient-to-br from-gray-400 to-gray-500'
+        }`}>
+          <Gift className="h-5 w-5" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-gray-900 dark:text-white">Dépenses Parrainage</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {config.enabled ? 'Système actif' : 'Système désactivé'}
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-xl text-red-600 dark:text-red-400">{formatCFA(totalCouponsCost)}</div>
+          <div className="text-xs text-gray-500">dépensé</div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Coupons générés</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white">{totalCouponsGenerated}</span>
+        </div>
+        <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Coupons utilisés (coût réel)</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white">{totalCouponsUsed}</span>
+        </div>
+      </div>
+
+      {totalCouponsCost > 0 && (
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-xs">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-500" />
+            <span className="text-red-700 dark:text-red-400">
+              Les coupons de parrainage représentent un coût de {formatCFA(totalCouponsCost)} intégré dans le calcul de la marge nette.
+              Coût moyen par coupon : {formatCFA(totalCouponsUsed > 0 ? Math.round(totalCouponsCost / totalCouponsUsed) : 0)}.
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Coûts tech mensuels */
 function TechCostBreakdown() {
   return (
@@ -536,8 +592,9 @@ function TechCostBreakdown() {
 }
 
 /** Modèle économique — AVEC BOUTONS D'ÉDITION */
-function BusinessModelCard({ ticketCount, model, actions }: {
+function BusinessModelCard({ ticketCount, referralCosts, model, actions }: {
   ticketCount: number;
+  referralCosts: number;
   model: ReturnType<typeof useFinancialFlow>['model'];
   actions: ReturnType<typeof useFinancialFlow>['actions'];
 }) {
@@ -546,6 +603,7 @@ function BusinessModelCard({ ticketCount, model, actions }: {
   const commissionRev = Math.floor(totalVolume * (model.commissionRate / 100));
   const feeRev = ticketCount * model.serviceFeePerTicket;
   const totalPlatform = commissionRev + feeRev;
+  const totalExpenses = TOTAL_TECH_COST + referralCosts;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -647,11 +705,17 @@ function BusinessModelCard({ ticketCount, model, actions }: {
               <span className="text-gray-600 dark:text-gray-400">- Coûts tech mensuels</span>
               <span className="text-red-500">-{formatCFA(TOTAL_TECH_COST)}</span>
             </div>
+            {referralCosts > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">- Coûts parrainage (coupons)</span>
+                <span className="text-red-500">-{formatCFA(referralCosts)}</span>
+              </div>
+            )}
             <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
             <div className="flex justify-between">
               <span className="text-gray-900 dark:text-white">Marge nette</span>
-              <span className={totalPlatform - TOTAL_TECH_COST > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}>
-                {formatCFA(totalPlatform - TOTAL_TECH_COST)}
+              <span className={totalPlatform - totalExpenses > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}>
+                {formatCFA(totalPlatform - totalExpenses)}
               </span>
             </div>
           </div>
@@ -880,7 +944,7 @@ export function FinancialFlow() {
                   </div>
                 )}
               </div>
-              <BusinessModelCard ticketCount={data.ticketCount} model={model} actions={actions} />
+              <BusinessModelCard ticketCount={data.ticketCount} referralCosts={data.referralCosts} model={model} actions={actions} />
             </div>
 
             {/* Canaux + Coûts tech */}
@@ -889,6 +953,11 @@ export function FinancialFlow() {
               <div className="lg:col-span-2">
                 <TechCostBreakdown />
               </div>
+            </div>
+
+            {/* Dépenses Parrainage */}
+            <div className="mb-6">
+              <ReferralCostCard referralStats={data.referralStats} />
             </div>
 
             {/* Tableau sociétés */}

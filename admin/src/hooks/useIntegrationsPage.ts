@@ -8,20 +8,20 @@
  * - Pas de spinner bloquant
  * - Test de connexion via service (pas de fake delay inline)
  * - Alertes configurables par integration
- * - Services dedies Infobip + AWS
+ * - Services dedies WhatsApp Business + AWS
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useIntegrations, useIntegrationActions, useFeatureFlags, useFeatureFlagActions } from './useEntities';
 import { usePaydunYa } from './usePaydunYa';
 import { integrationsService, featureFlagsService } from '../services/entitiesService';
-import { infobipService } from '../services/infobipService';
+import { whatsappService } from '../services/infobipService';
 import { awsStorageService } from '../services/awsStorageService';
 import { alertsService } from '../services/alertsService';
 import type {
   Integration,
   IntegrationAlertRule, IntegrationAlert,
-  InfobipAccountInfo, AwsHealthReport,
+  WhatsAppAccountInfo, AwsHealthReport,
 } from '../shared/types/standardized';
 import { toast } from 'sonner@2.0.3';
 
@@ -94,7 +94,7 @@ export function useIntegrationsPage() {
   const alertsLoadedRef = useRef(false);
 
   // --- Dedicated services state ---
-  const [infobipAccount, setInfobipAccount] = useState<InfobipAccountInfo | null>(null);
+  const [whatsappAccount, setWhatsappAccount] = useState<WhatsAppAccountInfo | null>(null);
   const [awsHealth, setAwsHealth] = useState<AwsHealthReport | null>(null);
   const [serviceLoading, setServiceLoading] = useState<Record<string, boolean>>({});
 
@@ -364,27 +364,27 @@ export function useIntegrationsPage() {
     toast.success('Alerte acquittee');
   }, [refreshAlerts]);
 
-  // --- Infobip dedicated actions ---
+  // --- WhatsApp Business dedicated actions ---
 
-  const loadInfobipAccount = useCallback(async () => {
+  const loadWhatsAppAccount = useCallback(async () => {
     setServiceLoading(prev => ({ ...prev, infobip: true }));
     try {
-      const res = await infobipService.getAccountInfo();
-      if (res.success && res.data) setInfobipAccount(res.data);
+      const res = await whatsappService.getAccountInfo();
+      if (res.success && res.data) setWhatsappAccount(res.data);
     } finally {
       setServiceLoading(prev => ({ ...prev, infobip: false }));
     }
   }, []);
 
-  const infobipHealthCheck = useCallback(async () => {
+  const whatsappHealthCheck = useCallback(async () => {
     setServiceLoading(prev => ({ ...prev, infobipHealth: true }));
     try {
-      const res = await infobipService.healthCheck();
+      const res = await whatsappService.healthCheck();
       if (res.success && res.data) {
         if (res.data.apiReachable) {
-          toast.success(`Infobip OK — ${res.data.latencyMs}ms, Sender ID ${res.data.senderIdActive ? 'actif' : 'inactif'}`);
+          toast.success(`WhatsApp Business OK — ${res.data.latencyMs}ms, Sender ID ${res.data.senderIdActive ? 'actif' : 'inactif'}`);
         } else {
-          toast.error('Infobip API non joignable');
+          toast.error('WhatsApp Business API non joignable');
         }
       }
       return res.data;
@@ -397,14 +397,14 @@ export function useIntegrationsPage() {
     if (!testSmsPhone) { toast.error('Numero requis'); return; }
     setServiceLoading(prev => ({ ...prev, testSms: true }));
     try {
-      const res = await infobipService.sendTestSms(testSmsPhone);
+      const res = await whatsappService.sendTestSms(testSmsPhone);
       if (res.success && res.data) {
         if (res.data.success) {
-          toast.success(`SMS envoye a ${res.data.to} — ${res.data.deliveryTime}s`);
+          toast.success(`Message envoyé à ${res.data.to} — ${res.data.deliveryTime}s`);
           setShowTestSmsModal(false);
           setTestSmsPhone('');
         } else {
-          toast.error(res.data.errorMessage || 'Echec envoi SMS');
+          toast.error(res.data.errorMessage || 'Echec envoi message WhatsApp');
         }
       }
     } finally {
@@ -459,7 +459,7 @@ export function useIntegrationsPage() {
     paydunya, integrations, nonPaymentIntegrations, featureFlags,
     stats, filteredIntegrations,
     alertRules, alerts,
-    infobipAccount, awsHealth,
+    whatsappAccount, awsHealth,
     serviceLoading,
 
     // UI state
@@ -503,8 +503,8 @@ export function useIntegrationsPage() {
       confirmDeleteRule, deleteAlertRule,
       cancelDeleteRule: () => setShowDeleteRuleConfirm(null),
       acknowledgeAlert,
-      // Infobip
-      loadInfobipAccount, infobipHealthCheck, sendTestSms,
+      // WhatsApp Business
+      loadWhatsAppAccount, whatsappHealthCheck, sendTestSms,
       openTestSmsModal: () => { setTestSmsPhone(''); setShowTestSmsModal(true); },
       // AWS
       loadAwsHealth, purgeCdnCache, restartLightsail,
