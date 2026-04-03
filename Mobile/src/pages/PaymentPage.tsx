@@ -149,6 +149,7 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, selectedPa
     cardExpiry: cardExpiry.trim() || undefined,
     cardCvv: cardCvv.trim() || undefined,
     appliedCoupon: appliedCoupon || undefined,
+    computedTotalToPay: priceBreakdown.totalToPay,
   });
 
   // ============================================
@@ -278,12 +279,13 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, selectedPa
         feedback.payment();
         showConfetti();
         setTimeout(() => {
+          const finalTotal = selectedPaymentPayload?.computedTotalToPay ?? priceBreakdown.totalToPay;
           onNavigate('payment-success', { 
             ...reservationData,
             ticketId: ticket.id, 
             bookingId: booking.id,
             paymentId: payment.id,
-            totalPaid: priceBreakdown.totalToPay 
+            totalPaid: finalTotal 
           });
         }, 2000);
       } else {
@@ -301,13 +303,12 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, selectedPa
     }
   };
 
-  // Auto-process payment after returning from OTP
+  // Auto-process payment after returning from OTP — wait for paymentMethods to load
   useEffect(() => {
-    // If we've just returned from OTP verification with paymentMethod set, auto-process
-    if (selectedPaymentMethod && selectedPaymentPayload && paymentMethod && !isProcessing && paymentStatus === null) {
+    if (selectedPaymentMethod && selectedPaymentPayload && paymentMethod && !isProcessing && paymentStatus === null && !methodsLoading) {
       handlePaymentProcess();
     }
-  }, [selectedPaymentMethod, selectedPaymentPayload]);
+  }, [selectedPaymentMethod, selectedPaymentPayload, methodsLoading]);
 
   // Handle payment - navigate to OTP verification first
   const handlePayment = () => {

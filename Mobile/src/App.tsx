@@ -122,6 +122,7 @@ export interface PaymentPreparationData {
   cardExpiry?: string;
   cardCvv?: string;
   appliedCoupon?: any; // Coupon applied on PaymentPage, preserved through OTP flow
+  computedTotalToPay?: number; // Total calculated BEFORE OTP, preserved through round-trip
 }
 
 interface AppState {

@@ -9,14 +9,14 @@
  * - Validation: from et to obligatoires
  */
 
-import { useState, useEffect } from 'react';
-import { Search, MapPin, Calendar, Building2, Users } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, Calendar, Building2, Users, ChevronDown, Check } from 'lucide-react';
 import { t } from '../lib/i18n';
 import type { Page } from '../App';
 import { ContextualHelp, HelpButton } from '../components/ContextualHelp';
 import { AnimatedButton } from '../components/AnimatedButton';
 import { StoriesCircle } from '../components/StoriesCircle';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import brandLogo from '../assets/brand/logo.png';
 import { feedback } from '../lib/interactions';
 import { useStations, usePopularRoutes, useUnreadNotificationCount } from '../lib/hooks';
@@ -50,6 +50,33 @@ export function HomePage({ userName, onSearch, onNavigate }: HomePageProps) {
   const [passengers, setPassengers] = useState(1);
   const [showHelp, setShowHelp] = useState(false);
   const [forceShowHelp, setForceShowHelp] = useState(false);  // Added: to track manual button clicks
+  const [openDropdown, setOpenDropdown] = useState<'from' | 'to' | 'passengers' | null>(null);
+  const [citySearch, setCitySearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+        setCitySearch('');
+      }
+    };
+    if (openDropdown) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
+
+  // Auto-focus search input when dropdown opens
+  useEffect(() => {
+    if ((openDropdown === 'from' || openDropdown === 'to') && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [openDropdown]);
+
+  const filteredStations = stations.filter(s =>
+    s.city.toLowerCase().includes(citySearch.toLowerCase())
+  );
 
   const helpTips = [
     {
@@ -303,49 +330,129 @@ export function HomePage({ userName, onSearch, onNavigate }: HomePageProps) {
             >
               <div>
                 <label className="block text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-1.5">D'où partez-vous ?</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
-                  <select
-                    value={from}
-                    onChange={(e) => setFrom(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 hover:border-amber-400 dark:hover:border-amber-600 focus:border-amber-500 dark:focus:border-amber-500 focus:outline-none transition-colors"
-                    disabled={stationsLoading}
-                    title="Ville de départ"
-                    aria-label="Ville de départ"
-                  >
-                    <option value="">
-                      {stationsLoading ? 'Chargement...' : 'Choisir la ville de départ'}
-                    </option>
-                    {stations.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.city}
-                      </option>
-                    ))}
-                  </select>
+                <div className="relative" ref={openDropdown === 'from' ? dropdownRef : undefined}>
+                  {openDropdown === 'from' ? (
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        placeholder="Rechercher une ville..."
+                        className="w-full pl-10 pr-3 py-2.5 sm:py-3 border-2 border-amber-500 dark:border-amber-500 rounded-xl text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none transition-colors"
+                      />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-180 transition-transform" />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setOpenDropdown('from'); setCitySearch(''); feedback.tap(); }}
+                      className="w-full flex items-center pl-10 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 hover:border-amber-400 dark:hover:border-amber-600 focus:border-amber-500 dark:focus:border-amber-500 focus:outline-none transition-colors text-left"
+                      disabled={stationsLoading}
+                    >
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
+                      <span className={from ? 'text-gray-900 dark:text-gray-100 flex-1' : 'text-gray-400 dark:text-gray-500 flex-1'}>
+                        {from ? stations.find(s => s.id === from)?.city : (stationsLoading ? 'Chargement...' : 'Choisir la ville de départ')}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-gray-400 transition-transform" />
+                    </button>
+                  )}
+                  <AnimatePresence>
+                    {openDropdown === 'from' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                        exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border-2 border-amber-300 dark:border-amber-600 rounded-xl shadow-xl overflow-hidden origin-top"
+                      >
+                        <div className="max-h-52 overflow-y-auto py-1">
+                          {filteredStations.length === 0 ? (
+                            <p className="px-4 py-3 text-sm text-gray-400 text-center">Aucune ville trouvée</p>
+                          ) : filteredStations.map((station) => (
+                            <button
+                              key={station.id}
+                              type="button"
+                              onClick={() => { setFrom(station.id); setOpenDropdown(null); setCitySearch(''); feedback.tap(); }}
+                              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
+                                from === station.id
+                                  ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                  : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                              }`}
+                            >
+                              <span>{station.city}</span>
+                              {from === station.id && <Check className="w-4 h-4 text-amber-500" />}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-1.5">Où allez-vous ?</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
-                  <select
-                    value={to}
-                    onChange={(e) => setTo(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 hover:border-green-400 dark:hover:border-green-600 focus:border-green-500 dark:focus:border-green-500 focus:outline-none transition-colors"
-                    disabled={stationsLoading}
-                    title="Ville d'arrivée"
-                    aria-label="Ville d'arrivée"
-                  >
-                    <option value="">
-                      {stationsLoading ? 'Chargement...' : "Choisir la ville d'arrivée"}
-                    </option>
-                    {stations.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.city}
-                      </option>
-                    ))}
-                  </select>
+                <div className="relative" ref={openDropdown === 'to' ? dropdownRef : undefined}>
+                  {openDropdown === 'to' ? (
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        placeholder="Rechercher une ville..."
+                        className="w-full pl-10 pr-3 py-2.5 sm:py-3 border-2 border-green-500 dark:border-green-500 rounded-xl text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none transition-colors"
+                      />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-180 transition-transform" />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setOpenDropdown('to'); setCitySearch(''); feedback.tap(); }}
+                      className="w-full flex items-center pl-10 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 hover:border-green-400 dark:hover:border-green-600 focus:border-green-500 dark:focus:border-green-500 focus:outline-none transition-colors text-left"
+                      disabled={stationsLoading}
+                    >
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                      <span className={to ? 'text-gray-900 dark:text-gray-100 flex-1' : 'text-gray-400 dark:text-gray-500 flex-1'}>
+                        {to ? stations.find(s => s.id === to)?.city : (stationsLoading ? 'Chargement...' : "Choisir la ville d'arrivée")}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-gray-400 transition-transform" />
+                    </button>
+                  )}
+                  <AnimatePresence>
+                    {openDropdown === 'to' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                        exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border-2 border-green-300 dark:border-green-600 rounded-xl shadow-xl overflow-hidden origin-top"
+                      >
+                        <div className="max-h-52 overflow-y-auto py-1">
+                          {filteredStations.length === 0 ? (
+                            <p className="px-4 py-3 text-sm text-gray-400 text-center">Aucune ville trouvée</p>
+                          ) : filteredStations.map((station) => (
+                            <button
+                              key={station.id}
+                              type="button"
+                              onClick={() => { setTo(station.id); setOpenDropdown(null); setCitySearch(''); feedback.tap(); }}
+                              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
+                                to === station.id
+                                  ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                  : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                              }`}
+                            >
+                              <span>{station.city}</span>
+                              {to === station.id && <Check className="w-4 h-4 text-green-500" />}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
@@ -389,19 +496,47 @@ export function HomePage({ userName, onSearch, onNavigate }: HomePageProps) {
 
               <div>
                 <label className="block text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-1.5">Combien de passagers ?</label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
-                  <select
-                    value={passengers}
-                    onChange={(e) => setPassengers(Number(e.target.value))}
-                    className="w-full pl-10 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 hover:border-green-400 dark:hover:border-green-600 focus:border-green-500 dark:focus:border-green-500 focus:outline-none transition-colors"
-                    title="Nombre de passagers"
-                    aria-label="Nombre de passagers"
+                <div className="relative" ref={openDropdown === 'passengers' ? dropdownRef : undefined}>
+                  <button
+                    type="button"
+                    onClick={() => { setOpenDropdown(openDropdown === 'passengers' ? null : 'passengers'); feedback.tap(); }}
+                    className="w-full flex items-center pl-10 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 hover:border-green-400 dark:hover:border-green-600 focus:border-green-500 dark:focus:border-green-500 focus:outline-none transition-colors text-left"
                   >
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
-                      <option key={num} value={num}>{num} {num === 1 ? 'passager' : 'passagers'}</option>
-                    ))}
-                  </select>
+                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                    <span className="text-gray-900 dark:text-gray-100 flex-1">
+                      {passengers} {passengers === 1 ? 'passager' : 'passagers'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${openDropdown === 'passengers' ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {openDropdown === 'passengers' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                        exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border-2 border-green-300 dark:border-green-600 rounded-xl shadow-xl overflow-hidden origin-top"
+                      >
+                        <div className="max-h-52 overflow-y-auto py-1">
+                          {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => { setPassengers(num); setOpenDropdown(null); feedback.tap(); }}
+                              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
+                                passengers === num
+                                  ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                  : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                              }`}
+                            >
+                              <span>{num} {num === 1 ? 'passager' : 'passagers'}</span>
+                              {passengers === num && <Check className="w-4 h-4 text-green-500" />}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </motion.div>

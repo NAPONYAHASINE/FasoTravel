@@ -1,7 +1,7 @@
 # 🏗️ FasoTravel — Blueprint Complet du Backend
 
-**Date:** Juin 2025  
-**Version:** 1.0  
+**Date:** Avril 2026  
+**Version:** 1.1  
 **Statut:** Document de construction — à suivre étape par étape
 
 ---
@@ -35,7 +35,7 @@ FasoTravel est une plateforme de réservation de transport routier au Burkina Fa
 | **Mobile** | :3000 | App passager (Capacitor) | Voyageurs |
 | **Admin** | :3002 | Dashboard administration | Admins FasoTravel |
 | **Societe** | :3001 | App société de transport | Opérateurs, caissiers, managers |
-| **Backend** | :3000/api | API NestJS (À CONSTRUIRE) | Toutes les apps |
+| **Backend** | :3003/api | API NestJS (À CONSTRUIRE) | Toutes les apps |
 
 ### Flux Principal
 ```
@@ -429,7 +429,7 @@ Les migrations SQL sont dans `Mobile/src/migrations/`. Ces tables sont **déjà 
 
 ### 5.2 Tables MANQUANTES (à créer — Migration 014+)
 
-Ces 19 tables sont référencées dans le frontend mais n'ont PAS de migration SQL :
+Ces 20 tables sont référencées dans le frontend mais n'ont PAS de migration SQL :
 
 #### Migration 014: Referral / Parrainage
 ```sql
@@ -836,8 +836,8 @@ CREATE INDEX idx_vehicle_locations_trip ON vehicle_locations(trip_id, recorded_a
 | # | Statut | Tables | Migration |
 |---|--------|--------|-----------|
 | 31 | ✅ Existantes | users, operators, stations, vehicles, trips, segments, seats, bookings, tickets, etc. | 001-013 |
-| 19 | 🔴 Manquantes | referrals, referral_coupons, referral_config, platform_policies, audit_logs, security_events, blocked_ips, support_tickets, support_messages, incidents, integrations, integration_alert_rules, integration_alerts, paydunya_config, paydunya_webhook_logs, notification_templates, notification_campaigns, scheduled_notifications, automation_rules, vehicle_locations | 014-021 |
-| **50** | **Total** | | |
+| 20 | 🔴 Manquantes | referrals, referral_coupons, referral_config, platform_policies, audit_logs, security_events, blocked_ips, support_tickets, support_messages, incidents, integrations, integration_alert_rules, integration_alerts, paydunya_config, paydunya_webhook_logs, notification_templates, notification_campaigns, scheduled_notifications, automation_rules, vehicle_locations | 014-021 |
+| **51** | **Total** | | |
 
 ---
 
@@ -850,13 +850,16 @@ Les endpoints sont définis par les 3 frontends. Le backend doit implémenter TO
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
 | POST | `/auth/login` | Login email + mot de passe | Toutes |
-| POST | `/auth/register` | Inscription passager | Mobile |
+| POST | `/auth/register` | Inscription (passager ou opérateur) | Mobile, Societe |
 | POST | `/auth/logout` | Déconnexion | Toutes |
 | POST | `/auth/verify-otp` | Vérification OTP (SMS via Infobip) | Mobile |
 | POST | `/auth/resend-otp` | Renvoyer OTP | Mobile |
-| POST | `/auth/refresh-token` | Renouveler JWT | Toutes |
+| POST | `/auth/refresh-token` | Renouveler JWT | Mobile, Societe |
+| POST | `/auth/refresh` | Renouveler JWT (alias) | Admin |
 | GET | `/auth/me` | Profil utilisateur courant | Toutes |
 | POST | `/auth/reset-password` | Réinitialisation mot de passe | Toutes |
+
+> **Note:** L'Admin utilise `/auth/refresh` et Mobile/Societe utilisent `/auth/refresh-token`. Le backend doit supporter les deux ou unifier sur un seul endpoint.
 
 **Flux OTP Mobile:**
 ```
@@ -970,15 +973,36 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | DELETE | `/stations/:id` | Supprimer | Admin |
 | GET | `/stations/:id/stats` | Statistiques | Admin |
 
-### 6.8 Stories (`/stories/`)
+### 6.8 Stories (`/stories/`, `/admin/stories/`, `/admin/story-circles/`)
+
+**Côté Mobile :**
 
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
-| GET | `/stories` | Toutes les stories | Admin |
 | GET | `/stories/active` | Stories actives | Mobile |
-| POST | `/stories` | Créer story | Admin |
 | POST | `/stories/mark-viewed` | Marquer comme vue | Mobile |
 | GET | `/stories/viewed` | Stories vues par user | Mobile |
+| GET | `/operators/:id/stories` | Stories d'un opérateur | Mobile |
+
+**Côté Admin — CRUD Stories :**
+
+| Méthode | Endpoint | Description | Apps |
+|---------|----------|-------------|------|
+| GET | `/admin/stories` | Toutes les stories (admin) | Admin |
+| POST | `/admin/stories` | Créer story | Admin |
+| PUT | `/admin/stories/:id` | Modifier story | Admin |
+| PUT | `/admin/stories/:id/publish` | Publier story | Admin |
+| PUT | `/admin/stories/:id/archive` | Archiver story | Admin |
+| DELETE | `/admin/stories/:id` | Supprimer story | Admin |
+
+**Côté Admin — CRUD Story Circles (catégories) :**
+
+| Méthode | Endpoint | Description | Apps |
+|---------|----------|-------------|------|
+| GET | `/admin/story-circles` | Liste des cercles | Admin |
+| POST | `/admin/story-circles` | Créer cercle | Admin |
+| PUT | `/admin/story-circles/:id` | Modifier cercle | Admin |
+| DELETE | `/admin/story-circles/:id` | Supprimer cercle | Admin |
 
 ### 6.9 Publicités (`/ads/`)
 
@@ -1027,13 +1051,19 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | POST | `/referrals/validate` | Valider code parrainage | Mobile |
 | POST | `/referrals/coupons/validate` | Valider coupon | Mobile |
 | POST | `/referrals/coupons/use` | Utiliser coupon | Mobile |
-| GET | `/admin/referrals` | Liste parrainages | Admin |
+| GET | `/admin/referrals` | Liste parrainages (filtres, pagination) | Admin |
+| GET | `/admin/referrals/:id` | Détail parrainage | Admin |
 | GET | `/admin/referrals/stats` | Statistiques | Admin |
 | GET | `/admin/referrals/config` | Config parrainage | Admin |
-| GET | `/admin/referrals/coupons` | Tous les coupons | Admin |
+| GET | `/admin/referrals/coupons` | Tous les coupons (filtres) | Admin |
+| POST | `/admin/referrals/coupons` | Créer coupon | Admin |
 | GET | `/admin/referrals/user/:userId` | Parrainages d'un user | Admin |
 
-### 6.13 Support (`/support/`, `/tickets/`)
+### 6.13 Support (`/support/`, `/support-tickets/`, `/incidents/`)
+
+> ⚠️ **ATTENTION COLLISION `/tickets`:** L'Admin utilise `/tickets` pour les tickets support, mais Mobile et Societe utilisent `/tickets` pour les billets de transport. Le backend DOIT séparer ces deux concepts :
+> - **Billets de transport** → `/tickets` (section 6.4)
+> - **Tickets support** → `/support-tickets` (cette section)
 
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
@@ -1044,11 +1074,15 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | GET | `/support/incidents/:id` | Détail incident | Mobile |
 | POST | `/support/incidents/:id/close` | Fermer incident | Mobile |
 | POST | `/support/assistant/chat` | Chat assistant IA | Mobile |
-| GET | `/tickets` | Liste tickets support | Admin |
-| GET | `/tickets/:id` | Détail ticket | Admin |
-| POST | `/tickets/:id/messages` | Répondre | Admin |
-| POST | `/tickets/:id/close` | Clôturer | Admin |
+| GET | `/support-tickets` | Liste tickets support | Admin |
+| GET | `/support-tickets/:id` | Détail ticket | Admin |
+| POST | `/support-tickets` | Créer ticket | Admin |
+| PUT | `/support-tickets/:id` | Modifier ticket | Admin |
+| POST | `/support-tickets/:id/messages` | Répondre | Admin |
+| POST | `/support-tickets/:id/close` | Clôturer | Admin |
 | GET | `/incidents` | Liste incidents | Admin |
+| POST | `/incidents` | Créer incident | Admin |
+| PUT | `/incidents/:id` | Modifier incident | Admin |
 | POST | `/incidents/:id/resolve` | Résoudre | Admin |
 | POST | `/incidents/:id/assign` | Assigner | Admin |
 
@@ -1057,18 +1091,24 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
 | GET | `/policies/platform?status=published` | CGU publiées | Mobile |
-| GET | `/policies/platform` | Liste admin | Admin |
+| GET | `/policies/platform` | Liste admin (filtres) | Admin |
 | GET | `/policies/platform/:id` | Détail | Admin |
 | POST | `/policies/platform` | Créer | Admin |
 | PUT | `/policies/platform/:id` | Modifier | Admin |
 | DELETE | `/policies/platform/:id` | Supprimer | Admin |
 | POST | `/policies/platform/:id/publish` | Publier | Admin |
 | POST | `/policies/platform/:id/archive` | Archiver | Admin |
-| GET | `/policies/operator` | Règles opérateurs | Admin |
+| GET | `/policies/operator` | Règles opérateurs (filtres) | Admin |
+| GET | `/policies/operator/:id` | Détail règle | Admin |
 | POST | `/policies/operator` | Créer règle | Admin |
 | PUT | `/policies/operator/:id` | Modifier | Admin |
+| DELETE | `/policies/operator/:id` | Supprimer règle | Admin |
+| POST | `/policies/operator/:id/toggle-status` | Activer/désactiver | Admin |
+| PUT | `/policies/operator/:id/compliance` | Mettre à jour conformité | Admin |
 
-### 6.15 Notifications (`/notifications/`)
+### 6.15 Notifications (`/notifications/`, `/admin/notifications/`)
+
+**Notifications utilisateur (toutes apps):**
 
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
@@ -1077,7 +1117,32 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | POST | `/notifications/read-all` | Tout marquer lu | Toutes |
 | DELETE | `/notifications/:id` | Supprimer | Toutes |
 
-### 6.16 Utilisateurs (`/users/`, `/user/`)
+**Centre de notifications admin (Admin uniquement):**
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/admin/notifications` | Inbox notifications admin |
+| POST | `/admin/notifications` | Créer notification |
+| PUT | `/admin/notifications/:id/read` | Marquer lue |
+| POST | `/admin/notifications/send-bulk` | Envoyer campagne (immédiate ou programmée) |
+| GET | `/admin/notifications/stats` | Statistiques globales notifications |
+| GET | `/admin/notifications/stats/channels` | Stats par canal (push/email/whatsapp) |
+| GET | `/admin/notifications/stats/weekly` | Stats hebdomadaires |
+| GET | `/admin/notifications/audiences` | Segments d'audience disponibles |
+| GET | `/admin/notifications/history` | Historique campagnes envoyées |
+| GET | `/admin/notifications/templates` | Liste templates |
+| POST | `/admin/notifications/templates` | Créer template |
+| PUT | `/admin/notifications/templates/:id` | Modifier template |
+| DELETE | `/admin/notifications/templates/:id` | Supprimer template |
+| PUT | `/admin/notifications/templates/:id/use` | Utiliser template (incrémente compteur) |
+| GET | `/admin/notifications/automations` | Liste règles d'automatisation |
+| POST | `/admin/notifications/automations` | Créer règle |
+| PUT | `/admin/notifications/automations/:id` | Modifier / Activer / Désactiver règle |
+| DELETE | `/admin/notifications/automations/:id` | Supprimer règle |
+| GET | `/admin/notifications/scheduled` | Notifications programmées |
+| PUT | `/admin/notifications/scheduled/:id/cancel` | Annuler programmation |
+
+### 6.16 Utilisateurs (`/users/`, `/user/`, `/admin/passengers/`)
 
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
@@ -1085,7 +1150,7 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | PUT | `/user/profile` | Modifier profil | Mobile |
 | GET | `/user/export` | Exporter mes données | Mobile |
 | DELETE | `/user/delete` | Supprimer compte | Mobile |
-| GET | `/users` | Liste utilisateurs | Admin |
+| GET | `/users` | Liste utilisateurs (admin générique) | Admin |
 | GET | `/users/:id` | Détail | Admin |
 | POST | `/users` | Créer | Admin |
 | PUT | `/users/:id` | Modifier | Admin |
@@ -1093,7 +1158,22 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | POST | `/users/:id/block` | Bloquer | Admin |
 | POST | `/users/:id/unblock` | Débloquer | Admin |
 
-### 6.17 Dashboard (`/dashboard/`)
+**Gestion passagers (Admin — service dédié):**
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/admin/passengers` | Liste passagers |
+| GET | `/admin/passengers/:id` | Détail passager |
+| PATCH | `/admin/passengers/:id` | Modifier passager |
+| POST | `/admin/passengers/:id/suspend` | Suspendre (avec raison) |
+| POST | `/admin/passengers/:id/reactivate` | Réactiver |
+| POST | `/admin/passengers/:id/reset-password` | Reset mot de passe |
+| DELETE | `/admin/passengers/:id` | Supprimer passager |
+| POST | `/admin/passengers/:id/notify` | Envoyer notification |
+
+> **Note:** `/users/*` et `/admin/passengers/*` gèrent le même type d'entité. Le backend peut router les deux vers le même service avec des filtres différents, ou unifier sur un seul préfixe.
+
+### 6.17 Dashboard & Analytics (`/dashboard/`, `/admin/analytics/`, `/admin/dashboard/`)
 
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
@@ -1101,6 +1181,10 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | GET | `/dashboard/stats` | Statistiques globales | Admin |
 | GET | `/dashboard/recent-activity` | Activité récente | Admin |
 | GET | `/dashboard/realtime-map` | Carte temps réel | Admin |
+| GET | `/admin/dashboard/stats` | Stats dashboard (KPIs résumés) | Admin |
+| GET | `/admin/analytics/platform` | Métriques croissance plateforme (période) | Admin |
+| GET | `/admin/analytics/registrations` | Inscriptions hebdomadaires (période) | Admin |
+| GET | `/admin/analytics/stations/activity` | Activité par gare (période) | Admin |
 
 ### 6.18 Sécurité (`/admin/security/`, `/sessions/`)
 
@@ -1115,12 +1199,17 @@ CRON: Chaque minute, expire les HOLD > 10 min
 | POST | `/admin/security/sessions/:id/revoke` | Révoquer session | Admin |
 | POST | `/admin/security/sessions/revoke-others` | Révoquer toutes | Admin |
 | GET | `/admin/security/events` | Événements sécurité | Admin |
-| GET | `/sessions` | Liste sessions | Admin |
+| GET | `/sessions` | Liste sessions (filtres, pagination) | Admin |
+| GET | `/sessions/:id` | Détail session | Admin |
+| GET | `/sessions/stats` | Statistiques sessions | Admin |
 | POST | `/sessions/:id/terminate` | Terminer session | Admin |
 | POST | `/sessions/terminate-bulk` | Terminer en masse | Admin |
+| POST | `/sessions/user/:userId/terminate` | Terminer sessions d'un user | Admin |
+| POST | `/sessions/terminate-suspicious` | Terminer sessions suspectes | Admin |
 | POST | `/sessions/block-ip` | Bloquer IP | Admin |
 | GET | `/sessions/blocked-ips` | IPs bloquées | Admin |
 | DELETE | `/sessions/blocked-ips/:ip` | Débloquer IP | Admin |
+| GET | `/sessions/export` | Exporter sessions (CSV/JSON) | Admin |
 
 ### 6.19 Logs & Audit (`/logs/`)
 
@@ -1193,18 +1282,53 @@ CRON: Chaque minute, expire les HOLD > 10 min
 
 ### 6.25 App Societe — Endpoints Spécifiques
 
+> Ces endpoints sont utilisés par l'app Societe (societe/src/services/config.ts). L'authentification utilise les mêmes endpoints `/auth/*` que les autres apps.
+
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| GET/POST | `/managers` | CRUD managers de gare |
-| GET/POST | `/cashiers` | CRUD caissiers |
-| GET/POST | `/routes` | CRUD routes (itinéraires) |
-| GET/POST | `/schedule-templates` | Modèles d'horaires récurrents |
-| GET/POST | `/price-segments` | Tarification par segment |
+| GET | `/managers` | Liste managers de gare |
+| POST | `/managers` | Créer manager |
+| PUT | `/managers/:id` | Modifier manager |
+| DELETE | `/managers/:id` | Supprimer manager |
+| GET | `/cashiers` | Liste caissiers |
+| POST | `/cashiers` | Créer caissier |
+| PUT | `/cashiers/:id` | Modifier caissier |
+| DELETE | `/cashiers/:id` | Supprimer caissier |
+| GET | `/routes` | Liste routes (itinéraires) |
+| POST | `/routes` | Créer route |
+| PUT | `/routes/:id` | Modifier route |
+| DELETE | `/routes/:id` | Supprimer route |
+| GET | `/schedule-templates` | Modèles d'horaires récurrents |
+| POST | `/schedule-templates` | Créer modèle |
+| PUT | `/schedule-templates/:id` | Modifier modèle |
+| DELETE | `/schedule-templates/:id` | Supprimer modèle |
+| GET | `/trips` | Liste trajets (filtrés par opérateur) |
+| POST | `/trips` | Créer trajet |
+| POST | `/trips/generate-from-templates` | Générer depuis modèles |
+| GET | `/tickets` | Liste billets vendus |
+| POST | `/tickets/:id/cancel` | Annuler billet |
+| POST | `/tickets/:id/refund` | Rembourser billet |
+| GET | `/price-segments` | Tarification par segment |
+| POST | `/price-segments` | Créer tarif segment |
+| PUT | `/price-segments/:id` | Modifier tarif |
 | GET | `/price-history` | Historique des prix |
-| GET/POST | `/cash-transactions` | Transactions caisse |
+| GET | `/stories` | Stories de l'opérateur |
 | POST | `/stories/upload` | Upload story |
+| GET | `/cash-transactions` | Transactions caisse |
+| POST | `/cash-transactions` | Enregistrer transaction |
 
-### 6.26 Vehicle Tracking
+### 6.26 Finances (`/admin/financial/`)
+
+| Méthode | Endpoint | Description | Apps |
+|---------|----------|-------------|------|
+| GET | `/admin/financial/metrics` | Dashboard métriques financières (revenu, commissions, taux) | Admin |
+| GET | `/admin/financial/daily-revenue?period=week` | Revenus journaliers par période (week/month/quarter/year) | Admin |
+| GET | `/admin/financial/payment-methods` | Stats par méthode de paiement | Admin |
+| GET | `/admin/financial/top-companies?limit=10` | Top sociétés par revenu | Admin |
+
+> **Note :** Les query params `period` et `limit` sont obligatoires côté frontend. Le backend doit les valider et fournir des valeurs par défaut (period=week, limit=10).
+
+### 6.27 Vehicle Tracking
 
 | Méthode | Endpoint | Description | Apps |
 |---------|----------|-------------|------|
@@ -2103,7 +2227,7 @@ ENCRYPTION_KEY=<32_BYTE_HEX_KEY>
 
 | Métrique | Valeur |
 |----------|--------|
-| **Tables DB totales** | 50 (31 existantes + 19 à créer) |
+| **Tables DB totales** | 51 (31 existantes + 20 à créer) |
 | **Endpoints API** | ~140 |
 | **Modules NestJS** | 22 |
 | **Intégrations externes** | 5 (PaydunYa, Infobip, Firebase, SendGrid, AWS) |
