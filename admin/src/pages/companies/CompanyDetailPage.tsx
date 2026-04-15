@@ -191,8 +191,8 @@ export default function CompanyDetailPage() {
                 <div className="text-gray-900 dark:text-white">{company.contactPersonName || 'Non renseigné'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Téléphone</div>
-                <div className="text-gray-900 dark:text-white">{company.contactPersonPhone || 'Non renseigné'}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">WhatsApp</div>
+                <div className="text-gray-900 dark:text-white">{company.contactPersonWhatsapp || 'Non renseigné'}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Email</div>

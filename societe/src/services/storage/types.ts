@@ -32,7 +32,8 @@ export type StorageKey =
   | 'auth_token'
   | 'auth_user'
   | 'refresh_token'
-  | 'token_expires_at';
+  | 'token_expires_at'
+  | '_pending_otp_user';
 
 /**
  * Mapping des clés vers leurs types
@@ -53,6 +54,7 @@ export interface StorageTypeMap {
   auth_user: any; // Type User à définir
   refresh_token: string;
   token_expires_at: string;
+  _pending_otp_user: any;
 }
 
 /**

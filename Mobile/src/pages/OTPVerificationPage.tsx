@@ -127,13 +127,19 @@ export function OTPVerificationPage({
     }
   };
 
-  // Détect contact type
-  const isEmail = identifier.includes('@');
+  // Détect contact type — les logins téléphone utilisent {phone}@phone.transportbf.bf
+  const isPhoneSynthetic = identifier.endsWith('@phone.transportbf.bf');
+  const isEmail = identifier.includes('@') && !isPhoneSynthetic;
   const contactType = isEmail ? 'adresse e-mail' : 'numéro WhatsApp';
   
+  // Pour les identifiants téléphone synthétiques, extraire le numéro
+  const displayIdentifier = isPhoneSynthetic 
+    ? identifier.replace('@phone.transportbf.bf', '')
+    : identifier;
+  
   const maskedIdentifier = isEmail 
-    ? identifier.substring(0, 3) + '***' + identifier.substring(identifier.lastIndexOf('@') - 2)
-    : identifier.replace(/(\d)(?=(\d{2})+(?!\d))/g, '*');
+    ? displayIdentifier.substring(0, 3) + '***' + displayIdentifier.substring(displayIdentifier.lastIndexOf('@') - 2)
+    : displayIdentifier.replace(/(\d)(?=(\d{2})+(?!\d))/g, '*');
 
   return (
     <div
@@ -338,7 +344,9 @@ export function OTPVerificationPage({
             className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
           >
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              💡 <strong>Conseil :</strong> Vérifiez aussi WhatsApp et vos e-mails indésirables si vous ne recevez pas le code.
+              💡 <strong>Conseil :</strong> {isEmail 
+                ? 'Vérifiez vos e-mails indésirables si vous ne recevez pas le code.'
+                : 'Vérifiez vos messages WhatsApp si vous ne recevez pas le code.'}
             </p>
           </motion.div>
         </div>

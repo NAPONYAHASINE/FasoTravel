@@ -181,7 +181,7 @@ export interface UpdateStationDto {
 export interface CreateManagerDto {
   name: string;
   email: string;
-  phone: string;
+  whatsapp: string;
   gareId: string;
   gareName: string;
   status: 'active' | 'inactive';
@@ -191,7 +191,7 @@ export interface CreateManagerDto {
 export interface UpdateManagerDto {
   name?: string;
   email?: string;
-  phone?: string;
+  whatsapp?: string;
   gareId?: string;
   gareName?: string;
   status?: 'active' | 'inactive';
@@ -204,7 +204,7 @@ export interface UpdateManagerDto {
 export interface CreateCashierDto {
   name: string;
   email: string;
-  phone: string;
+  whatsapp: string;
   gareId: string;
   gareName: string;
   managerId: string;
@@ -215,7 +215,7 @@ export interface CreateCashierDto {
 export interface UpdateCashierDto {
   name?: string;
   email?: string;
-  phone?: string;
+  whatsapp?: string;
   gareId?: string;
   gareName?: string;
   managerId?: string;

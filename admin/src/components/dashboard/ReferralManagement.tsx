@@ -29,6 +29,8 @@ import {
   Eye,
   X,
   Wallet,
+  Ban,
+  XCircle,
 } from 'lucide-react';
 import { StatCard } from '../ui/stat-card';
 import { PAGE_CLASSES } from '../../lib/design-system';
@@ -39,7 +41,7 @@ import type { Referral, ReferralCoupon, ReferralStats, ReferralBadgeLevel } from
 import { POINTS_PER_REFERRAL } from '../../shared/types/standardized';
 
 type TabKey = 'overview' | 'referrals' | 'coupons';
-type CouponStatusFilter = 'all' | 'active' | 'used' | 'expired';
+type CouponStatusFilter = 'all' | 'active' | 'used' | 'expired' | 'cancelled';
 
 const BADGE_CONFIG: Record<ReferralBadgeLevel, { label: string; color: string; bg: string; emoji: string }> = {
   standard: { label: 'Standard', color: 'text-gray-600', bg: 'bg-gray-100 dark:bg-gray-700', emoji: '🌱' },
@@ -52,6 +54,7 @@ const COUPON_STATUS_BADGE: Record<ReferralCoupon['status'], { label: string; ico
   active: { label: 'Actif', icon: CheckCircle2, classes: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' },
   used: { label: 'Utilisé', icon: null, classes: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' },
   expired: { label: 'Expiré', icon: Clock, classes: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
+  cancelled: { label: 'Annulé', icon: XCircle, classes: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' },
 };
 
 function ReferralManagement() {
@@ -75,6 +78,12 @@ function ReferralManagement() {
   // Toggle config dialog
   const [toggleDialogOpen, setToggleDialogOpen] = useState(false);
   const [disableReason, setDisableReason] = useState('');
+
+  // Cancel coupon dialog
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelCouponTarget, setCancelCouponTarget] = useState<ReferralCoupon | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -129,6 +138,34 @@ function ReferralManagement() {
       }
     } catch {
       toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  // === CANCEL COUPON ===
+  const openCancelDialog = (coupon: ReferralCoupon) => {
+    setCancelCouponTarget(coupon);
+    setCancelReason('');
+    setCancelDialogOpen(true);
+  };
+
+  const handleCancelCoupon = async () => {
+    if (!cancelCouponTarget || !cancelReason.trim()) return;
+    setCancelLoading(true);
+    try {
+      const res = await referralsService.cancelCoupon(cancelCouponTarget.id, cancelReason.trim());
+      if (res.success) {
+        setCoupons(prev => prev.map(c => c.id === cancelCouponTarget.id ? { ...c, status: 'cancelled' as const, cancelledAt: new Date().toISOString(), cancelReason: cancelReason.trim() } : c));
+        toast.success(`Coupon ${cancelCouponTarget.code} annulé`);
+        setCancelDialogOpen(false);
+        setCancelCouponTarget(null);
+        setCancelReason('');
+      } else {
+        toast.error(res.error || 'Erreur lors de l\'annulation');
+      }
+    } catch {
+      toast.error('Erreur lors de l\'annulation du coupon');
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -517,6 +554,7 @@ function ReferralManagement() {
                   <option value="active">Actif</option>
                   <option value="used">Utilisé</option>
                   <option value="expired">Expiré</option>
+                  <option value="cancelled">Annulé</option>
                 </select>
                 <button
                   onClick={handleExportCoupons}
@@ -586,9 +624,21 @@ function ReferralManagement() {
                             </p>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <span className="text-xs text-gray-400">
-                              {new Date(coupon.expiresAt).toLocaleDateString('fr-FR')}
-                            </span>
+                            {coupon.status === 'active' ? (
+                              <button
+                                onClick={() => openCancelDialog(coupon)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                              >
+                                <Ban className="w-3.5 h-3.5" />
+                                Annuler
+                              </button>
+                            ) : coupon.status === 'cancelled' && coupon.cancelReason ? (
+                              <span className="text-xs text-gray-400 italic" title={coupon.cancelReason}>
+                                {coupon.cancelReason.length > 30 ? coupon.cancelReason.slice(0, 30) + '...' : coupon.cancelReason}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -693,6 +743,85 @@ function ReferralManagement() {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
                 Désactiver
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================== CANCEL COUPON DIALOG =================== */}
+      {cancelDialogOpen && cancelCouponTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setCancelDialogOpen(false); setCancelCouponTarget(null); setCancelReason(''); }}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <Ban className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Annuler le coupon
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Cette action est irréversible
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">Code</span>
+                  <span className="font-mono font-semibold text-gray-900 dark:text-white">{cancelCouponTarget.code}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">Montant</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{cancelCouponTarget.amount} FCFA</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">Utilisateur</span>
+                  <span className="text-gray-900 dark:text-white">{cancelCouponTarget.userName || cancelCouponTarget.userId}</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Raison de l'annulation <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  placeholder="Ex: Fraude détectée, demande de l'utilisateur..."
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  rows={3}
+                  maxLength={500}
+                />
+                <p className="text-xs text-gray-400 mt-1">{cancelReason.length}/500</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => { setCancelDialogOpen(false); setCancelCouponTarget(null); setCancelReason(''); }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                disabled={cancelLoading}
+              >
+                Fermer
+              </button>
+              <button
+                onClick={handleCancelCoupon}
+                disabled={cancelLoading || !cancelReason.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {cancelLoading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Annulation...
+                  </>
+                ) : (
+                  <>
+                    <Ban className="w-4 h-4" />
+                    Confirmer l'annulation
+                  </>
+                )}
               </button>
             </div>
           </div>

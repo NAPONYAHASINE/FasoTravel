@@ -3,14 +3,17 @@ import { BaseEntity } from './base.entity';
 
 @Entity('stations')
 export class Station extends BaseEntity {
-  @PrimaryColumn({ name: 'station_id', type: 'varchar', length: 50 })
-  stationId: string;
+  @PrimaryColumn({ type: 'varchar', length: 50 })
+  id: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
   @Column({ type: 'varchar', length: 100 })
   city: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  region: string;
 
   @Column({ type: 'numeric', precision: 10, scale: 8, nullable: true })
   latitude: number;
@@ -47,6 +50,34 @@ export class Station extends BaseEntity {
   })
   contactPhone: string;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive: boolean;
+  @Column({
+    name: 'contact_person',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  contactPerson: string;
+
+  @Column({ type: 'int', nullable: true })
+  capacity: number;
+
+  @Column({ type: 'varchar', length: 20, default: 'active' })
+  status: string;
+
+  @Column({ name: 'manager_id', type: 'varchar', length: 50, nullable: true })
+  managerId: string;
+
+  @Column({
+    name: 'manager_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  managerName: string;
+
+  @Column({ name: 'baggage_price', type: 'int', nullable: true })
+  baggagePrice: number;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  phone: string;
 }

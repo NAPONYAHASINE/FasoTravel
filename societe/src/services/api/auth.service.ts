@@ -25,14 +25,37 @@ class AuthService {
       const managers = storageService.get(STORAGE_MANAGERS) || [];
       const cashiers = storageService.get(STORAGE_CASHIERS) || [];
       
-      // Chercher l'utilisateur
-      const manager = managers.find((m: any) => m.email === data.email && m.password === data.password);
-      const cashier = cashiers.find((c: any) => c.email === data.email && c.password === data.password);
+      // Chercher l'utilisateur (par email ou whatsapp@phone.transportbf.bf)
+      const rawPhone = data.email.replace(/@phone\.transportbf\.bf$/, '');
+      const manager = managers.find((m: any) => m.email === data.email || m.whatsapp === rawPhone);
+      const cashier = cashiers.find((c: any) => c.email === data.email || c.whatsapp === rawPhone);
       
-      const user = manager || cashier;
+      let user: any = manager || cashier;
 
       if (!user) {
-        throw new Error('Email ou mot de passe incorrect');
+        // Comptes démo : inférer le rôle depuis le numéro WhatsApp de démo
+        const demoRoles: Record<string, string> = {
+          '70000001': 'responsable',
+          '70000002': 'manager',
+          '70000003': 'cashier',
+        };
+        const inferredRole = demoRoles[rawPhone];
+
+        if (inferredRole) {
+          user = {
+            id: inferredRole === 'manager' ? 'mgr_dev_1' : inferredRole === 'cashier' ? 'cash_dev_1' : 'resp_1',
+            name: inferredRole === 'manager' ? 'Manager Dev' : inferredRole === 'cashier' ? 'Caissier Dev' : 'Jean Ouédraogo',
+            email: data.email,
+            whatsapp: rawPhone,
+            role: inferredRole,
+            status: 'active',
+            companyId: 'soc_1',
+            companyName: 'TSR - Transport Sayouba Rasmané',
+            ...(inferredRole !== 'responsable' ? { gareId: 'gare_1', gareName: 'Gare Ouaga Centre' } : {}),
+          };
+        } else {
+          throw new Error('Numéro WhatsApp ou mot de passe incorrect');
+        }
       }
 
       // Vérifier le statut
@@ -40,42 +63,44 @@ class AuthService {
         throw new Error('Compte inactif');
       }
 
+      // Étape 1 : retourner otpRequired (ne PAS sauvegarder de session)
+      // On stocke temporairement l'user pour que verifyOtp puisse le retrouver
+      storageService.set('_pending_otp_user', user);
+
       const authResponse: AuthResponse = {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: manager ? 'manager' : 'cashier',
-          status: 'active',
-          gareId: user.gareId,
-          gareName: user.gareName,
-        } as OperatorUser,
-        token: `mock_token_${user.id}`,
+        otpRequired: true,
+        identifier: data.email,
+        message: 'OTP envoyé sur votre WhatsApp (mode démo: entrez 123456)',
+        otpCode: '123456', // affiché en dev uniquement
       };
 
-      // Sauvegarder la session
-      storageService.set(STORAGE_AUTH_TOKEN, authResponse.token);
-      storageService.set(STORAGE_CURRENT_USER, authResponse.user);
-
-      logger.info('✅ Connexion réussie (local)', { 
-        user: authResponse.user.email, 
-        role: (authResponse.user as OperatorUser).role 
-      });
+      logger.info('📨 OTP requis (local)', { email: data.email, otpCode: '123456' });
 
       return authResponse;
     } else {
       // MODE API : Utiliser apiClient
       const authResponse = await apiClient.post<AuthResponse>(API_ENDPOINTS.auth.login, data);
 
+      // Si OTP requis (envoyé via WhatsApp), ne pas sauvegarder de tokens
+      if (authResponse.otpRequired) {
+        logger.info('📨 OTP requis via WhatsApp', { identifier: authResponse.identifier });
+        return authResponse;
+      }
+
       // Sauvegarder la session
-      storageService.set(STORAGE_AUTH_TOKEN, authResponse.token);
-      storageService.set(STORAGE_CURRENT_USER, authResponse.user);
+      if (authResponse.token) {
+        storageService.set(STORAGE_AUTH_TOKEN, authResponse.token);
+      }
+      if (authResponse.user) {
+        storageService.set(STORAGE_CURRENT_USER, authResponse.user);
+      }
       if (authResponse.refreshToken) {
         storageService.set(STORAGE_REFRESH_TOKEN, authResponse.refreshToken);
       }
 
 logger.info('✅ Connexion réussie (API)', {
-        user: authResponse.user.email,
-        role: (authResponse.user as OperatorUser).role 
+        user: authResponse.user?.email,
+        role: (authResponse.user as OperatorUser)?.role 
       });
 
       return authResponse;
@@ -178,6 +203,82 @@ logger.info('✅ Connexion réussie (API)', {
   hasRole(role: 'responsable' | 'manager' | 'cashier'): boolean {
     const user = this.getCurrentUser() as OperatorUser | null;
     return user?.role === role;
+  }
+
+  /**
+   * Vérifier un code OTP (après login WhatsApp)
+   */
+  async verifyOtp(identifier: string, code: string): Promise<AuthResponse> {
+    if (isDevelopment()) {
+      // Mock: accepter tout code de 6 chiffres
+      if (code.length !== 6) throw new Error('Code OTP invalide');
+
+      // Récupérer l'utilisateur stocké lors du login (étape 1)
+      const pendingUser = storageService.get('_pending_otp_user');
+      storageService.remove('_pending_otp_user');
+
+      if (!pendingUser) {
+        throw new Error('Session expirée, veuillez vous reconnecter');
+      }
+
+      const authResponse: AuthResponse = {
+        user: {
+          id: (pendingUser as any).id,
+          email: (pendingUser as any).email,
+          name: (pendingUser as any).name,
+          role: (pendingUser as any).role,
+          status: 'active',
+          gareId: (pendingUser as any).gareId,
+          gareName: (pendingUser as any).gareName,
+          companyId: (pendingUser as any).companyId,
+          companyName: (pendingUser as any).companyName,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as OperatorUser,
+        token: `mock_token_otp_${Date.now()}`,
+        refreshToken: `mock_refresh_otp_${Date.now()}`,
+        expiresIn: 3600,
+      };
+
+      // Sauvegarder la session
+      if (authResponse.token) {
+        storageService.set(STORAGE_AUTH_TOKEN, authResponse.token);
+      }
+      if (authResponse.user) {
+        storageService.set(STORAGE_CURRENT_USER, authResponse.user);
+      }
+
+      return authResponse;
+    }
+
+    const response = await apiClient.post<AuthResponse>(
+      API_ENDPOINTS.auth.verifyOtp,
+      { identifier, code, mode: 'auth' }
+    );
+
+    // Sauvegarder les tokens après vérification OTP réussie
+    if (response.token) {
+      storageService.set(STORAGE_AUTH_TOKEN, response.token);
+    }
+    if (response.user) {
+      storageService.set(STORAGE_CURRENT_USER, response.user);
+    }
+    if (response.refreshToken) {
+      storageService.set(STORAGE_REFRESH_TOKEN, response.refreshToken);
+    }
+
+    return response;
+  }
+
+  /**
+   * Renvoyer un code OTP
+   */
+  async resendOtp(email: string): Promise<{ message: string; otpCode?: string }> {
+    if (isDevelopment()) {
+      return { message: 'OTP renvoyé sur votre WhatsApp', otpCode: '123456' };
+    }
+
+    return apiClient.post(API_ENDPOINTS.auth.resendOtp, { email });
   }
 
   /**

@@ -117,7 +117,7 @@ export function TripDetailPage({ tripId, isRoundTrip = false, returnDate, passen
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <h1 className="text-2xl mb-1">{trip.from_stop_name} → {trip.to_stop_name}</h1>
+            <h1 className="text-xl sm:text-2xl mb-1 break-words">{trip.from_stop_name} → {trip.to_stop_name}</h1>
             <p className="text-sm opacity-90">{formatDate(trip.departure_time)}</p>
           </motion.div>
         </div>
@@ -341,10 +341,10 @@ export function TripDetailPage({ tripId, isRoundTrip = false, returnDate, passen
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Prix {isRoundTrip ? 'trajet aller' : 'total'}</p>
-                <p className="text-2xl text-gray-900 dark:text-white">
+                <p className="text-xl sm:text-2xl text-gray-900 dark:text-white truncate">
                   {(((trip.promoted_price ?? trip.base_price) * passengers) + (selectedBaggage ? (operator?.baggage_price || 0) : 0)).toLocaleString()} FCFA
                 </p>
                 {trip.promoted_price && trip.promoted_price < trip.base_price && (

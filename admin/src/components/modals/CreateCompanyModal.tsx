@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Building2, Mail, Phone, MapPin, Percent, User, FileText, Hash, Upload, Coffee, Wifi, Snowflake, Plug, Tv, Armchair, Luggage, Lock, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { X, Building2, Mail, Phone, MapPin, Percent, User, FileText, Hash, Upload, Coffee, Wifi, Snowflake, Plug, Tv, Armchair, Luggage, Lock, KeyRound, Eye, EyeOff, MessageSquare } from 'lucide-react';
 
 interface CreateCompanyModalProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
     registrationNumber: '',
     taxId: '',
     contactPersonName: '',
-    contactPersonPhone: '',
+    contactPersonWhatsapp: '',
     contactPersonEmail: '',
     managerPassword: '',
     managerPin: '',
@@ -77,7 +77,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
       registrationNumber: '',
       taxId: '',
       contactPersonName: '',
-      contactPersonPhone: '',
+      contactPersonWhatsapp: '',
       contactPersonEmail: '',
       managerPassword: '',
       managerPin: '',
@@ -258,18 +258,18 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
             </div>
           </div>
 
-          {/* Contact Person Phone */}
+          {/* Contact Person WhatsApp */}
           <div>
             <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-              Téléphone du contact *
+              WhatsApp du responsable *
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="tel"
                 required
-                value={formData.contactPersonPhone}
-                onChange={(e) => setFormData({ ...formData, contactPersonPhone: e.target.value })}
+                value={formData.contactPersonWhatsapp}
+                onChange={(e) => setFormData({ ...formData, contactPersonWhatsapp: e.target.value })}
                 className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="+226 XX XX XX XX"
               />

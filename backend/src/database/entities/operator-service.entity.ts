@@ -10,8 +10,8 @@ import {
 
 @Entity('operator_services')
 export class OperatorService {
-  @PrimaryColumn({ name: 'service_id', type: 'varchar', length: 50 })
-  serviceId: string;
+  @PrimaryColumn({ type: 'varchar', length: 50 })
+  id: string;
 
   @Column({ name: 'operator_id', type: 'varchar', length: 50 })
   operatorId: string;

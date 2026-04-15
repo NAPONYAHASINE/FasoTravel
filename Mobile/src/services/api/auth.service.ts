@@ -21,10 +21,12 @@ import type { User, AuthCredentials, AuthRegisterData, AuthResponse, PassengerUs
 class AuthService {
   /**
    * Login utilisateur
+   * Non-admin: backend renvoie { otpRequired, identifier } → OTP via WhatsApp
+   * Admin: backend renvoie { user, token, refreshToken } directement
    */
   async login(credentials: AuthCredentials): Promise<AuthResponse> {
     if (isDevelopment()) {
-      // Mock login
+      // Mock login — simule le flow OTP WhatsApp
       return this.mockLogin(credentials);
     }
 
@@ -33,7 +35,12 @@ class AuthService {
       credentials
     );
 
-    this.saveAuthData(response);
+    // Si OTP requis (non-admin), ne pas sauvegarder de tokens
+    if (response.otpRequired) {
+      return response;
+    }
+
+    this.saveAuthData(response as Required<Pick<AuthResponse, 'token' | 'user'>> & AuthResponse);
     return response;
   }
 
@@ -147,9 +154,15 @@ class AuthService {
    * Sauvegarde les données d'auth
    */
   private saveAuthData(response: AuthResponse): void {
-    storageService.set(STORAGE_AUTH_TOKEN, response.token);
-    storageService.set(STORAGE_REFRESH_TOKEN, response.refreshToken);
-    storageService.set(STORAGE_CURRENT_USER, response.user);
+    if (response.token) {
+      storageService.set(STORAGE_AUTH_TOKEN, response.token);
+    }
+    if (response.refreshToken) {
+      storageService.set(STORAGE_REFRESH_TOKEN, response.refreshToken);
+    }
+    if (response.user) {
+      storageService.set(STORAGE_CURRENT_USER, response.user);
+    }
     storageService.set(STORAGE_TOKEN_EXPIRES_AT, Date.now() + (response.expiresIn || 3600) * 1000);
   }
 
@@ -168,27 +181,13 @@ class AuthService {
   // ============================================
 
   private mockLogin(credentials: AuthCredentials): AuthResponse {
-    const mockUser: PassengerUser = {
-      id: 'user_1',
-      email: credentials.email,
-      phone: '+226 70 11 22 33',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'PASSENGER',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    // Mock: simule OTP WhatsApp pour les non-admin
+    return {
+      otpRequired: true,
+      identifier: credentials.email,
+      message: 'OTP envoyé sur votre WhatsApp',
+      otpCode: '123456', // dev only
     };
-
-    const mockResponse: AuthResponse = {
-      user: mockUser,
-      token: `mock_token_${Date.now()}`,
-      refreshToken: `mock_refresh_${Date.now()}`,
-      expiresIn: 3600,
-    };
-
-    this.saveAuthData(mockResponse);
-    return mockResponse;
   }
 
   private mockRegister(data: AuthRegisterData): AuthResponse {

@@ -180,7 +180,7 @@ class TransportCompaniesService {
         registrationNumber: data.registrationNumber,
         taxId: data.taxId,
         contactPersonName: data.contactPersonName,
-        contactPersonPhone: data.contactPersonPhone,
+        contactPersonWhatsapp: data.contactPersonWhatsapp,
         contactPersonEmail: data.contactPersonEmail,
         status: 'pending', // Nouvelle société en attente d'approbation
         commission: data.commission || 10,
@@ -1521,6 +1521,26 @@ class ReferralsService {
       return { success: true, data: this.mockCoupons };
     }
     return await apiService.get('/admin/referrals/coupons');
+  }
+
+  async cancelCoupon(
+    couponId: string,
+    reason: string,
+  ): Promise<ApiResponse<ReferralCoupon>> {
+    if (AppConfig.isMock) {
+      const index = this.mockCoupons.findIndex((c) => c.id === couponId);
+      if (index === -1) return { success: false, error: 'Coupon non trouvé' };
+      this.mockCoupons[index] = {
+        ...this.mockCoupons[index],
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString(),
+        cancelledBy: 'admin_001',
+        cancelReason: reason,
+      };
+      this.createAuditLog('coupon_cancelled', couponId, { reason });
+      return { success: true, data: this.mockCoupons[index] };
+    }
+    return await apiService.post(`/admin/referrals/coupons/${couponId}/cancel`, { reason });
   }
 }
 

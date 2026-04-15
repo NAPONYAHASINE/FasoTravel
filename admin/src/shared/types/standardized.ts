@@ -31,10 +31,13 @@ export interface ReferralCoupon {
   code: string;
   amount: number;
   pointsCost: number;
-  status: 'active' | 'used' | 'expired';
+  status: 'active' | 'used' | 'expired' | 'cancelled';
   createdAt: string;
   expiresAt: string;
   usedAt?: string;
+  cancelledAt?: string;
+  cancelledBy?: string;
+  cancelReason?: string;
 }
 
 export interface ReferralConfig {
@@ -176,7 +179,7 @@ export interface TransportCompany {
   
   // Contact person
   contactPersonName?: string;
-  contactPersonPhone?: string;
+  contactPersonWhatsapp?: string;
   contactPersonEmail?: string;
   
   vehicleCount?: number;

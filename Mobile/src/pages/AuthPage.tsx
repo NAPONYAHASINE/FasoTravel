@@ -10,7 +10,7 @@
 
 import type { Page } from '../App';
 import { useState, useEffect } from 'react';
-import { Mail, Lock, Phone, User, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Lock, Phone, User, Eye, EyeOff, UserPlus, Mail } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -33,11 +33,9 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
   const [isLoading, setIsLoading] = useState(false); // Loading state for API calls
   const [_globalError, setGlobalError] = useState<string>(''); // Global error message
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
   
   // Login
   const [loginPhone, setLoginPhone] = useState('');
-  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginErrors, setLoginErrors] = useState<{ identifier?: string; password?: string }>({});
   
@@ -89,18 +87,10 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
     setGlobalError('');
     const errors: { identifier?: string; password?: string } = {};
     
-    if (loginMethod === 'phone') {
-      if (!loginPhone) {
-        errors.identifier = 'Numéro WhatsApp requis';
-      } else if (!validatePhone(loginPhone)) {
-        errors.identifier = 'Format WhatsApp: 8 chiffres (ex: 70123456)';
-      }
-    } else {
-      if (!loginEmail) {
-        errors.identifier = 'Email requis';
-      } else if (!validateEmail(loginEmail)) {
-        errors.identifier = 'Email invalide';
-      }
+    if (!loginPhone) {
+      errors.identifier = 'Numéro WhatsApp requis';
+    } else if (!validatePhone(loginPhone)) {
+      errors.identifier = 'Format WhatsApp: 8 chiffres (ex: 70123456)';
     }
     
     if (!loginPassword) {
@@ -116,23 +106,36 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
       feedback.tap();
       
       try {
-        const identifier = loginMethod === 'phone' ? loginPhone : loginEmail;
         const response = await authService.login({
-          email: loginMethod === 'email' ? loginEmail : `${loginPhone}@phone.transportbf.bf`,
+          email: `${loginPhone}@phone.transportbf.bf`,
           password: loginPassword,
         });
 
         feedback.success();
 
+        if (response.otpRequired) {
+          // OTP requis — le backend a envoyé l'OTP via WhatsApp
+          // On passe à l'écran OTP avec les infos minimales
+          onAuth({
+            name: loginPhone,
+            email: response.identifier || `${loginPhone}@phone.transportbf.bf`,
+            phone: loginPhone,
+            isGuest: false,
+            loginIdentifier: loginPhone,
+          });
+          return;
+        }
+
+        // Admin ou réponse directe avec tokens
         const u = response.user as any;
         const userData = {
           name: u.firstName
             ? `${u.firstName} ${u.lastName || ''}`.trim()
-            : u.name || identifier,
+            : u.name || loginPhone,
           email: u.email || '',
           phone: u.phone || loginPhone || '',
           isGuest: false,
-          loginIdentifier: identifier,
+          loginIdentifier: loginPhone,
         };
 
         onAuth(userData);
@@ -211,8 +214,8 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
 
         const userData = {
           name: registerName,
-          email: response.user.email || registerEmail || '',
-          phone: (response.user as any).phone || registerPhone,
+          email: response.user?.email || registerEmail || '',
+          phone: (response.user as any)?.phone || registerPhone,
           isGuest: false,
           loginIdentifier: registerPhone,
         };
@@ -369,78 +372,26 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
                       exit={{ opacity: 0, x: 20 }}
                       className="space-y-4"
                     >
-                      {/* Toggle Login Method */}
-                      <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                        <button
-                          onClick={() => {
-                            feedback.tap();
-                            setLoginMethod('phone');
-                          }}
-                          className={`flex-1 py-2 px-3 rounded-md text-sm transition-all ${
-                            loginMethod === 'phone'
-                              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
-                              : 'text-gray-600 dark:text-gray-400'
-                          }`}
-                        >
-                          <Phone className="w-4 h-4 inline mr-1" />
-                          WhatsApp
-                        </button>
-                        <button
-                          onClick={() => {
-                            feedback.tap();
-                            setLoginMethod('email');
-                          }}
-                          className={`flex-1 py-2 px-3 rounded-md text-sm transition-all ${
-                            loginMethod === 'email'
-                              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
-                              : 'text-gray-600 dark:text-gray-400'
-                          }`}
-                        >
-                          <Mail className="w-4 h-4 inline mr-1" />
-                          Email
-                        </button>
+                      {/* WhatsApp Phone Input */}
+                      <div>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <Input
+                            type="tel"
+                            value={loginPhone}
+                            onChange={(e) => {
+                              setLoginPhone(e.target.value);
+                              setLoginErrors({ ...loginErrors, identifier: undefined });
+                            }}
+                            placeholder="Numéro WhatsApp (70123456)"
+                            maxLength={8}
+                            className={`pl-10 ${loginErrors.identifier ? 'border-red-500' : ''}`}
+                          />
+                        </div>
+                        {loginErrors.identifier && (
+                          <p className="text-xs text-red-500 mt-1">{loginErrors.identifier}</p>
+                        )}
                       </div>
-
-                      {loginMethod === 'phone' ? (
-                        <div>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <Input
-                              type="tel"
-                              value={loginPhone}
-                              onChange={(e) => {
-                                setLoginPhone(e.target.value);
-                                setLoginErrors({ ...loginErrors, identifier: undefined });
-                              }}
-                              placeholder="Numéro WhatsApp (70123456)"
-                              maxLength={8}
-                              className={`pl-10 ${loginErrors.identifier ? 'border-red-500' : ''}`}
-                            />
-                          </div>
-                          {loginErrors.identifier && (
-                            <p className="text-xs text-red-500 mt-1">{loginErrors.identifier}</p>
-                          )}
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <Input
-                              type="email"
-                              value={loginEmail}
-                              onChange={(e) => {
-                                setLoginEmail(e.target.value);
-                                setLoginErrors({ ...loginErrors, identifier: undefined });
-                              }}
-                              placeholder="votre@email.com"
-                              className={`pl-10 ${loginErrors.identifier ? 'border-red-500' : ''}`}
-                            />
-                          </div>
-                          {loginErrors.identifier && (
-                            <p className="text-xs text-red-500 mt-1">{loginErrors.identifier}</p>
-                          )}
-                        </div>
-                      )}
 
                       <div>
                         <div className="relative">

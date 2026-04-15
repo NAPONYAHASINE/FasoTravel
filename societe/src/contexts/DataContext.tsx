@@ -80,7 +80,7 @@ export interface Manager {
   userId?: string; // ID du compte utilisateur (lié à l'authentification backend)
   name: string;
   email: string;
-  phone: string;
+  whatsapp: string;
   gareId: string;
   gareName: string;
   status: 'active' | 'inactive';
@@ -93,7 +93,7 @@ export interface Cashier {
   userId?: string; // ID du compte utilisateur (lié à l'authentification backend)
   name: string;
   email: string;
-  phone: string;
+  whatsapp: string;
   gareId: string;
   gareName: string;
   managerId: string;
@@ -534,8 +534,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     'managers',
     () => managerService.list(),
     () => [
-      { id: 'mgr_1', name: 'Marie Kaboré', email: 'marie.kabore@tsr.bf', phone: '+226 70 11 22 33', gareId: 'gare_1', gareName: 'Gare Routière de Ouagadougou', status: 'active', joinedDate: '2024-01-15', password: 'password123' },
-      { id: 'mgr_2', name: 'Pierre Sawadogo', email: 'pierre.sawadogo@tsr.bf', phone: '+226 70 44 55 66', gareId: 'gare_2', gareName: 'Gare de Bobo-Dioulasso', status: 'active', joinedDate: '2024-02-01', password: 'password123' },
+      { id: 'mgr_1', name: 'Marie Kaboré', email: 'marie.kabore@tsr.bf', whatsapp: '+226 70 11 22 33', gareId: 'gare_1', gareName: 'Gare Routière de Ouagadougou', status: 'active', joinedDate: '2024-01-15', password: 'password123' },
+      { id: 'mgr_2', name: 'Pierre Sawadogo', email: 'pierre.sawadogo@tsr.bf', whatsapp: '+226 70 44 55 66', gareId: 'gare_2', gareName: 'Gare de Bobo-Dioulasso', status: 'active', joinedDate: '2024-02-01', password: 'password123' },
     ],
     { skipEmptyArrays: true }
   );
@@ -544,9 +544,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     'cashiers',
     () => cashierService.list(),
     () => [
-      { id: 'cash_1', userId: 'user_1', name: 'Ibrahim Sawadogo', email: 'ibrahim.sawadogo@tsr.bf', phone: '+226 70 22 33 44', gareId: 'gare_1', gareName: 'Gare Routière de Ouagadougou', managerId: 'mgr_1', status: 'active', joinedDate: '2024-03-10', password: 'password123' },
-      { id: 'cash_2', userId: 'user_2', name: 'Fatou Diallo', email: 'fatou.diallo@tsr.bf', phone: '+226 70 55 66 77', gareId: 'gare_1', gareName: 'Gare Routière de Ouagadougou', managerId: 'mgr_1', status: 'active', joinedDate: '2024-03-15', password: 'password123' },
-      { id: 'cash_3', userId: 'user_3', name: 'Aminata Traoré', email: 'aminata.traore@tsr.bf', phone: '+226 70 88 99 00', gareId: 'gare_2', gareName: 'Gare de Bobo-Dioulasso', managerId: 'mgr_2', status: 'active', joinedDate: '2024-04-01', password: 'password123' },
+      { id: 'cash_1', userId: 'user_1', name: 'Ibrahim Sawadogo', email: 'ibrahim.sawadogo@tsr.bf', whatsapp: '+226 70 22 33 44', gareId: 'gare_1', gareName: 'Gare Routière de Ouagadougou', managerId: 'mgr_1', status: 'active', joinedDate: '2024-03-10', password: 'password123' },
+      { id: 'cash_2', userId: 'user_2', name: 'Fatou Diallo', email: 'fatou.diallo@tsr.bf', whatsapp: '+226 70 55 66 77', gareId: 'gare_1', gareName: 'Gare Routière de Ouagadougou', managerId: 'mgr_1', status: 'active', joinedDate: '2024-03-15', password: 'password123' },
+      { id: 'cash_3', userId: 'user_3', name: 'Aminata Traoré', email: 'aminata.traore@tsr.bf', whatsapp: '+226 70 88 99 00', gareId: 'gare_2', gareName: 'Gare de Bobo-Dioulasso', managerId: 'mgr_2', status: 'active', joinedDate: '2024-04-01', password: 'password123' },
     ],
     { skipEmptyArrays: true }
   );

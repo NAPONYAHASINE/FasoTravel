@@ -49,3 +49,55 @@ export { BookingSegment } from './booking-segment.entity';
 export { OperatorPolicy } from './operator-policy.entity';
 export { OperatorService } from './operator-service.entity';
 export { Promotion } from './promotion.entity';
+
+// Geo / Tracking
+export { Route } from './route.entity';
+export { Incident } from './incident.entity';
+
+// Referrals
+export { ReferralCoupon } from './referral-coupon.entity';
+
+// Audit & Security
+export { AuditLog } from './audit-log.entity';
+export { SecurityEvent } from './security-event.entity';
+export { BlockedIp } from './blocked-ip.entity';
+
+// Notifications Center
+export { NotificationTemplate } from './notification-template.entity';
+export { AutomationRule } from './automation-rule.entity';
+export { NotificationCampaign } from './notification-campaign.entity';
+export { ScheduledNotification } from './scheduled-notification.entity';
+
+// Policies
+export { PlatformPolicy } from './platform-policy.entity';
+
+// Support
+export { SupportTicket } from './support-ticket.entity';
+
+// Societe / Pricing
+export { PriceSegment } from './price-segment.entity';
+export { PriceHistory } from './price-history.entity';
+export { CashTransaction } from './cash-transaction.entity';
+
+// Cashier Heartbeat
+export { CashierPresence } from './cashier-presence.entity';
+
+// Settings
+export { AppSettings } from './app-settings.entity';
+
+// Integrations
+export { Integration } from './integration.entity';
+export { IntegrationAlertRule } from './integration-alert-rule.entity';
+export { IntegrationAlert } from './integration-alert.entity';
+
+// Story Circles & Feature Flags
+export { StoryCircle } from './story-circle.entity';
+export { FeatureFlag } from './feature-flag.entity';
+
+// External API
+export { ApiKey } from './api-key.entity';
+
+// AI Support
+export { KnowledgeArticle } from './knowledge-article.entity';
+export { AssistantConversation } from './assistant-conversation.entity';
+export type { ConversationMessage } from './assistant-conversation.entity';

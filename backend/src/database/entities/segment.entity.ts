@@ -1,5 +1,7 @@
 import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import type { Trip } from './trip.entity';
+import type { Station } from './station.entity';
 
 @Entity('segments')
 export class Segment extends BaseEntity {
@@ -11,14 +13,14 @@ export class Segment extends BaseEntity {
 
   @ManyToOne('Trip', 'segments', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'trip_id' })
-  trip: any;
+  trip: Trip;
 
   @Column({ name: 'from_stop_id', type: 'varchar', length: 50 })
   fromStopId: string;
 
   @ManyToOne('Station')
   @JoinColumn({ name: 'from_stop_id' })
-  fromStop: any;
+  fromStop: Station;
 
   @Column({
     name: 'from_stop_name',
@@ -33,7 +35,7 @@ export class Segment extends BaseEntity {
 
   @ManyToOne('Station')
   @JoinColumn({ name: 'to_stop_id' })
-  toStop: any;
+  toStop: Station;
 
   @Column({
     name: 'to_stop_name',

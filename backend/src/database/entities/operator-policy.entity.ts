@@ -10,8 +10,8 @@ import {
 
 @Entity('operator_policies')
 export class OperatorPolicy {
-  @PrimaryColumn({ name: 'policy_id', type: 'varchar', length: 50 })
-  policyId: string;
+  @PrimaryColumn({ type: 'varchar', length: 50 })
+  id: string;
 
   @Column({ name: 'operator_id', type: 'varchar', length: 50 })
   operatorId: string;

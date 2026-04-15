@@ -4,8 +4,8 @@ import { TicketStatus } from '../../common/constants';
 
 @Entity('tickets')
 export class Ticket extends BaseEntity {
-  @PrimaryColumn({ name: 'ticket_id', type: 'varchar', length: 50 })
-  ticketId: string;
+  @PrimaryColumn({ type: 'varchar', length: 50 })
+  id: string;
 
   @Column({ name: 'bundle_id', type: 'uuid', nullable: true })
   bundleId: string;
@@ -108,4 +108,62 @@ export class Ticket extends BaseEntity {
     nullable: true,
   })
   originalTicketId: string;
+
+  // Journey details (denormalized for ticket display)
+  @Column({
+    name: 'from_station_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  fromStationName: string;
+
+  @Column({
+    name: 'to_station_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  toStationName: string;
+
+  @Column({ name: 'departure_time', type: 'timestamp', nullable: true })
+  departureTime: Date;
+
+  @Column({ name: 'arrival_time', type: 'timestamp', nullable: true })
+  arrivalTime: Date;
+
+  @Column({ type: 'varchar', length: 10, default: 'XOF' })
+  currency: string;
+
+  @Column({ name: 'can_cancel', type: 'boolean', default: true })
+  canCancel: boolean;
+
+  @Column({ name: 'can_transfer', type: 'boolean', default: true })
+  canTransfer: boolean;
+
+  // Societe counter-sale fields
+  @Column({
+    name: 'sales_channel',
+    type: 'varchar',
+    length: 30,
+    nullable: true,
+  })
+  salesChannel: string;
+
+  @Column({ name: 'cashier_id', type: 'uuid', nullable: true })
+  cashierId: string;
+
+  @Column({
+    name: 'cashier_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  cashierName: string;
+
+  @Column({ name: 'gare_id', type: 'varchar', length: 50, nullable: true })
+  gareId: string;
+
+  @Column({ type: 'int', nullable: true })
+  commission: number;
 }

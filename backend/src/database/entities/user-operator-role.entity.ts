@@ -6,6 +6,8 @@ import {
   JoinColumn,
   Unique,
 } from 'typeorm';
+import { User } from './user.entity';
+import { Operator } from './operator.entity';
 
 @Entity('user_operator_roles')
 @Unique(['userId', 'operatorId'])
@@ -16,16 +18,16 @@ export class UserOperatorRole {
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @ManyToOne('User', { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: any;
+  user: User;
 
   @Column({ name: 'operator_id', type: 'varchar', length: 50 })
   operatorId: string;
 
-  @ManyToOne('Operator', { onDelete: 'CASCADE' })
+  @ManyToOne(() => Operator, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'operator_id' })
-  operator: any;
+  operator: Operator;
 
   @Column({ type: 'varchar', length: 50 })
   role: string;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './styles.css';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Bus, Lock, Mail, Shield, Loader2, ChevronRight, Sun, Moon } from "lucide-react";
+import { Bus, Lock, MessageSquare, Shield, Loader2, ChevronRight, Sun, Moon } from "lucide-react";
 import logoImage from "figma:asset/ddaf4c7eb0e28936f4d0223e859065e25d5c3fc8.png";
 
 type UserRole = 'responsable' | 'manager' | 'caissier';
@@ -11,7 +11,7 @@ export default function LoginPage() {
   const { darkMode, toggleDarkMode } = useTheme();
   const [step, setStep] = useState<'role' | 'credentials' | 'otp'>('role');
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  const [email, setEmail] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -48,8 +48,13 @@ export default function LoginPage() {
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
     setStep('credentials');
-    // Pré-remplir l'email de démo
-    setEmail(`${role}@tsr.bf`);
+    // Pré-remplir le numéro WhatsApp de démo
+    const demoNumbers: Record<UserRole, string> = {
+      responsable: '70000001',
+      manager: '70000002',
+      caissier: '70000003',
+    };
+    setWhatsapp(demoNumbers[role]);
     setPassword('demo123');
   };
 
@@ -59,7 +64,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Convertir le numéro WhatsApp en email synthétique pour le backend
+      const syntheticEmail = `${whatsapp}@phone.transportbf.bf`;
+      // Appel login — le backend envoie l'OTP via WhatsApp
+      await login(syntheticEmail, password);
+      // Si on arrive ici sans erreur, l'OTP a été envoyé → passer à l'étape OTP
       setStep('otp');
     } catch (err) {
       setError('Identifiants incorrects. Veuillez réessayer.');
@@ -74,7 +83,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password, otp);
+      const syntheticEmail = `${whatsapp}@phone.transportbf.bf`;
+      await login(syntheticEmail, password, otp);
     } catch (err) {
       setError('Code OTP incorrect. Veuillez réessayer.');
     } finally {
@@ -85,7 +95,7 @@ export default function LoginPage() {
   const resetToRoleSelection = () => {
     setStep('role');
     setSelectedRole(null);
-    setEmail('');
+    setWhatsapp('');
     setPassword('');
     setOtp('');
     setError('');
@@ -285,7 +295,7 @@ export default function LoginPage() {
                     Identifiants
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Entrez vos identifiants professionnels
+                    Entrez votre numéro WhatsApp et mot de passe
                   </p>
                 </div>
 
@@ -298,18 +308,18 @@ export default function LoginPage() {
                 <form onSubmit={handleCredentialsSubmit} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Email professionnel
+                      Numéro WhatsApp
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail className="text-gray-500 dark:text-gray-400" size={20} />
+                        <MessageSquare className="text-green-500" size={20} />
                       </div>
                       <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        type="tel"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value.replace(/[^0-9+]/g, ''))}
                         className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#f59e0b] focus:border-transparent"
-                        placeholder="votre@email.bf"
+                        placeholder="70 XX XX XX"
                         required
                       />
                     </div>
@@ -352,7 +362,7 @@ export default function LoginPage() {
 
                 <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <p className="text-xs text-blue-800 dark:text-blue-200">
-                    💡 <strong>Mode démo :</strong> Les identifiants sont pré-remplis. Cliquez sur "Continuer" pour accéder.
+                    💡 <strong>Mode démo :</strong> Numéro WhatsApp et mot de passe pré-remplis. Cliquez sur "Continuer" puis entrez un code OTP à 6 chiffres.
                   </p>
                 </div>
               </div>
@@ -368,7 +378,7 @@ export default function LoginPage() {
                     Vérification OTP
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Un code de sécurité a été envoyé à votre numéro
+                    Un code de sécurité a été envoyé sur votre WhatsApp
                   </p>
                 </div>
 

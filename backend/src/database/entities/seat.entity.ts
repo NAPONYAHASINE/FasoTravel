@@ -9,8 +9,8 @@ import { SeatStatus } from '../../common/constants';
 
 @Entity('seats')
 export class Seat {
-  @PrimaryGeneratedColumn('uuid', { name: 'seat_id' })
-  seatId: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ name: 'trip_id', type: 'varchar', length: 50 })
   tripId: string;

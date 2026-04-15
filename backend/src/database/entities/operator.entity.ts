@@ -3,8 +3,8 @@ import { BaseEntity } from './base.entity';
 
 @Entity('operators')
 export class Operator extends BaseEntity {
-  @PrimaryColumn({ name: 'operator_id', type: 'varchar', length: 50 })
-  operatorId: string;
+  @PrimaryColumn({ type: 'varchar', length: 50 })
+  id: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
@@ -23,7 +23,12 @@ export class Operator extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ name: 'phone_number', type: 'varchar', length: 20, nullable: true })
+  @Column({
+    name: 'phone_number',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
   phoneNumber: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -53,8 +58,8 @@ export class Operator extends BaseEntity {
   @Column({ name: 'is_verified', type: 'boolean', default: false })
   isVerified: boolean;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive: boolean;
+  @Column({ type: 'varchar', length: 30, default: 'active' })
+  status: string;
 
   @Column({
     name: 'opening_hours',

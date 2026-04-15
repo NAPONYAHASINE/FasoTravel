@@ -22,17 +22,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: { sub: string; role: string }) {
     const user = await this.userRepository.findOne({
-      where: { userId: payload.sub, isActive: true },
+      where: { id: payload.sub },
     });
 
-    if (!user) {
+    if (!user || user.status === 'inactive' || user.status === 'suspended') {
       throw new UnauthorizedException('User not found or inactive');
     }
 
     return {
-      userId: user.userId,
+      sub: user.id,
       role: user.role,
-      phoneNumber: user.phoneNumber,
+      email: user.email,
     };
   }
 }

@@ -7,11 +7,14 @@ import {
   OneToMany,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import type { Station } from './station.entity';
+import type { Segment } from './segment.entity';
+import type { Seat } from './seat.entity';
 
 @Entity('trips')
 export class Trip extends BaseEntity {
-  @PrimaryColumn({ name: 'trip_id', type: 'varchar', length: 50 })
-  tripId: string;
+  @PrimaryColumn({ type: 'varchar', length: 50 })
+  id: string;
 
   @Column({ name: 'operator_id', type: 'varchar', length: 50 })
   operatorId: string;
@@ -31,7 +34,7 @@ export class Trip extends BaseEntity {
   @Column({
     name: 'operator_logo',
     type: 'varchar',
-    length: 10,
+    length: 500,
     nullable: true,
   })
   operatorLogo: string;
@@ -43,11 +46,22 @@ export class Trip extends BaseEntity {
   @JoinColumn({ name: 'vehicle_id' })
   vehicle: any;
 
+  @Column({
+    name: 'vehicle_type',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  vehicleType: string;
+
   @Column({ name: 'departure_time', type: 'timestamp' })
   departureTime: Date;
 
   @Column({ name: 'arrival_time', type: 'timestamp' })
   arrivalTime: Date;
+
+  @Column({ name: 'duration_minutes', type: 'int', nullable: true })
+  durationMinutes: number;
 
   @Column({ name: 'base_price', type: 'int' })
   basePrice: number;
@@ -55,35 +69,35 @@ export class Trip extends BaseEntity {
   @Column({ type: 'varchar', length: 10, default: 'XOF' })
   currency: string;
 
-  @Column({ name: 'from_stop_id', type: 'varchar', length: 50 })
-  fromStopId: string;
+  @Column({ name: 'from_station_id', type: 'varchar', length: 50 })
+  fromStationId: string;
 
   @ManyToOne('Station')
-  @JoinColumn({ name: 'from_stop_id' })
-  fromStop: any;
+  @JoinColumn({ name: 'from_station_id' })
+  fromStation: Station;
 
   @Column({
-    name: 'from_stop_name',
+    name: 'from_station_name',
     type: 'varchar',
     length: 255,
     nullable: true,
   })
-  fromStopName: string;
+  fromStationName: string;
 
-  @Column({ name: 'to_stop_id', type: 'varchar', length: 50 })
-  toStopId: string;
+  @Column({ name: 'to_station_id', type: 'varchar', length: 50 })
+  toStationId: string;
 
   @ManyToOne('Station')
-  @JoinColumn({ name: 'to_stop_id' })
-  toStop: any;
+  @JoinColumn({ name: 'to_station_id' })
+  toStation: Station;
 
   @Column({
-    name: 'to_stop_name',
+    name: 'to_station_name',
     type: 'varchar',
     length: 255,
     nullable: true,
   })
-  toStopName: string;
+  toStationName: string;
 
   @Column({ type: 'text', array: true, default: '{}' })
   amenities: string[];
@@ -97,10 +111,31 @@ export class Trip extends BaseEntity {
   @Column({ name: 'total_seats', type: 'int', default: 0 })
   totalSeats: number;
 
-  @Column({ name: 'is_cancelled', type: 'boolean', default: false })
-  isCancelled: boolean;
+  @Column({
+    name: 'service_class',
+    type: 'varchar',
+    length: 30,
+    default: 'standard',
+  })
+  serviceClass: string;
 
-  // From migration 010 - trip progression
+  @Column({ type: 'varchar', length: 50, default: 'scheduled' })
+  status: string;
+
+  // Route / bus info (Societe)
+  @Column({ name: 'route_id', type: 'varchar', length: 50, nullable: true })
+  routeId: string;
+
+  @Column({ name: 'bus_number', type: 'varchar', length: 50, nullable: true })
+  busNumber: string;
+
+  @Column({ name: 'gare_id', type: 'varchar', length: 50, nullable: true })
+  gareId: string;
+
+  @Column({ name: 'gare_name', type: 'varchar', length: 255, nullable: true })
+  gareName: string;
+
+  // Trip progression
   @Column({
     name: 'current_segment_id',
     type: 'varchar',
@@ -116,9 +151,6 @@ export class Trip extends BaseEntity {
     nullable: true,
   })
   currentStationId: string;
-
-  @Column({ type: 'varchar', length: 50, default: 'SCHEDULED' })
-  status: string;
 
   @Column({ name: 'last_location_update', type: 'timestamp', nullable: true })
   lastLocationUpdate: Date;
@@ -141,7 +173,7 @@ export class Trip extends BaseEntity {
   })
   gpsLongitude: number;
 
-  // From migration 013 - promotions
+  // Promotions
   @Column({
     name: 'promotion_id',
     type: 'varchar',
@@ -166,9 +198,21 @@ export class Trip extends BaseEntity {
   })
   discountPercentage: number;
 
+  // Driver info (Societe)
+  @Column({ name: 'driver_id', type: 'varchar', length: 50, nullable: true })
+  driverId: string;
+
+  @Column({
+    name: 'driver_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  driverName: string;
+
   @OneToMany('Segment', 'trip')
-  segments: any[];
+  segments: Segment[];
 
   @OneToMany('Seat', 'trip')
-  seats: any[];
+  seats: Seat[];
 }

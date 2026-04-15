@@ -63,12 +63,17 @@ export const isOperatorUser = (user: User): user is OperatorUser => {
 
 /**
  * Réponse d'authentification - UNIFIÉE
+ * Le backend renvoie otpRequired=true pour les non-admin (OTP via WhatsApp).
  */
 export interface AuthResponse {
-  user: User;
-  token: string;
+  user?: User;
+  token?: string;
   refreshToken?: string;
   expiresIn?: number;
+  otpRequired?: boolean;
+  identifier?: string;
+  message?: string;
+  otpCode?: string; // dev only
 }
 
 /**

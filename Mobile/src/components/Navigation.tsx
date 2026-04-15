@@ -21,10 +21,15 @@ interface NavigationProps {
   userName?: string;
 }
 
+// Detect if running inside Capacitor (native mobile app)
+const isCapacitor = typeof (window as any).Capacitor !== 'undefined';
+
 export function Navigation({ currentPage, onNavigate, userName }: NavigationProps) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // Always use mobile nav in Capacitor app; otherwise use width breakpoint
+  const [isMobile, setIsMobile] = useState(isCapacitor || window.innerWidth < 768);
 
   useEffect(() => {
+    if (isCapacitor) return; // Always mobile in native app
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);

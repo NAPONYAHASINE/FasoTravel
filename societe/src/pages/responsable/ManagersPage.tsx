@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCheck, Plus, Edit, Trash2, Phone, Mail, MapPin, CheckCircle, XCircle, Lock, Eye, EyeOff } from "lucide-react";
+import { UserCheck, Plus, Edit, Trash2, Mail, MapPin, CheckCircle, XCircle, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -31,7 +31,7 @@ export default function ManagersPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    whatsapp: '',
     gareId: '',
     status: 'active' as 'active' | 'inactive',
     password: '', // ✅ Mot de passe (uniquement en mode création)
@@ -42,7 +42,7 @@ export default function ManagersPage() {
     setFormData({
       name: '',
       email: '',
-      phone: '',
+      whatsapp: '',
       gareId: '',
       status: 'active',
       password: '',
@@ -51,7 +51,7 @@ export default function ManagersPage() {
   };
 
   const handleAdd = () => {
-    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+    if (!formData.name.trim() || !formData.email.trim() || !formData.whatsapp.trim()) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -113,7 +113,7 @@ export default function ManagersPage() {
     //     userId: user.id,
     //     name: formData.name,
     //     email: formData.email,
-    //     phone: formData.phone,
+    //     phone: formData.whatsapp,
     //     gareId: gare.id,
     //     gareName: gare.name,
     //     status: formData.status,
@@ -124,7 +124,7 @@ export default function ManagersPage() {
     addManager({
       name: formData.name,
       email: formData.email,
-      phone: formData.phone,
+      whatsapp: formData.whatsapp,
       gareId: gare.id,
       gareName: gare.name,
       status: formData.status,
@@ -142,7 +142,7 @@ export default function ManagersPage() {
     setFormData({
       name: manager.name,
       email: manager.email,
-      phone: manager.phone,
+      whatsapp: manager.whatsapp,
       gareId: manager.gareId,
       status: manager.status,
       password: '', // ✅ Réinitialiser les champs mot de passe (non utilisés en mode édition)
@@ -154,7 +154,7 @@ export default function ManagersPage() {
   const handleUpdate = () => {
     if (!editingManager) return;
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+    if (!formData.name.trim() || !formData.email.trim() || !formData.whatsapp.trim()) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -187,7 +187,7 @@ export default function ManagersPage() {
     const updateData: any = {
       name: formData.name,
       email: formData.email,
-      phone: formData.phone,
+      whatsapp: formData.whatsapp,
       gareId: gare.id,
       gareName: gare.name,
       status: formData.status,
@@ -340,8 +340,8 @@ export default function ManagersPage() {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Phone size={16} className="text-gray-500 dark:text-gray-400" />
-                  <span>{manager.phone}</span>
+                  <MessageSquare size={16} className="text-gray-500 dark:text-gray-400" />
+                  <span>{manager.whatsapp}</span>
                 </div>
 
                 {/* ✅ Affichage du mot de passe avec toggle */}
@@ -424,12 +424,12 @@ export default function ManagersPage() {
           </div>
 
           <div>
-            <Label htmlFor="phone">Téléphone *</Label>
+            <Label htmlFor="whatsapp">WhatsApp *</Label>
             <Input
-              id="phone"
+              id="whatsapp"
               type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              value={formData.whatsapp}
+              onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
               placeholder="Ex: +226 70 11 22 33"
             />
           </div>
@@ -535,12 +535,12 @@ export default function ManagersPage() {
           </div>
 
           <div>
-            <Label htmlFor="edit-phone">Téléphone *</Label>
+            <Label htmlFor="edit-whatsapp">WhatsApp *</Label>
             <Input
-              id="edit-phone"
+              id="edit-whatsapp"
               type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              value={formData.whatsapp}
+              onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
               placeholder="Ex: +226 70 11 22 33"
             />
           </div>

@@ -67,6 +67,8 @@ export const API_ENDPOINTS = {
     me: '/auth/me',
     resetPassword: '/auth/reset-password',
     refreshToken: '/auth/refresh-token',
+    verifyOtp: '/auth/verify-otp',
+    resendOtp: '/auth/resend-otp',
   },
   
   // Managers

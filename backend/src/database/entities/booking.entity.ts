@@ -11,8 +11,8 @@ import { BookingStatus } from '../../common/constants';
 
 @Entity('bookings')
 export class Booking extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid', { name: 'booking_id' })
-  bookingId: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
@@ -35,7 +35,7 @@ export class Booking extends BaseEntity {
   @JoinColumn({ name: 'operator_id' })
   operator: any;
 
-  @Column({ type: 'varchar', length: 30, default: BookingStatus.HOLD })
+  @Column({ type: 'varchar', length: 30, default: BookingStatus.PENDING })
   status: string;
 
   @Column({ name: 'total_amount', type: 'int' })
@@ -104,6 +104,13 @@ export class Booking extends BaseEntity {
     nullable: true,
   })
   toSegmentId: string;
+
+  @Column({
+    name: 'selected_services',
+    type: 'jsonb',
+    nullable: true,
+  })
+  selectedServices: string[];
 
   @OneToMany('Ticket', 'booking')
   tickets: any[];

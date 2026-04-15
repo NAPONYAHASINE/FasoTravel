@@ -8,10 +8,12 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { User } from '../database/entities';
+import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    IntegrationsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -19,7 +21,11 @@ import { User } from '../database/entities';
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('jwt.secret', 'fallback-secret'),
         signOptions: {
-          expiresIn: config.get<string>('jwt.expiresIn', '1h') as any,
+          // JWT StringValue branded type requires cast
+          expiresIn: config.get<string>(
+            'jwt.expiresIn',
+            '1h',
+          ) as unknown as import('ms').StringValue,
         },
       }),
     }),

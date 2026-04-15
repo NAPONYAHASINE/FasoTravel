@@ -369,7 +369,7 @@ export function TransportCompanyManagement() {
                       <div className="font-medium mb-1">Personne de contact:</div>
                       <div className="pl-2 space-y-1">
                         <div>{company.contactPersonName}</div>
-                        {company.contactPersonPhone && <div>{company.contactPersonPhone}</div>}
+                        {company.contactPersonWhatsapp && <div>{company.contactPersonWhatsapp}</div>}
                         {company.contactPersonEmail && <div>{company.contactPersonEmail}</div>}
                       </div>
                     </div>
@@ -598,10 +598,10 @@ export function TransportCompanyManagement() {
                         <span className="text-sm text-gray-600 dark:text-gray-400">Nom:</span>
                         <p className="text-gray-900 dark:text-white">{selectedCompany.contactPersonName}</p>
                       </div>
-                      {selectedCompany.contactPersonPhone && (
+                      {selectedCompany.contactPersonWhatsapp && (
                         <div>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">Téléphone:</span>
-                          <p className="text-gray-900 dark:text-white">{selectedCompany.contactPersonPhone}</p>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">WhatsApp:</span>
+                          <p className="text-gray-900 dark:text-white">{selectedCompany.contactPersonWhatsapp}</p>
                         </div>
                       )}
                       {selectedCompany.contactPersonEmail && (

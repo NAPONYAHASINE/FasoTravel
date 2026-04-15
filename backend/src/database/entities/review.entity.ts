@@ -9,8 +9,8 @@ import { BaseEntity } from './base.entity';
 
 @Entity('reviews')
 export class Review extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid', { name: 'review_id' })
-  reviewId: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ name: 'trip_id', type: 'varchar', length: 50, nullable: true })
   tripId: string;
@@ -61,6 +61,6 @@ export class Review extends BaseEntity {
   @Column({ name: 'is_verified_traveler', type: 'boolean', default: false })
   isVerifiedTraveler: boolean;
 
-  @Column({ type: 'varchar', length: 50, default: 'PENDING' })
+  @Column({ type: 'varchar', length: 50, default: 'pending' })
   status: string;
 }

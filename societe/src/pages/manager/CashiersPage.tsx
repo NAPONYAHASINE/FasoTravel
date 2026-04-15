@@ -28,7 +28,7 @@ export default function CashiersPage() {
   const [newCashier, setNewCashier] = useState({
     name: '',
     email: '',
-    phone: '',
+    whatsapp: '',
     password: '',
   });
 
@@ -99,7 +99,7 @@ export default function CashiersPage() {
     setNewCashier({
       name: '',
       email: '',
-      phone: '',
+      whatsapp: '',
       password: '',
     });
     toast.success('Caissier ajouté avec succès');
@@ -112,7 +112,7 @@ export default function CashiersPage() {
       setNewCashier({
         name: '',
         email: '',
-        phone: '',
+        whatsapp: '',
         password: '',
       });
       toast.success('Caissier modifié avec succès');
@@ -129,7 +129,7 @@ export default function CashiersPage() {
     setNewCashier({
       name: cashier.name,
       email: cashier.email,
-      phone: cashier.phone,
+      whatsapp: cashier.whatsapp,
       password: '',
     });
     setIsEditDialogOpen(true);
@@ -339,11 +339,11 @@ export default function CashiersPage() {
             />
           </div>
           <div>
-            <Label htmlFor="phone">Téléphone *</Label>
+            <Label htmlFor="phone">WhatsApp *</Label>
             <Input
               id="phone"
-              value={newCashier.phone}
-              onChange={(e) => setNewCashier({ ...newCashier, phone: e.target.value })}
+              value={newCashier.whatsapp}
+              onChange={(e) => setNewCashier({ ...newCashier, whatsapp: e.target.value })}
               placeholder="+226 70 12 34 56"
             />
           </div>
@@ -397,11 +397,11 @@ export default function CashiersPage() {
             />
           </div>
           <div>
-            <Label htmlFor="edit-phone">Téléphone *</Label>
+            <Label htmlFor="edit-phone">WhatsApp *</Label>
             <Input
               id="edit-phone"
-              value={newCashier.phone}
-              onChange={(e) => setNewCashier({ ...newCashier, phone: e.target.value })}
+              value={newCashier.whatsapp}
+              onChange={(e) => setNewCashier({ ...newCashier, whatsapp: e.target.value })}
               placeholder="+226 70 12 34 56"
             />
           </div>
