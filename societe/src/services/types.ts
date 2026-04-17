@@ -44,7 +44,8 @@ export interface AuthResponse {
 
 export interface ResetPasswordDto {
   email: string;
-  redirectUrl?: string;
+  code: string;
+  newPassword: string;
 }
 
 // ============================================

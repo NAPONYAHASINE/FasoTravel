@@ -10,41 +10,64 @@ import type { Page } from '../App';
  */
 
 import { useState } from 'react';
-import { ArrowLeft, Save, Loader } from 'lucide-react';
+import { ArrowLeft, Save, Loader, Lock } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { feedback } from '../lib/interactions';
+import { updateUserProfile } from '../lib/api';
+import { authService } from '../services/api/auth.service';
 
 interface EditProfilePageProps {
   onNavigate: (page: Page, data?: any) => void;
   onBack: () => void;
   onUpdateUser?: (userData: { name: string; email: string; phone: string }) => void;
+  onAutoLogin?: () => void;
   initialName?: string;
   initialEmail?: string;
   initialPhone?: string;
+  forgotPasswordEmail?: string;
+  forgotPasswordOtp?: string;
 }
 
 export function EditProfilePage({
   onNavigate,
   onBack,
   onUpdateUser,
+  onAutoLogin,
   initialName = 'NAPON Yahasine',
   initialEmail = 'yahasine@transportbf.bf',
   initialPhone = '+226 70 12 34 56',
+  forgotPasswordEmail,
+  forgotPasswordOtp,
 }: EditProfilePageProps) {
-  const [name, setName] = useState(initialName);
-  const [email, setEmail] = useState(initialEmail);
-  const [phone, setPhone] = useState(initialPhone);
+  // En mode forgot-password, extraire le téléphone de l'email synthétique
+  const derivedPhone = forgotPasswordEmail
+    ? `+226 ${forgotPasswordEmail.replace(/@phone\.transportbf\.bf$/, '')}`
+    : '';
+  const [name, setName] = useState(initialName || (forgotPasswordEmail ? derivedPhone : ''));
+  const [email, setEmail] = useState(forgotPasswordEmail || initialEmail);
+  const [phone, setPhone] = useState(derivedPhone || initialPhone);
+  
+  // Password change fields
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const isForgotPasswordMode = !!forgotPasswordEmail;
+
   // Validation
   const isValid = () => {
+    if (isForgotPasswordMode) {
+      return newPassword.length >= 6 && newPassword === confirmPassword;
+    }
     if (name.trim().length < 3) return false;
     if (!email.includes('@')) return false;
     if (phone.trim().length < 8) return false;
+    // Password change is optional when editing profile normally
+    if (newPassword && (newPassword.length < 6 || newPassword !== confirmPassword)) return false;
     return true;
   };
 
@@ -54,7 +77,7 @@ export function EditProfilePage({
     setSuccess(false);
 
     if (!isValid()) {
-      setError('Veuillez vérifier vos informations');
+      setError(isForgotPasswordMode ? 'Le mot de passe doit faire au moins 6 caractères et les deux champs doivent correspondre' : 'Veuillez vérifier vos informations');
       feedback.tap();
       return;
     }
@@ -63,14 +86,34 @@ export function EditProfilePage({
       setLoading(true);
       feedback.tap();
 
-      // Appel API (mock)
-      // PATCH /users/me { name, email, phone }
-      console.log('Updating user:', { name, email, phone });
+      if (isForgotPasswordMode) {
+        // Reset password via backend with OTP code from verification step
+        await authService.resetPassword(forgotPasswordEmail!, forgotPasswordOtp || '', newPassword);
+        setSuccess(true);
+        feedback.success();
+        // Auto-login after password reset
+        if (onAutoLogin) {
+          setTimeout(() => {
+            onAutoLogin();
+          }, 1500);
+        } else {
+          setTimeout(() => {
+            onNavigate('auth');
+          }, 1500);
+        }
+        return;
+      }
 
-      // Simuler un appel API
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Normal profile update
+      await updateUserProfile({ name, email, phone });
 
-      // Appeler callback de mise à jour si fourni
+      // If password change requested along with profile update
+      if (newPassword) {
+        const currentUser = await authService.getCurrentUser();
+        const userEmail = currentUser?.email || email;
+        await authService.resetPassword(userEmail, '', newPassword);
+      }
+
       if (onUpdateUser) {
         onUpdateUser({ name, email, phone });
       }
@@ -78,7 +121,6 @@ export function EditProfilePage({
       setSuccess(true);
       feedback.success();
 
-      // Retourner à la page profil après 1.5 secondes avec les données mises à jour
       setTimeout(() => {
         onNavigate('profile', { name, email, phone });
       }, 1500);
@@ -119,8 +161,8 @@ export function EditProfilePage({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <h1 className="text-xl sm:text-2xl mb-1">Modifier mon profil</h1>
-            <p className="text-xs sm:text-sm opacity-90">Mettez à jour vos informations personnelles</p>
+            <h1 className="text-xl sm:text-2xl mb-1">{isForgotPasswordMode ? 'Réinitialiser mot de passe' : 'Modifier mon profil'}</h1>
+            <p className="text-xs sm:text-sm opacity-90">{isForgotPasswordMode ? 'Entrez votre nouveau mot de passe ci-dessous' : 'Mettez à jour vos informations personnelles'}</p>
           </motion.div>
         </div>
       </motion.div>
@@ -143,7 +185,7 @@ export function EditProfilePage({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                ✓ Vos informations ont été mises à jour avec succès. Redirection en cours...
+                ✓ {isForgotPasswordMode ? 'Mot de passe réinitialisé avec succès. Redirection...' : 'Vos informations ont été mises à jour avec succès. Redirection en cours...'}
               </motion.div>
             )}
           </AnimatePresence>
@@ -183,11 +225,11 @@ export function EditProfilePage({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: NAPON Yahasine"
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-colors"
-                disabled={loading}
-                required
+                disabled={loading || isForgotPasswordMode}
+                required={!isForgotPasswordMode}
                 minLength={3}
               />
-              {name.length < 3 && name.length > 0 && (
+              {!isForgotPasswordMode && name.length < 3 && name.length > 0 && (
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                   Le nom doit contenir au moins 3 caractères
                 </p>
@@ -206,10 +248,10 @@ export function EditProfilePage({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Ex: votre@email.com"
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-colors"
-                disabled={loading}
-                required
+                disabled={loading || isForgotPasswordMode}
+                required={!isForgotPasswordMode}
               />
-              {email && !email.includes('@') && (
+              {!isForgotPasswordMode && email && !email.includes('@') && (
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                   Veuillez entrer une adresse e-mail valide
                 </p>
@@ -228,16 +270,68 @@ export function EditProfilePage({
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Ex: +226 70 12 34 56"
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-colors"
-                disabled={loading}
-                required
+                disabled={loading || isForgotPasswordMode}
+                required={!isForgotPasswordMode}
                 minLength={8}
               />
-              {phone.length < 8 && phone.length > 0 && (
+              {!isForgotPasswordMode && phone.length < 8 && phone.length > 0 && (
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                   Le numéro doit contenir au moins 8 caractères
                 </p>
               )}
             </div>
+
+            {/* Password Change Fields */}
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {isForgotPasswordMode ? 'Nouveau mot de passe' : 'Changer le mot de passe'} {isForgotPasswordMode && <span className="text-red-600">*</span>}
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 6 caractères"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-colors"
+                  disabled={loading}
+                  minLength={6}
+                  required={isForgotPasswordMode}
+                />
+              </div>
+              {newPassword && newPassword.length < 6 && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  Le mot de passe doit contenir au moins 6 caractères
+                </p>
+              )}
+            </div>
+
+            {(isForgotPasswordMode || newPassword) && (
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Confirmer le mot de passe <span className="text-red-600">*</span>
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Répétez le mot de passe"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-colors"
+                    disabled={loading}
+                    required
+                  />
+                </div>
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    Les mots de passe ne correspondent pas
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Info Box */}
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -288,7 +382,7 @@ export function EditProfilePage({
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  <span>{loading ? 'Enregistrement...' : 'Enregistrer'}</span>
+                  <span>{loading ? 'Enregistrement...' : isForgotPasswordMode ? 'Réinitialiser' : 'Enregistrer'}</span>
                 </span>
               </Button>
             </div>

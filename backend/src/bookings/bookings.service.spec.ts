@@ -134,7 +134,9 @@ const mockSeatRepo = {
   find: jest.fn(),
 };
 
-const mockTripRepo = {};
+const mockTripRepo = {
+  findOne: jest.fn().mockResolvedValue(null),
+};
 const mockBookingSegmentRepo = {
   count: jest.fn().mockResolvedValue(0),
   find: jest.fn().mockResolvedValue([]),

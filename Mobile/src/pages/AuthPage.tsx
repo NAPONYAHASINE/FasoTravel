@@ -151,6 +151,39 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
     }
   };
 
+  const handleForgotPassword = async () => {
+    // Validate phone number first
+    if (!loginPhone) {
+      setLoginErrors({ identifier: 'Entrez votre numéro WhatsApp d\'abord' });
+      return;
+    }
+    if (!validatePhone(loginPhone)) {
+      setLoginErrors({ identifier: 'Format WhatsApp: 8 chiffres (ex: 70123456)' });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const email = `${loginPhone}@phone.transportbf.bf`;
+      await authService.forgotPassword(email);
+      feedback.success();
+      // Navigate to OTP page with forgot-password mode
+      onAuth({
+        name: loginPhone,
+        email,
+        phone: loginPhone,
+        isGuest: false,
+        loginIdentifier: `forgot:${loginPhone}`,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur lors de l\'envoi de l\'OTP';
+      setGlobalError(message);
+      feedback.error();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRegister = async () => {
     const errors: {
       name?: string;
@@ -433,6 +466,20 @@ export function AuthPage({ onAuth, onBack: _onBack, onNavigate }: AuthPageProps)
                           'Se connecter'
                         )}
                       </Button>
+
+                      {/* Mot de passe oublié */}
+                      <p className="text-center text-sm">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            feedback.tap();
+                            handleForgotPassword();
+                          }}
+                          className="text-amber-600 dark:text-amber-400 hover:underline"
+                        >
+                          Mot de passe oublié ?
+                        </button>
+                      </p>
 
                       {/* Lien vers inscription */}
                       <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">

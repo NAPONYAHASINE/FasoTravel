@@ -31,7 +31,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
     loadNotifications();
   }, [loadNotifications]);
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // Sync unreadCount to localStorage
   useEffect(() => {
@@ -96,22 +96,22 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
   const handleMarkAsRead = async (id: string) => {
     await notificationService.markAsRead(id);
     setNotifications(prev => prev.map(n => 
-      n.notification_id === id ? { ...n, is_read: true } : n
+      n.notificationId === id ? { ...n, isRead: true } : n
     ));
   };
 
   const handleMarkAllAsRead = async () => {
     await notificationService.markAllAsRead();
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
   const handleDelete = async (id: string) => {
     await notificationService.deleteNotification(id);
-    setNotifications(prev => prev.filter(n => n.notification_id !== id));
+    setNotifications(prev => prev.filter(n => n.notificationId !== id));
   };
 
   const filteredNotifications = filter === 'unread' 
-    ? notifications.filter(n => !n.is_read)
+    ? notifications.filter(n => !n.isRead)
     : notifications;
 
   return (
@@ -196,9 +196,9 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
             <div className="space-y-3">
               {filteredNotifications.map((notification) => (
                 <div
-                  key={notification.notification_id}
+                  key={notification.notificationId}
                   className={`bg-white dark:bg-gray-800 rounded-2xl p-4 transition-all ${
-                    !notification.is_read ? 'border-2 border-amber-200 dark:border-amber-800 shadow-sm' : 'border border-gray-200 dark:border-gray-700'
+                    !notification.isRead ? 'border-2 border-amber-200 dark:border-amber-800 shadow-sm' : 'border border-gray-200 dark:border-gray-700'
                   }`}
                 >
                   <div className="flex gap-4">
@@ -214,12 +214,12 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h3 className="text-sm text-gray-900 dark:text-white flex items-center gap-2">
                           {notification.title}
-                          {!notification.is_read && (
+                          {!notification.isRead && (
                             <span className="w-2 h-2 bg-amber-600 dark:bg-amber-500 rounded-full"></span>
                           )}
                         </h3>
                         <span className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                          {formatTimestamp(notification.created_at)}
+                          {formatTimestamp(notification.createdAt)}
                         </span>
                       </div>
                       
@@ -229,9 +229,9 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2">
-                        {!notification.is_read && (
+                        {!notification.isRead && (
                           <button
-                            onClick={() => handleMarkAsRead(notification.notification_id)}
+                            onClick={() => handleMarkAsRead(notification.notificationId)}
                             className="text-[11px] sm:text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-1"
                           >
                             <Check className="w-3 h-3" />
@@ -239,7 +239,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(notification.notification_id)}
+                          onClick={() => handleDelete(notification.notificationId)}
                           className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-1 ml-auto"
                         >
                           <Trash2 className="w-3 h-3" />

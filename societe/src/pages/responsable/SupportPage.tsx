@@ -165,7 +165,7 @@ export default function SupportPage() {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">En cours</p>
               <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {tickets.filter((t: any) => t.status === 'in_progress').length}
+                {tickets.filter((t: any) => t.status === 'in-progress').length}
               </p>
             </div>
             <Clock className="text-yellow-600 dark:text-yellow-400" size={24} />

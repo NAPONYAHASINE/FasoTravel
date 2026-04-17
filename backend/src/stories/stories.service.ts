@@ -6,7 +6,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OperatorStory, AdminStory, StoryView } from '../database/entities';
-import { CreateStoryDto, UpdateStoryDto } from './dto';
+import {
+  CreateStoryDto,
+  UpdateStoryDto,
+  CreateAdminStoryDto,
+  UpdateAdminStoryDto,
+} from './dto';
 import { randomUUID } from 'crypto';
 import { STORY_EXPIRATION_DAYS } from '../common/constants';
 
@@ -166,25 +171,44 @@ export class StoriesService {
   }
 
   // ─── Admin: Create admin story ────────────────────────────────
-  async createAdminStory(dto: CreateStoryDto) {
+  async createAdminStory(dto: CreateAdminStoryDto) {
     const story = this.adminStoryRepo.create({
       id: randomUUID(),
-      category: dto.type ?? 'general',
-      gradient: dto.gradient,
       title: dto.title,
-      description: dto.description,
+      description: dto.description ?? '',
+      mediaType: dto.mediaType ?? 'gradient',
+      mediaUrl: dto.mediaUrl,
+      gradient: dto.gradient,
       emoji: dto.emoji,
+      circleId: dto.circleId,
+      ctaText: dto.ctaText,
+      actionType: dto.actionType ?? 'none',
+      actionUrl: dto.actionUrl,
+      internalPage: dto.internalPage,
+      status: 'draft',
       priority: 0,
       isActive: true,
+      expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
     });
     return this.adminStoryRepo.save(story);
   }
 
   // ─── Admin: Update admin story ────────────────────────────────
-  async updateAdminStory(id: string, dto: UpdateStoryDto) {
+  async updateAdminStory(id: string, dto: UpdateAdminStoryDto) {
     const story = await this.adminStoryRepo.findOne({ where: { id } });
     if (!story) throw new NotFoundException(`Admin story ${id} introuvable`);
-    Object.assign(story, dto);
+    if (dto.title !== undefined) story.title = dto.title;
+    if (dto.description !== undefined) story.description = dto.description;
+    if (dto.mediaType !== undefined) story.mediaType = dto.mediaType;
+    if (dto.mediaUrl !== undefined) story.mediaUrl = dto.mediaUrl;
+    if (dto.gradient !== undefined) story.gradient = dto.gradient;
+    if (dto.emoji !== undefined) story.emoji = dto.emoji;
+    if (dto.circleId !== undefined) story.circleId = dto.circleId;
+    if (dto.ctaText !== undefined) story.ctaText = dto.ctaText;
+    if (dto.actionType !== undefined) story.actionType = dto.actionType;
+    if (dto.actionUrl !== undefined) story.actionUrl = dto.actionUrl;
+    if (dto.internalPage !== undefined) story.internalPage = dto.internalPage;
+    if (dto.expiresAt !== undefined) story.expiresAt = new Date(dto.expiresAt);
     return this.adminStoryRepo.save(story);
   }
 
@@ -193,6 +217,8 @@ export class StoriesService {
     const story = await this.adminStoryRepo.findOne({ where: { id } });
     if (!story) throw new NotFoundException(`Admin story ${id} introuvable`);
     story.isActive = true;
+    story.status = 'published';
+    story.publishedAt = new Date();
     return this.adminStoryRepo.save(story);
   }
 
@@ -201,6 +227,7 @@ export class StoriesService {
     const story = await this.adminStoryRepo.findOne({ where: { id } });
     if (!story) throw new NotFoundException(`Admin story ${id} introuvable`);
     story.isActive = false;
+    story.status = 'archived';
     return this.adminStoryRepo.save(story);
   }
 

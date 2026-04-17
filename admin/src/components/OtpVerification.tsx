@@ -4,7 +4,7 @@
  * 
  * FLUX: Login (email/password) → OTP Verification → Dashboard
  * 
- * En mode Mock: le code OTP est affiché dans la console + accepte "000000"
+ * En mode Mock: le code OTP est affiché dans la console
  * En production: le code est envoyé via WhatsApp Business ou email selon le canal
  */
 
@@ -323,33 +323,6 @@ export function OtpVerification() {
                 </button>
               </div>
             </>
-          )}
-
-          {/* Aide démo */}
-          {!success && (
-            <div className="mt-6 p-3 bg-gradient-to-r from-red-50 to-yellow-50 dark:from-red-900/20 dark:to-yellow-900/20 rounded-xl border border-red-200/50 dark:border-red-800/50">
-              <p className="text-xs text-red-800 dark:text-red-200 mb-1">
-                Mode démo — Code de test :
-              </p>
-              <div className="flex items-center gap-2">
-                <code className="px-2 py-1 bg-white/60 dark:bg-gray-800/60 rounded text-sm text-red-700 dark:text-red-300 tracking-widest">
-                  000000
-                </code>
-                <button
-                  onClick={() => {
-                    const testCode = '000000'.split('');
-                    setDigits(testCode);
-                    setError('');
-                  }}
-                  className="text-xs text-red-600 dark:text-red-400 hover:underline"
-                >
-                  Remplir
-                </button>
-              </div>
-              <p className="text-[10px] text-gray-500 dark:text-gray-500 mt-1">
-                Le vrai code est aussi dans la console du navigateur (F12)
-              </p>
-            </div>
           )}
 
           {/* Footer */}

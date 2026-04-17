@@ -81,8 +81,7 @@ export class AdsService {
       throw new NotFoundException(`Ad ${adId} introuvable`);
     }
 
-    ad.impressionsCount += 1;
-    await this.adRepo.save(ad);
+    await this.adRepo.increment({ id: adId }, 'impressionsCount', 1);
 
     const impression = new AdImpression();
     impression.adId = adId;
@@ -105,8 +104,7 @@ export class AdsService {
       throw new NotFoundException(`Ad ${adId} introuvable`);
     }
 
-    ad.clicksCount += 1;
-    await this.adRepo.save(ad);
+    await this.adRepo.increment({ id: adId }, 'clicksCount', 1);
 
     const click = new AdClick();
     click.adId = adId;
@@ -171,11 +169,16 @@ export class AdsService {
   async createAd(dto: CreateAdDto) {
     const ad = this.adRepo.create({
       title: dto.title,
-      mediaType: dto.type ?? 'banner',
-      mediaUrl: dto.imageUrl,
-      actionUrl: dto.linkUrl,
-      actionType: 'link',
-      createdBy: dto.advertiser ?? '00000000-0000-0000-0000-000000000000',
+      description: dto.description ?? '',
+      mediaType: dto.mediaType ?? 'image',
+      mediaUrl: dto.mediaUrl,
+      gradient: dto.gradient,
+      emoji: dto.emoji,
+      ctaText: dto.ctaText,
+      actionType: dto.actionType ?? 'none',
+      actionUrl: dto.actionUrl,
+      internalPage: dto.internalPage,
+      internalData: dto.internalData,
       targetPages: dto.targetPages,
       startDate: dto.startDate ? new Date(dto.startDate) : new Date(),
       endDate: dto.endDate
@@ -183,7 +186,7 @@ export class AdsService {
         : new Date(
             Date.now() + AD_DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60 * 1000,
           ),
-      priority: dto.priority ?? 0,
+      priority: dto.priority ?? 5,
       targetNewUsers: dto.targetNewUsers ?? false,
       isActive: true,
     });
@@ -195,7 +198,22 @@ export class AdsService {
    */
   async updateAd(id: string, dto: UpdateAdDto) {
     const ad = await this.findOne(id);
-    Object.assign(ad, dto);
+    if (dto.title !== undefined) ad.title = dto.title;
+    if (dto.description !== undefined) ad.description = dto.description;
+    if (dto.mediaType !== undefined) ad.mediaType = dto.mediaType;
+    if (dto.mediaUrl !== undefined) ad.mediaUrl = dto.mediaUrl;
+    if (dto.gradient !== undefined) ad.gradient = dto.gradient;
+    if (dto.emoji !== undefined) ad.emoji = dto.emoji;
+    if (dto.ctaText !== undefined) ad.ctaText = dto.ctaText;
+    if (dto.actionType !== undefined) ad.actionType = dto.actionType;
+    if (dto.actionUrl !== undefined) ad.actionUrl = dto.actionUrl;
+    if (dto.internalPage !== undefined) ad.internalPage = dto.internalPage;
+    if (dto.internalData !== undefined) ad.internalData = dto.internalData;
+    if (dto.targetPages !== undefined) ad.targetPages = dto.targetPages;
+    if (dto.targetNewUsers !== undefined)
+      ad.targetNewUsers = dto.targetNewUsers;
+    if (dto.priority !== undefined) ad.priority = dto.priority;
+    if (dto.isActive !== undefined) ad.isActive = dto.isActive;
     if (dto.startDate) ad.startDate = new Date(dto.startDate);
     if (dto.endDate) ad.endDate = new Date(dto.endDate);
     return this.adRepo.save(ad);

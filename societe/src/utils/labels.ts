@@ -145,11 +145,17 @@ export const getIncidentTypeInfo = (type: Incident['type']) => {
         icon: Clock, 
         color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' 
       };
-    case 'breakdown':
+    case 'mechanical':
       return { 
-        label: 'Panne', 
+        label: 'Panne mécanique', 
         icon: AlertTriangle, 
         color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' 
+      };
+    case 'cancellation':
+      return { 
+        label: 'Annulation', 
+        icon: XCircle, 
+        color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' 
       };
     case 'accident':
       return { 
@@ -215,12 +221,10 @@ export const getIncidentStatusLabel = (status: Incident['status']): string => {
   switch (status) {
     case 'open':
       return 'Ouvert';
-    case 'in_progress':
+    case 'in-progress':
       return 'En cours';
     case 'resolved':
       return 'Résolu';
-    case 'closed':
-      return 'Fermé';
     default:
       return status;
   }
@@ -286,11 +290,11 @@ export const getStoryStatusLabel = (status: 'active' | 'scheduled' | 'expired' |
 /**
  * Retourne le label d'un statut de support ticket
  */
-export const getSupportTicketStatusLabel = (status: 'open' | 'in_progress' | 'resolved' | 'closed'): string => {
+export const getSupportTicketStatusLabel = (status: 'open' | 'in-progress' | 'resolved' | 'closed'): string => {
   switch (status) {
     case 'open':
       return 'Ouvert';
-    case 'in_progress':
+    case 'in-progress':
       return 'En cours';
     case 'resolved':
       return 'Résolu';

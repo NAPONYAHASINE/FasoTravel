@@ -56,6 +56,7 @@ export class IncidentsController {
    * POST /incidents
    * Passenger or operator reports an incident.
    */
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateIncidentDto) {
     // In production: extract reportedBy from JWT

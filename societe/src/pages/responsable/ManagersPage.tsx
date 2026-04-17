@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCheck, Plus, Edit, Trash2, Mail, MapPin, CheckCircle, XCircle, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
+import { UserCheck, Plus, Edit, Trash2, MapPin, CheckCircle, XCircle, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { BackButton } from '../../components/ui/back-button';
@@ -30,7 +30,6 @@ export default function ManagersPage() {
   
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     whatsapp: '',
     gareId: '',
     status: 'active' as 'active' | 'inactive',
@@ -41,7 +40,6 @@ export default function ManagersPage() {
   const resetForm = () => {
     setFormData({
       name: '',
-      email: '',
       whatsapp: '',
       gareId: '',
       status: 'active',
@@ -51,7 +49,7 @@ export default function ManagersPage() {
   };
 
   const handleAdd = () => {
-    if (!formData.name.trim() || !formData.email.trim() || !formData.whatsapp.trim()) {
+    if (!formData.name.trim() || !formData.whatsapp.trim()) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -123,13 +121,13 @@ export default function ManagersPage() {
 
     addManager({
       name: formData.name,
-      email: formData.email,
+      email: `${formData.whatsapp.replace(/[^0-9]/g, '')}@phone.transportbf.bf`,
       whatsapp: formData.whatsapp,
       gareId: gare.id,
       gareName: gare.name,
       status: formData.status,
       joinedDate: new Date().toISOString().split('T')[0],
-      password: formData.password, // ✅ Ajouté
+      password: formData.password,
     });
 
     toast.success('Manager ajouté avec succès');
@@ -141,11 +139,10 @@ export default function ManagersPage() {
     setEditingManager(manager);
     setFormData({
       name: manager.name,
-      email: manager.email,
       whatsapp: manager.whatsapp,
       gareId: manager.gareId,
       status: manager.status,
-      password: '', // ✅ Réinitialiser les champs mot de passe (non utilisés en mode édition)
+      password: '',
       passwordConfirm: '',
     });
     setIsEditDialogOpen(true);
@@ -154,7 +151,7 @@ export default function ManagersPage() {
   const handleUpdate = () => {
     if (!editingManager) return;
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.whatsapp.trim()) {
+    if (!formData.name.trim() || !formData.whatsapp.trim()) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -186,7 +183,7 @@ export default function ManagersPage() {
     // Préparer les données de mise à jour
     const updateData: any = {
       name: formData.name,
-      email: formData.email,
+      email: `${formData.whatsapp.replace(/[^0-9]/g, '')}@phone.transportbf.bf`,
       whatsapp: formData.whatsapp,
       gareId: gare.id,
       gareName: gare.name,
@@ -335,12 +332,7 @@ export default function ManagersPage() {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Mail size={16} className="text-gray-500 dark:text-gray-400" />
-                  <span>{manager.email}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <MessageSquare size={16} className="text-gray-500 dark:text-gray-400" />
+                  <MessageSquare size={16} className="text-green-500 dark:text-green-400" />
                   <span>{manager.whatsapp}</span>
                 </div>
 
@@ -409,17 +401,6 @@ export default function ManagersPage() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Ex: Marie Kaboré"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="Ex: marie.kabore@tsr.bf"
             />
           </div>
 
@@ -520,17 +501,6 @@ export default function ManagersPage() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Ex: Marie Kaboré"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="edit-email">Email *</Label>
-            <Input
-              id="edit-email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="Ex: marie.kabore@tsr.bf"
             />
           </div>
 

@@ -16,6 +16,7 @@ import {
   Trip,
   BookingSegment,
   Segment,
+  Promotion,
 } from '../database/entities';
 import {
   BookingStatus,
@@ -386,6 +387,20 @@ export class BookingsService {
     }
 
     const confirmedBooking = await this.bookingRepo.save(booking);
+
+    // Increment promotion usesCount if trip has an active promotion
+    const trip = await this.tripRepo.findOne({
+      where: { id: booking.tripId },
+    });
+    if (trip?.promotionId) {
+      await this.dataSource
+        .createQueryBuilder()
+        .update(Promotion)
+        .set({ usesCount: () => '"uses_count" + 1' })
+        .where('promotion_id = :id', { id: trip.promotionId })
+        .andWhere('is_active = true')
+        .execute();
+    }
 
     // Auto-generate tickets (1 per seat)
     await this.ticketsService.generateForBooking(confirmedBooking);

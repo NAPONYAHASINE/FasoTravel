@@ -164,6 +164,7 @@ export interface PassengerUser {
   name: string;
   phone: string;
   profileImage?: string;
+  profileImageUrl?: string;
   phoneVerified: boolean;
   emailVerified: boolean;
   phoneVerifiedAt?: string;
@@ -171,6 +172,9 @@ export interface PassengerUser {
   lastLoginAt?: string;
   verified?: boolean;
   totalBookings?: number;
+  referralCode?: string;
+  referralPointsBalance?: number;
+  badgeLevel?: string;
   status: 'active' | 'inactive' | 'suspended' | 'pending';
   createdAt: string;
   updatedAt: string;

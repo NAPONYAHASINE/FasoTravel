@@ -17,15 +17,18 @@ import type { SupportMessage, Incident } from '../types';
 interface CreateSupportMessageParams {
   subject: string;
   message: string;
-  category: 'BOOKING' | 'PAYMENT' | 'TICKET' | 'VEHICLE' | 'OTHER';
+  category: 'BOOKING' | 'PAYMENT' | 'TECHNICAL' | 'FEEDBACK' | 'OTHER';
   attachments?: string[];
 }
 
 interface CreateIncidentParams {
-  type: string;
-  location?: string;
+  trip_id: string;
   description: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  type?: 'accident' | 'delay' | 'cancellation' | 'mechanical' | 'other';
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  latitude?: number;
+  longitude?: number;
+  timestamp?: string;
 }
 
 export interface AssistantReply {
@@ -33,6 +36,7 @@ export interface AssistantReply {
   escalate: boolean;
   confidence: number;
   sources: string[];
+  conversationId?: string;
 }
 
 interface AssistantRequestParams {
@@ -134,9 +138,9 @@ class SupportService {
   }
 
   /**
-   * Ferme un incident
+   * Résoudre un incident
    */
-  async closeIncident(incidentId: string, resolution: string): Promise<Incident> {
+  async resolveIncident(incidentId: string, resolution: string): Promise<Incident> {
     if (isDevelopment()) {
       const incidents = storageService.get<Incident[]>('user_incidents') || [];
       const incident = incidents.find(i => i.id === incidentId);
@@ -148,7 +152,7 @@ class SupportService {
     }
 
     return apiClient.post<Incident>(
-      API_ENDPOINTS.support.closeIncident(incidentId),
+      API_ENDPOINTS.support.resolveIncident(incidentId),
       { resolution }
     );
   }
@@ -178,9 +182,9 @@ class SupportService {
   private mockReportIncident(params: CreateIncidentParams): Incident {
     const incident: Incident = {
       id: `incident_${Date.now()}`,
-      tripId: 'current_trip',
+      tripId: params.trip_id,
       userId: 'current_user',
-      type: (params.type as 'delay' | 'accident' | 'missing_passenger' | 'vehicle_issue' | 'other'),
+      type: (params.type as 'delay' | 'accident' | 'cancellation' | 'mechanical' | 'other') ?? 'other',
       description: params.description,
       status: 'open',
       createdAt: new Date().toISOString(),

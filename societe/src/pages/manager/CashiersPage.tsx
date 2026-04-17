@@ -27,7 +27,6 @@ export default function CashiersPage() {
   // État pour le nouveau caissier
   const [newCashier, setNewCashier] = useState({
     name: '',
-    email: '',
     whatsapp: '',
     password: '',
   });
@@ -89,6 +88,7 @@ export default function CashiersPage() {
   const handleAddCashier = () => {
     addCashier({
       ...newCashier,
+      email: `${newCashier.whatsapp.replace(/[^0-9]/g, '')}@phone.transportbf.bf`,
       gareId: user?.gareId || '',
       gareName: user?.gareName || '',
       managerId: user?.id || '',
@@ -98,7 +98,6 @@ export default function CashiersPage() {
     setIsAddDialogOpen(false);
     setNewCashier({
       name: '',
-      email: '',
       whatsapp: '',
       password: '',
     });
@@ -107,11 +106,13 @@ export default function CashiersPage() {
 
   const handleEditCashier = () => {
     if (editingCashier) {
-      updateCashier(editingCashier.id, newCashier);
+      updateCashier(editingCashier.id, {
+        ...newCashier,
+        email: `${newCashier.whatsapp.replace(/[^0-9]/g, '')}@phone.transportbf.bf`,
+      });
       setIsEditDialogOpen(false);
       setNewCashier({
         name: '',
-        email: '',
         whatsapp: '',
         password: '',
       });
@@ -128,7 +129,6 @@ export default function CashiersPage() {
     setEditingCashier(cashier);
     setNewCashier({
       name: cashier.name,
-      email: cashier.email,
       whatsapp: cashier.whatsapp,
       password: '',
     });
@@ -251,8 +251,8 @@ export default function CashiersPage() {
                     <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">🔐 Identifiants de connexion</p>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Email:</p>
-                        <p className="text-xs font-medium text-gray-900 dark:text-white">{cashier.email}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">WhatsApp:</p>
+                        <p className="text-xs font-medium text-gray-900 dark:text-white">{cashier.whatsapp}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <p className="text-xs text-gray-500 dark:text-gray-400">Mot de passe:</p>
@@ -329,16 +329,6 @@ export default function CashiersPage() {
             />
           </div>
           <div>
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={newCashier.email}
-              onChange={(e) => setNewCashier({ ...newCashier, email: e.target.value })}
-              placeholder="caissier@exemple.com"
-            />
-          </div>
-          <div>
             <Label htmlFor="phone">WhatsApp *</Label>
             <Input
               id="phone"
@@ -384,16 +374,6 @@ export default function CashiersPage() {
               value={newCashier.name}
               onChange={(e) => setNewCashier({ ...newCashier, name: e.target.value })}
               placeholder="Nom complet du caissier"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-email">Email *</Label>
-            <Input
-              id="edit-email"
-              type="email"
-              value={newCashier.email}
-              onChange={(e) => setNewCashier({ ...newCashier, email: e.target.value })}
-              placeholder="caissier@exemple.com"
             />
           </div>
           <div>

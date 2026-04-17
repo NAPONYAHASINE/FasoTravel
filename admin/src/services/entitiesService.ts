@@ -175,7 +175,7 @@ class TransportCompaniesService {
         name: data.name || '',
         legalName: data.legalName,
         email: data.email || '',
-        phone: data.phone || '',
+        phoneNumber: data.phoneNumber || '',
         address: data.address,
         registrationNumber: data.registrationNumber,
         taxId: data.taxId,
@@ -184,11 +184,11 @@ class TransportCompaniesService {
         contactPersonEmail: data.contactPersonEmail,
         status: 'pending', // Nouvelle société en attente d'approbation
         commission: data.commission || 10,
-        totalVehicles: 0,
+        fleetSize: 0,
         totalRoutes: 0,
         totalTrips: 0,
         rating: 0,
-        logo: data.logo,
+        logoUrl: data.logoUrl,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -791,9 +791,9 @@ class NotificationsService {
 
   async markAsRead(id: string): Promise<ApiResponse<Notification>> {
     if (AppConfig.isMock) {
-      const index = this.mockData.findIndex(n => n.id === id);
+      const index = this.mockData.findIndex(n => n.notificationId === id);
       if (index !== -1) {
-        this.mockData[index] = { ...this.mockData[index], read: true, readAt: new Date().toISOString() };
+        this.mockData[index] = { ...this.mockData[index], isRead: true, readAt: new Date().toISOString() };
         return { success: true, data: this.mockData[index] };
       }
       return { success: false, error: 'Notification non trouvée' };
@@ -801,12 +801,12 @@ class NotificationsService {
     return apiService.put<Notification>(`/admin/notifications/${id}/read`, {});
   }
 
-  async create(data: Omit<Notification, 'id' | 'read' | 'createdAt' | 'readAt'>): Promise<ApiResponse<Notification>> {
+  async create(data: Omit<Notification, 'notificationId' | 'isRead' | 'createdAt' | 'readAt'>): Promise<ApiResponse<Notification>> {
     if (AppConfig.isMock) {
       const newNotif: Notification = {
         ...data,
-        id: `notif_${Date.now()}`,
-        read: false,
+        notificationId: `notif_${Date.now()}`,
+        isRead: false,
         createdAt: new Date().toISOString(),
       };
       this.mockData.unshift(newNotif);
@@ -849,12 +849,12 @@ class NotificationsService {
 
       // Immediate send — add to admin inbox AND sent history
       const newNotif: Notification = {
-        id: `notif_${Date.now()}`,
+        notificationId: `notif_${Date.now()}`,
         type: payload.type,
         title: payload.title,
         message: payload.message,
-        read: false,
-        actionUrl: payload.actionUrl,
+        isRead: false,
+        deepLink: payload.actionUrl,
         createdAt: new Date().toISOString(),
       };
       this.mockData.unshift(newNotif);
@@ -1392,6 +1392,13 @@ class OperatorServicesService {
       return { success: true, data: this.mockData };
     }
     return await apiService.get('/admin/operator-services');
+  }
+  async getByOperator(operatorId: string): Promise<ApiResponse<OperatorService[]>> {
+    if (AppConfig.isMock) {
+      const filtered = this.mockData.filter(s => s.companyId === operatorId);
+      return { success: true, data: filtered };
+    }
+    return await apiService.get(`/operators/${operatorId}/services`);
   }
   async getById(id: string): Promise<ApiResponse<OperatorService>> {
     if (AppConfig.isMock) {

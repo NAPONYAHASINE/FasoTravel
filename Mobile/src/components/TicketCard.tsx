@@ -80,6 +80,8 @@ const TicketCardComponent = ({ ticket, onDownload, onCancel, onClick }: TicketCa
         return <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">Annulé</Badge>;
       case 'expired':
         return <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">Expiré</Badge>;
+      case 'refunded':
+        return <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">Remboursé</Badge>;
       default:
         return null;
     }

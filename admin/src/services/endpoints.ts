@@ -23,6 +23,9 @@ export const ENDPOINTS = {
     logout: () => '/auth/logout',
     refresh: () => '/auth/refresh',
     me: () => '/auth/me',
+    verifyOtp: () => '/auth/verify-otp',
+    resendOtp: () => '/auth/resend-otp',
+    forgotPassword: () => '/auth/forgot-password',
     resetPassword: () => '/auth/reset-password',
   },
 
@@ -49,16 +52,18 @@ export const ENDPOINTS = {
     stats: (id: string) => `/stations/${id}/stats`,
   },
 
-  // Users (Utilisateurs)
+  // Users (Passagers — gestion admin)
   users: {
-    list: (params?: { page?: number; limit?: number; role?: string }) =>
-      `/users${params ? buildQueryParams(params) : ''}`,
-    get: (id: string) => `/users/${id}`,
-    create: () => '/users',
-    update: (id: string) => `/users/${id}`,
-    delete: (id: string) => `/users/${id}`,
-    block: (id: string) => `/users/${id}/block`,
-    unblock: (id: string) => `/users/${id}/unblock`,
+    list: (params?: { page?: number; limit?: number; status?: string; search?: string }) =>
+      `/admin/passengers${params ? buildQueryParams(params) : ''}`,
+    get: (id: string) => `/admin/passengers/${id}`,
+    update: (id: string) => `/admin/passengers/${id}`,
+    delete: (id: string) => `/admin/passengers/${id}`,
+    suspend: (id: string) => `/admin/passengers/${id}/suspend`,
+    reactivate: (id: string) => `/admin/passengers/${id}/reactivate`,
+    verify: (id: string) => `/admin/passengers/${id}/verify`,
+    resetPassword: (id: string) => `/admin/passengers/${id}/reset-password`,
+    notify: (id: string) => `/admin/passengers/${id}/notify`,
   },
 
   // Bookings (Réservations)
@@ -125,12 +130,17 @@ export const ENDPOINTS = {
   // Promotions
   promotions: {
     list: (params?: { page?: number; limit?: number; status?: string }) =>
-      `/promotions${params ? buildQueryParams(params) : ''}`,
-    get: (id: string) => `/promotions/${id}`,
-    create: () => '/promotions',
-    update: (id: string) => `/promotions/${id}`,
-    delete: (id: string) => `/promotions/${id}`,
-    toggle: (id: string) => `/promotions/${id}/toggle`,
+      `/admin/promotions${params ? buildQueryParams(params) : ''}`,
+    get: (id: string) => `/admin/promotions/${id}`,
+    create: () => '/admin/promotions',
+    update: (id: string) => `/admin/promotions/${id}`,
+    delete: (id: string) => `/admin/promotions/${id}`,
+    toggle: (id: string) => `/admin/promotions/${id}/toggle`,
+    stats: () => '/admin/promotions/stats',
+    approve: (id: string) => `/admin/promotions/${id}/approve`,
+    reject: (id: string) => `/admin/promotions/${id}/reject`,
+    activate: (id: string) => `/admin/promotions/${id}/activate`,
+    deactivate: (id: string) => `/admin/promotions/${id}/deactivate`,
   },
 
   // Advertising (Publicités)

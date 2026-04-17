@@ -50,6 +50,41 @@ function mapTicketFromModel(modelTicket: any): Ticket {
   };
 }
 
+// Map backend entity (camelCase with different field names) to services Ticket
+function mapTicketFromBackend(entity: any): Ticket {
+  return {
+    id: entity.id,
+    bookingId: entity.bookingId || '',
+    tripId: entity.tripId,
+    userId: entity.purchasedByUserId || '',
+    operatorId: entity.operatorId || '',
+    operatorName: entity.operator?.name || '',
+    fromStopId: '',
+    fromStopName: entity.fromStationName || '',
+    toStopId: '',
+    toStopName: entity.toStationName || '',
+    passengerName: entity.passengerName,
+    passengerPhone: entity.passengerPhone || '',
+    passengerEmail: entity.passengerEmail,
+    seatNumber: entity.seatNumber || '',
+    price: entity.price,
+    currency: entity.currency || 'XOF',
+    paymentMethod: entity.paymentMethod || 'cash',
+    paymentId: '',
+    status: entity.status,
+    qrCode: entity.qrCode,
+    alphanumericCode: entity.alphanumericCode,
+    embarkationTime: entity.departureTime,
+    arrivalTime: entity.arrivalTime,
+    createdAt: entity.purchasedAt || entity.createdAt,
+    updatedAt: entity.updatedAt,
+    holderDownloaded: false,
+    holderPresented: false,
+    canCancel: entity.canCancel ?? true,
+    canTransfer: entity.canTransfer ?? true,
+  };
+}
+
 class TicketService {
   /**
    * Récupère tous les tickets de l'utilisateur
@@ -60,8 +95,10 @@ class TicketService {
       return MOCK_TICKETS.map(mapTicketFromModel);
     }
 
-    // PRODUCTION: Call backend API
-    return apiClient.get<Ticket[]>(API_ENDPOINTS.tickets.list);
+    // PRODUCTION: Backend returns PaginatedResponse { data: Ticket[], meta: {...} }
+    const response = await apiClient.get<{ data: any[]; meta: any }>(API_ENDPOINTS.tickets.list);
+    const tickets = response.data || [];
+    return tickets.map(mapTicketFromBackend);
   }
 
   /**
@@ -75,7 +112,9 @@ class TicketService {
       return ticket;
     }
 
-    return apiClient.get<Ticket>(API_ENDPOINTS.tickets.detail(ticketId));
+    // PRODUCTION: Backend returns raw Ticket entity
+    const entity = await apiClient.get<any>(API_ENDPOINTS.tickets.detail(ticketId));
+    return mapTicketFromBackend(entity);
   }
 }
 

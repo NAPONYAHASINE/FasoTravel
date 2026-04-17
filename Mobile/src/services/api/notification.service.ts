@@ -12,8 +12,8 @@ export interface CreateNotificationParams {
   type: Notification['type'];
   title: string;
   message: string;
-  deep_link?: string;
-  image_url?: string;
+  deepLink?: string;
+  imageUrl?: string;
   metadata?: Notification['metadata'];
 }
 
@@ -70,7 +70,26 @@ class NotificationService {
   }
 
   /**
-   * Crée une nouvelle notification (admin/backend only)
+   * Enregistre le token FCM pour les push notifications
+   * ✅ BACKEND: POST /notifications with body { token, deviceType? }
+   */
+  async registerFcmToken(token: string, deviceType?: string): Promise<boolean> {
+    try {
+      if (isDevelopment()) {
+        console.log('FCM token registered (mock):', token);
+        return true;
+      }
+
+      await apiClient.post('/notifications', { token, deviceType });
+      return true;
+    } catch (error) {
+      console.error('Error registering FCM token:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Crée une nouvelle notification (admin/backend only - mock uniquement côté mobile)
    */
   async createNotification(params: CreateNotificationParams): Promise<Notification | null> {
     try {
@@ -78,9 +97,10 @@ class NotificationService {
         return this.mockCreateNotification(params);
       }
 
-      const response = await apiClient.post<Notification>('/notifications', params);
-
-      return response || null;
+      // Note: En production, les notifications sont créées par le backend/admin
+      // Ce endpoint n'existe pas côté mobile - retour null
+      console.warn('createNotification is not available from mobile in production');
+      return null;
     } catch (error) {
       console.error('Error creating notification:', error);
       return null;
@@ -148,7 +168,7 @@ class NotificationService {
     try {
       if (isDevelopment()) {
         const notifications = this.mockGetNotifications();
-        return notifications.filter(n => !n.is_read).length;
+        return notifications.filter(n => !n.isRead).length;
       }
 
       const response = await apiClient.get<{ count: number }>('/notifications/unread/count');
@@ -177,17 +197,17 @@ class NotificationService {
 
   private mockGetNotification(id: string): Notification | null {
     const notifications = this.mockGetNotifications();
-    return notifications.find(n => n.notification_id === id) || null;
+    return notifications.find(n => n.notificationId === id) || null;
   }
 
   private mockCreateNotification(params: CreateNotificationParams): Notification {
     const userId = 'user_1'; // TODO: Get from auth context in production
     const notification: Notification = {
-      notification_id: `notif_${Date.now()}`,
-      user_id: userId,
+      notificationId: `notif_${Date.now()}`,
+      userId: userId,
       ...params,
-      is_read: false,
-      created_at: new Date().toISOString(),
+      isRead: false,
+      createdAt: new Date().toISOString(),
     };
 
     const notifications = this.mockGetNotifications();
@@ -201,10 +221,10 @@ class NotificationService {
   private mockMarkAsRead(id: string): boolean {
     const userId = 'user_1'; // TODO: Get from auth context in production
     const notifications = this.mockGetNotifications();
-    const notification = notifications.find(n => n.notification_id === id);
+    const notification = notifications.find(n => n.notificationId === id);
     
     if (notification) {
-      notification.is_read = true;
+      notification.isRead = true;
       const storageKey = this.getStorageKey(userId);
       storageService.set(storageKey, notifications);
       return true;
@@ -216,7 +236,7 @@ class NotificationService {
   private mockMarkAllAsRead(): boolean {
     const userId = 'user_1'; // TODO: Get from auth context in production
     const notifications = this.mockGetNotifications();
-    notifications.forEach(n => n.is_read = true);
+    notifications.forEach(n => n.isRead = true);
     const storageKey = this.getStorageKey(userId);
     storageService.set(storageKey, notifications);
     return true;
@@ -225,7 +245,7 @@ class NotificationService {
   private mockDeleteNotification(id: string): boolean {
     const userId = 'user_1'; // TODO: Get from auth context in production
     const notifications = this.mockGetNotifications();
-    const filtered = notifications.filter(n => n.notification_id !== id);
+    const filtered = notifications.filter(n => n.notificationId !== id);
     
     if (filtered.length < notifications.length) {
       const storageKey = this.getStorageKey(userId);

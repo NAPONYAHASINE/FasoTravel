@@ -39,6 +39,17 @@ export class PromotionsController {
   validateCode(@Body() dto: ValidatePromotionDto) {
     return this.promotionsService.validateCode(dto);
   }
+
+  /**
+   * POST /promotions/use — Atomically consume a promotion (increment usesCount).
+   */
+  @Post('use')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Use a promotion (increment usage counter)' })
+  usePromotion(@Body('promotionId') promotionId: string) {
+    return this.promotionsService.usePromotion(promotionId);
+  }
 }
 
 /**

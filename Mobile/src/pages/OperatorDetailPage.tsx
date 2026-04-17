@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/button';
-import { useOperatorById, useStations, useOperatorStories } from '../lib/hooks';
+import { useOperatorById, useStations, useOperatorStories, useOperatorServices } from '../lib/hooks';
 import { feedback } from '../lib/interactions';
 import { OperatorStoriesViewer } from '../components/OperatorStoriesViewer';
 import { OperatorLogo } from '../components/OperatorLogo';
@@ -31,6 +31,7 @@ interface OperatorDetailPageProps {
 export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorDetailPageProps) {
   const { operator, isLoading: operatorLoading, error: operatorError } = useOperatorById(operatorId);
   const { stations, isLoading: stationsLoading } = useStations();
+  const { services: operatorServices } = useOperatorServices(operatorId);
   const [tripType, setTripType] = useState<'ALLER_SIMPLE' | 'ALLER_RETOUR'>('ALLER_SIMPLE');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -108,7 +109,16 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
     );
   }
 
-  // Amenities display mapping
+  // Service type icon mapping
+  const serviceTypeIconMap: Record<string, any> = {
+    'BAGGAGE': Droplet,
+    'FOOD': Coffee,
+    'COMFORT': Wifi,
+    'ENTERTAINMENT': Usb,
+    'OTHER': CheckCircle2,
+  };
+
+  // Amenities display mapping (fallback si pas de services)
   const amenityIconMap: Record<string, any> = {
     'WiFi': Wifi,
     'AC': Droplet,
@@ -525,8 +535,35 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
           </p>
         </div>
 
-        {/* Amenities */}
-        {operatorAmenities.length > 0 && (
+        {/* Services & Équipements */}
+        {operatorServices.length > 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h2 className="text-lg text-gray-900 dark:text-white mb-4">Services et équipements</h2>
+            <div className="space-y-3">
+              {operatorServices.map((svc, index) => {
+                const Icon = serviceTypeIconMap[svc.service_type] || CheckCircle2;
+                return (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                        <Icon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{svc.service_name}</p>
+                        {svc.description && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{svc.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                      {svc.price > 0 ? `${svc.price.toLocaleString()} ${svc.currency}` : 'Gratuit'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : operatorAmenities.length > 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
             <h2 className="text-lg text-gray-900 dark:text-white mb-4">Services et équipements</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -543,7 +580,7 @@ export function OperatorDetailPage({ operatorId, onNavigate, onBack }: OperatorD
               })}
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Policies */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">

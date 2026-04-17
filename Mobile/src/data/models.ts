@@ -457,22 +457,22 @@ export interface Review {
 // ============================================
 
 export interface Notification {
-  notification_id: string;
-  user_id: string;
+  notificationId: string;
+  userId: string;
   type: 'BOOKING_CONFIRMED' | 'TRIP_REMINDER' | 'PRICE_DROP' | 'OPERATOR_UPDATE' | 'PROMO' | 'TRIP_COMPLETED' | 'TRIP_COMPLETED_RATING';
   title: string;
   message: string;
-  deep_link?: string;
-  image_url?: string;
-  is_read: boolean;
-  created_at: string;
-  expires_at?: string;
+  deepLink?: string;
+  imageUrl?: string;
+  isRead: boolean;
+  createdAt: string;
+  expiresAt?: string;
   metadata?: {
-    trip_id?: string;
-    operator_id?: string;
-    ticket_id?: string;
-    from_stop?: string;
-    to_stop?: string;
+    tripId?: string;
+    operatorId?: string;
+    ticketId?: string;
+    fromStop?: string;
+    toStop?: string;
     [key: string]: any;
   };
 }
@@ -496,54 +496,54 @@ export interface UserDevice {
 
 export const MOCK_NOTIFICATIONS_LIST: Notification[] = [
   {
-    notification_id: 'NOTIF_001',
-    user_id: 'USER_001',
+    notificationId: 'NOTIF_001',
+    userId: 'USER_001',
     type: 'BOOKING_CONFIRMED',
     title: 'Réservation confirmée',
     message: 'Votre billet Ouagadougou → Bobo-Dioulasso du 10 mars est confirmé.',
-    is_read: false,
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    metadata: { trip_id: 'TRIP_001', ticket_id: 'TK_001' }
+    isRead: false,
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    metadata: { tripId: 'TRIP_001', ticketId: 'TK_001' }
   },
   {
-    notification_id: 'NOTIF_002',
-    user_id: 'USER_001',
+    notificationId: 'NOTIF_002',
+    userId: 'USER_001',
     type: 'TRIP_REMINDER',
     title: 'Rappel de voyage',
     message: 'Votre départ est prévu demain à 07h00. Préparez-vous !',
-    is_read: false,
-    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    metadata: { trip_id: 'TRIP_001' }
+    isRead: false,
+    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    metadata: { tripId: 'TRIP_001' }
   },
   {
-    notification_id: 'NOTIF_003',
-    user_id: 'USER_001',
+    notificationId: 'NOTIF_003',
+    userId: 'USER_001',
     type: 'PROMO',
     title: 'Promotion -25%',
     message: 'Air Canada Bus offre -25% sur Ouaga → Bobo ce week-end !',
-    is_read: true,
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    metadata: { operator_id: 'AIR_CANADA' }
+    isRead: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    metadata: { operatorId: 'AIR_CANADA' }
   },
   {
-    notification_id: 'NOTIF_004',
-    user_id: 'USER_001',
+    notificationId: 'NOTIF_004',
+    userId: 'USER_001',
     type: 'PRICE_DROP',
     title: 'Baisse de prix',
     message: 'Le trajet Ouaga → Koudougou est maintenant à 3500 FCFA.',
-    is_read: true,
-    created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-    metadata: { trip_id: 'TRIP_003' }
+    isRead: true,
+    createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+    metadata: { tripId: 'TRIP_003' }
   },
   {
-    notification_id: 'NOTIF_005',
-    user_id: 'USER_001',
+    notificationId: 'NOTIF_005',
+    userId: 'USER_001',
     type: 'TRIP_COMPLETED',
     title: 'Voyage terminé',
     message: 'Votre voyage Ouaga → Bobo est terminé. Notez votre expérience !',
-    is_read: true,
-    created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-    metadata: { trip_id: 'TRIP_001', ticket_id: 'TK_001' }
+    isRead: true,
+    createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+    metadata: { tripId: 'TRIP_001', ticketId: 'TK_001' }
   }
 ];
 
@@ -1912,9 +1912,9 @@ export const OPERATOR_STORIES: Record<string, OperatorStory[]> = {
 // ============================================
 
 export const POPULAR_ROUTES = [
-  { from: 'Ouaga', to: 'Bobo', from_id: 'OUAGA_CENTRE', to_id: 'BOBO_CENTRE' },
-  { from: 'Ouaga', to: 'Koudougou', from_id: 'OUAGA_CENTRE', to_id: 'KOUDOUGOU' },
-  { from: 'Bobo', to: 'Banfora', from_id: 'BOBO_CENTRE', to_id: 'BANFORA' },
+  { id: 'route_1', from: 'Ouaga', to: 'Bobo', from_id: 'OUAGA_CENTRE', to_id: 'BOBO_CENTRE', trip_count: 45, avg_price: 8000 },
+  { id: 'route_2', from: 'Ouaga', to: 'Koudougou', from_id: 'OUAGA_CENTRE', to_id: 'KOUDOUGOU', trip_count: 32, avg_price: 3000 },
+  { id: 'route_3', from: 'Bobo', to: 'Banfora', from_id: 'BOBO_CENTRE', to_id: 'BANFORA', trip_count: 28, avg_price: 4000 },
 ];
 
 // ============================================

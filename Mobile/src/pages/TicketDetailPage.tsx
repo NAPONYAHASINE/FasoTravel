@@ -200,6 +200,8 @@ export function TicketDetailPage({ ticketId, onNavigate, onBack }: TicketDetailP
         return <Badge className="bg-red-100 text-red-700">Annulé</Badge>;
       case 'expired':
         return <Badge className="bg-amber-100 text-amber-700">Expiré</Badge>;
+      case 'refunded':
+        return <Badge className="bg-yellow-100 text-yellow-700">Remboursé</Badge>;
       default:
         return null;
     }

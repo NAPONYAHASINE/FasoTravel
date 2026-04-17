@@ -400,7 +400,18 @@ export function AdminAppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_REFRESH_TOKEN, result.refreshToken);
       }
 
-      // Passer en mode OTP
+      // Admin roles: tokens received directly → skip OTP
+      if (result.token && !result.otpSent) {
+        const user = result.user;
+        if (user) {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+          localStorage.setItem('adminUser', JSON.stringify(user));
+        }
+        return;
+      }
+
+      // Non-admin: OTP flow
       if (result.user) {
         setPendingAdmin(result.user);
       }

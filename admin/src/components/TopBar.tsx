@@ -70,7 +70,7 @@ export function TopBar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
   const dropdownNotifications = notifications.slice(0, 5);
 
   const getNotificationIcon = (type: string) => {
@@ -100,10 +100,10 @@ export function TopBar() {
   };
 
   const handleMarkAllAsRead = async () => {
-    const unread = notifications.filter((n) => !n.read);
+    const unread = notifications.filter((n) => !n.isRead);
     if (unread.length === 0) return;
 
-    await Promise.allSettled(unread.map((n) => markNotificationAsRead(n.id)));
+    await Promise.allSettled(unread.map((n) => markNotificationAsRead(n.notificationId)));
     await refreshNotifications();
   };
 
@@ -214,19 +214,19 @@ export function TopBar() {
                       {dropdownNotifications.length > 0 ? (
                         dropdownNotifications.map((notif) => (
                           <div
-                            key={notif.id}
+                            key={notif.notificationId}
                             onClick={() => {
-                              if (!notif.read) {
-                                void markNotificationAsRead(notif.id);
+                              if (!notif.isRead) {
+                                void markNotificationAsRead(notif.notificationId);
                               }
-                              if (notif.actionUrl) {
+                              if (notif.deepLink) {
                                 setShowNotifications(false);
-                                navigate(notif.actionUrl);
+                                navigate(notif.deepLink);
                               }
                             }}
                             className={`group block p-4 rounded-lg transition-all ${
-                              !notif.read ? 'bg-red-50 dark:bg-red-900/20' : ''
-                            } hover:bg-gray-50 dark:hover:bg-gray-800 ${notif.actionUrl ? 'cursor-pointer' : ''}`}
+                              !notif.isRead ? 'bg-red-50 dark:bg-red-900/20' : ''
+                            } hover:bg-gray-50 dark:hover:bg-gray-800 ${notif.deepLink ? 'cursor-pointer' : ''}`}
                           >
                             <div className="flex items-start gap-3">
                               <div className="text-2xl flex-shrink-0">{getNotificationIcon(notif.type)}</div>
@@ -235,7 +235,7 @@ export function TopBar() {
                                 <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{notif.message}</p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatRelativeTime(notif.createdAt)}</p>
                               </div>
-                              {!notif.read && (
+                              {!notif.isRead && (
                                 <div className="w-2 h-2 bg-[#dc2626] rounded-full flex-shrink-0 mt-1.5" />
                               )}
                             </div>

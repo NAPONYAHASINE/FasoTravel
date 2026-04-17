@@ -29,27 +29,35 @@
 import { isDevelopment as _isDevelopmentFn } from '../shared/config/deployment';
 const isDevelopment = _isDevelopmentFn();
 const _meta: any = typeof import.meta !== 'undefined' ? (import.meta as any) : {};
-const BASE_URL = (_meta.env && _meta.env.VITE_API_URL) || 'http://localhost:3000/api';
+const BASE_URL = (_meta.env && _meta.env.VITE_API_URL) || 'http://localhost:3004/api';
 
 // Import canonical types from models to avoid duplicate/contradictory interfaces
-import type { Ticket as ModelTicket } from '../data/models';
+import type { Ticket as ModelTicket, OperatorService as ModelOperatorService } from '../data/models';
 
 // Types
 export interface Story {
   id: string;
   title: string;
   description: string;
-  image_url?: string;
+  mediaType: 'image' | 'video' | 'gradient';
+  mediaUrl?: string;
   emoji?: string;
   gradient: string;
-  category: 'PROMO' | 'NEW' | 'DESTINATION' | 'TIPS' | 'PARTNERS' | 'ANNOUNCEMENT';
-  link_url?: string;
-  promo_id?: string;  // ✅ Link vers une promotion (si c'est une story promo)
-  is_active: boolean;
+  circleId?: string;
+  ctaText?: string;
+  actionType: 'internal' | 'external' | 'none';
+  actionUrl?: string;
+  internalPage?: string;
+  viewsCount: number;
+  clicksCount: number;
+  status: 'draft' | 'published' | 'archived';
+  publishedAt?: string;
+  isActive: boolean;
   priority: number;
-  created_by: string;
-  created_at: string;
-  expires_at?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
 }
 
 export interface Station {
@@ -182,13 +190,18 @@ export async function getActiveStories(): Promise<Story[]> {
         description: '🎁 Air Canada: -25% sur tous les trajets jusqu\'au 28-feb !',
         emoji: '🎉',
         gradient: 'from-red-500 to-amber-500',
-        category: 'PROMO',
-        promo_id: 'PROMO_001',  // ✅ Link vers la promotion
-        is_active: true,
+        mediaType: 'gradient',
+        actionType: 'internal',
+        internalPage: 'search-results',
+        ctaText: 'Voir les offres',
+        viewsCount: 0,
+        clicksCount: 0,
+        status: 'published',
+        isActive: true,
         priority: 1,
-        created_by: 'admin',
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'story_2',
@@ -196,11 +209,15 @@ export async function getActiveStories(): Promise<Story[]> {
         description: '✨ Découvrez nos nouvelles destinations',
         emoji: '✨',
         gradient: 'from-amber-500 to-green-500',
-        category: 'NEW',
-        is_active: true,
+        mediaType: 'gradient',
+        actionType: 'none',
+        viewsCount: 0,
+        clicksCount: 0,
+        status: 'published',
+        isActive: true,
         priority: 2,
-        created_by: 'admin',
-        created_at: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
       {
         id: 'story_3',
@@ -208,12 +225,18 @@ export async function getActiveStories(): Promise<Story[]> {
         description: '🏖️ Explorez les plus belles destinations du Burkina Faso',
         emoji: '🌍',
         gradient: 'from-amber-500 to-orange-500',
-        category: 'DESTINATION',
-        is_active: true,
+        mediaType: 'gradient',
+        actionType: 'external',
+        actionUrl: 'https://www.burkina-faso-tourisme.com',
+        ctaText: 'En savoir plus',
+        viewsCount: 0,
+        clicksCount: 0,
+        status: 'published',
+        isActive: true,
         priority: 3,
-        created_by: 'admin',
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'story_4',
@@ -221,26 +244,32 @@ export async function getActiveStories(): Promise<Story[]> {
         description: '📢 Informations importantes sur nos services',
         emoji: '📣',
         gradient: 'from-orange-500 to-red-500',
-        category: 'ANNOUNCEMENT',
-        is_active: true,
+        mediaType: 'gradient',
+        actionType: 'none',
+        viewsCount: 0,
+        clicksCount: 0,
+        status: 'published',
+        isActive: true,
         priority: 4,
-        created_by: 'admin',
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
   }
 
   const response = await fetch(`${BASE_URL}/stories/active`);
   if (!response.ok) throw new Error('Failed to fetch stories');
-  return response.json();
+  const data = await response.json();
+  // Backend returns { operatorStories, adminStories } — we show adminStories on homepage
+  return data.adminStories ?? data;
 }
 
 /**
  * Créer une nouvelle story (admin only)
  * Nécessite authentification admin
  */
-export async function createStory(story: Omit<Story, 'id' | 'created_at'>): Promise<Story> {
+export async function createStory(story: Omit<Story, 'id' | 'createdAt'>): Promise<Story> {
   const response = await fetch(`${BASE_URL}/stories`, {
     method: 'POST',
     headers: {
@@ -356,7 +385,39 @@ export async function getNearbyStations(
     `${BASE_URL}/stations/nearby?lat=${latitude}&lon=${longitude}&radius=${radius}`
   );
   if (!response.ok) throw new Error('Failed to fetch nearby stations');
-  return response.json();
+  const data = await response.json();
+  // Map backend camelCase trip entities to snake_case for Mobile compatibility
+  return data.map((item: any) => ({
+    station: {
+      id: item.station.id,
+      name: item.station.name,
+      city: item.station.city,
+      latitude: item.station.latitude,
+      longitude: item.station.longitude,
+      address: item.station.address,
+      is_active: item.station.status === 'active',
+    },
+    distance_km: item.distance_km,
+    next_departures: (item.next_departures || []).map((t: any) => ({
+      trip_id: t.id,
+      operator_id: t.operatorId,
+      operator_name: t.operatorName,
+      departure_time: t.departureTime,
+      arrival_time: t.arrivalTime,
+      from_stop_id: t.fromStationId,
+      to_stop_id: t.toStationId,
+      from_stop_name: t.fromStationName,
+      to_stop_name: t.toStationName,
+      base_price: t.basePrice,
+      available_seats: t.availableSeats,
+      total_seats: t.totalSeats,
+      has_live_tracking: t.hasLiveTracking,
+      vehicle_type: t.vehicleType,
+      duration_minutes: t.durationMinutes,
+      segments: [],
+      amenities: t.amenities || [],
+    })),
+  }));
 }
 
 // ============================================
@@ -472,54 +533,40 @@ export async function getTripById(tripId: string): Promise<Trip> {
 // ============================================
 
 export interface CreateHoldBookingParams {
-  trip_id: string;
-  seat_numbers: string[];
-  passenger_name: string;
-  passenger_email?: string;
-  passenger_phone: string;
+  tripId: string;
+  seatNumbers?: string[];
+  numSeats?: number;
+  passengerName?: string;
+  passengerPhone?: string;
+  unitPrice?: number;
+  selectedServices?: string[];
 }
 
 /**
  * Créer une réservation en statut HOLD (TTL 10 minutes)
+ * ✅ BACKEND: POST /bookings → CreateBookingDto { tripId, seatNumbers?, numSeats?, passengerName?, passengerPhone? }
  */
 export async function createHoldBooking(params: CreateHoldBookingParams): Promise<ModelTicket> {
-  const response = await fetch(`${BASE_URL}/bookings/hold`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(params)
-  });
-
-  if (!response.ok) throw new Error('Failed to create hold booking');
-  return response.json();
+  const { bookingService } = await import('../services/api/booking.service');
+  const booking = await bookingService.createHoldBooking(params as any);
+  return booking as any;
 }
 
 export interface ConfirmBookingParams {
-  ticket_id: string;
-  payment_method: 'orange_money' | 'moov_money' | 'card' | 'wave' | 'cash';
-  payment_details: {
-    phone_number?: string;
-    card_token?: string;
-  };
+  bookingId: string;
+  paymentMethod: 'orange_money' | 'moov_money' | 'card' | 'wave' | 'cash';
+  paymentData?: Record<string, any>;
 }
 
 /**
  * Confirmer et payer une réservation HOLD
+ * ✅ BACKEND: POST /payments → CreatePaymentDto { bookingId, method, amount }
+ * Note: La confirmation est déclenchée automatiquement par le webhook de paiement
  */
 export async function confirmBooking(params: ConfirmBookingParams): Promise<ModelTicket> {
-  const response = await fetch(`${BASE_URL}/bookings/confirm`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(params)
-  });
-
-  if (!response.ok) throw new Error('Failed to confirm booking');
-  return response.json();
+  const { bookingService } = await import('../services/api/booking.service');
+  const ticket = await bookingService.confirmBooking(params as any);
+  return ticket as any;
 }
 
 // ============================================
@@ -637,6 +684,23 @@ export async function getOperatorById(operatorId: string): Promise<Operator> {
 }
 
 /**
+ * Récupère les services d'un opérateur (bagages, confort, nourriture, etc.)
+ * ✅ BACKEND: GET /operators/{operator_id}/services
+ */
+export async function getOperatorServices(operatorId: string): Promise<ModelOperatorService[]> {
+  if (isDevelopment) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const { OPERATORS } = await import('../data/models');
+    const operator = OPERATORS.find(op => op.operator_id === operatorId);
+    return operator?.services || [];
+  }
+
+  const response = await fetch(`${BASE_URL}/operators/${operatorId}/services`);
+  if (!response.ok) throw new Error('Failed to fetch operator services');
+  return response.json();
+}
+
+/**
  * Récupère les stories d'un opérateur
  * ✅ BACKEND: GET /operators/{operator_id}/stories
  * Returns only active (non-expired) stories
@@ -671,17 +735,19 @@ export async function getOperatorStories(operatorId: string): Promise<OperatorSt
 
 /**
  * Marque une story comme vue
- * ✅ BACKEND: POST /operators/{operator_id}/stories/{story_id}/view
+ * ✅ BACKEND: POST /stories/mark-viewed with body { storyId }
  */
-export async function markStoryAsViewed(operatorId: string, storyId: string): Promise<void> {
+export async function markStoryAsViewed(_operatorId: string, storyId: string): Promise<void> {
   if (isDevelopment) {
     await new Promise(resolve => setTimeout(resolve, 100));
-    console.log(`Story ${storyId} marked as viewed for operator ${operatorId}`);
+    console.log(`Story ${storyId} marked as viewed`);
     return;
   }
 
-  const response = await fetch(`${BASE_URL}/operators/${operatorId}/stories/${storyId}/view`, {
-    method: 'POST'
+  const response = await fetch(`${BASE_URL}/stories/mark-viewed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ storyId })
   });
   if (!response.ok) throw new Error('Failed to mark story as viewed');
 }
@@ -808,6 +874,7 @@ export async function getTicketById(ticketId: string): Promise<ModelTicket> {
 
 /**
  * Télécharge un billet PDF
+ * ✅ BACKEND: GET /tickets/:id/download → returns { ticket, qrCode }
  */
 export async function downloadTicket(ticketId: string): Promise<{ pdf_url: string }> {
   if (isDevelopment) {
@@ -817,15 +884,15 @@ export async function downloadTicket(ticketId: string): Promise<{ pdf_url: strin
     };
   }
 
-  const response = await fetch(`${BASE_URL}/tickets/${ticketId}/download`, {
-    method: 'POST'
-  });
-  if (!response.ok) throw new Error('Failed to download ticket');
-  return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  const result = await apiClient.get<{ ticket: any; qrCode: string }>(`/tickets/${ticketId}/download`);
+  // Backend returns { ticket, qrCode: base64 } — convert qrCode to a data URL for display
+  return { pdf_url: result.qrCode || '' };
 }
 
 /**
  * Transfère un billet
+ * ✅ BACKEND: POST /tickets/:id/transfer → returns TicketTransfer entity
  */
 export async function transferTicket(
   ticketId: string, 
@@ -839,17 +906,17 @@ export async function transferTicket(
     };
   }
 
-  const response = await fetch(`${BASE_URL}/tickets/${ticketId}/transfer`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ recipient_phone: recipientPhone })
-  });
-  if (!response.ok) throw new Error('Failed to transfer ticket');
-  return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  const result = await apiClient.post<any>(`/tickets/${ticketId}/transfer`, { recipientPhone });
+  return {
+    transfer_code: result.transferToken || result.id,
+    expires_at: result.expiresAt || new Date(Date.now() + 3600000).toISOString()
+  };
 }
 
 /**
  * Annule un billet
+ * ✅ BACKEND: POST /tickets/:id/cancel → returns updated Ticket entity
  */
 export async function cancelTicket(ticketId: string): Promise<{ refund_amount: number }> {
   if (isDevelopment) {
@@ -859,11 +926,10 @@ export async function cancelTicket(ticketId: string): Promise<{ refund_amount: n
     };
   }
 
-  const response = await fetch(`${BASE_URL}/tickets/${ticketId}`, {
-    method: 'DELETE'
-  });
-  if (!response.ok) throw new Error('Failed to cancel ticket');
-  return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  const result = await apiClient.post<any>(`/tickets/${ticketId}/cancel`);
+  // Backend returns the updated Ticket entity — extract price as refund amount
+  return { refund_amount: result.price || 0 };
 }
 
 // ============================================
@@ -872,41 +938,54 @@ export async function cancelTicket(ticketId: string): Promise<{ refund_amount: n
 
 /**
  * Récupère le profil utilisateur
+ * ✅ BACKEND: GET /users/me → returns toPassengerDto
  */
 export async function getUserProfile(): Promise<{
-  user_id: string;
+  id: string;
   name: string;
   email: string;
   phone: string;
-  language: string;
-  geo_consent: boolean;
-  push_consent: boolean;
+  status: string;
+  verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  profileImageUrl?: string;
+  referralCode?: string;
+  referralPointsBalance?: number;
+  badgeLevel?: string;
 }> {
   if (isDevelopment) {
     await new Promise(resolve => setTimeout(resolve, 300));
     return {
-      user_id: 'usr_001',
+      id: 'usr_001',
       name: 'NAPON Yahasine',
       email: 'yahasine@transportbf.bf',
       phone: '+226 70 12 34 56',
-      language: 'fr',
-      geo_consent: true,
-      push_consent: true
+      status: 'active',
+      verified: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      profileImageUrl: undefined,
+      referralCode: 'FT-226-ABC12',
+      referralPointsBalance: 0,
+      badgeLevel: 'standard',
     };
   }
 
-  const response = await fetch(`${BASE_URL}/users/me`);
-  if (!response.ok) throw new Error('Failed to fetch user profile');
-  return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  return apiClient.get('/users/me');
 }
 
 /**
  * Met à jour le profil utilisateur
+ * ✅ BACKEND: PATCH /users/me → UpdatePassengerDto { name?, email?, phone?, preferredLanguage?, pushEnabled? }
  */
 export async function updateUserProfile(data: {
-  language?: string;
-  geo_consent?: boolean;
-  push_consent?: boolean;
+  name?: string;
+  email?: string;
+  phone?: string;
+  preferredLanguage?: string;
+  pushEnabled?: boolean;
 }): Promise<void> {
   if (isDevelopment) {
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -914,29 +993,26 @@ export async function updateUserProfile(data: {
     return;
   }
 
-  const response = await fetch(`${BASE_URL}/users/me`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!response.ok) throw new Error('Failed to update user profile');
+  const { apiClient } = await import('../services/api/apiClient');
+  await apiClient.patch('/users/me', data);
 }
 
 /**
  * Exporte les données utilisateur (GDPR)
+ * ✅ BACKEND: GET /users/me/export → { profile, notifications, exportedAt }
  */
-export async function exportUserData(): Promise<{ download_url: string }> {
+export async function exportUserData(): Promise<{ profile: any; notifications: any[]; exportedAt: string }> {
   if (isDevelopment) {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
-      download_url: 'https://transportbf.app/exports/user_001.json'
+      profile: { id: 'usr_001', name: 'NAPON Yahasine', email: 'yahasine@transportbf.bf' },
+      notifications: [],
+      exportedAt: new Date().toISOString(),
     };
   }
 
-  const response = await fetch(`${BASE_URL}/users/me/export`);
-  if (!response.ok) throw new Error('Failed to export user data');
-    // Ajout d'un return pour toutes les branches
-    return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  return apiClient.get('/users/me/export');
 }
 
 // ============================================
@@ -1049,9 +1125,9 @@ export async function logout(): Promise<void> {
  * Envoie un message au support
  */
 export async function sendSupportMessage(data: {
-  email: string;
+  subject: string;
   message: string;
-  ticket_id?: string;
+  category?: string;
 }): Promise<{ support_ticket_id: string }> {
   if (isDevelopment) {
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -1060,13 +1136,9 @@ export async function sendSupportMessage(data: {
     };
   }
 
-  const response = await fetch(`${BASE_URL}/support/contact`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!response.ok) throw new Error('Failed to send support message');
-  return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  const result = await apiClient.post<any>('/support/messages', data);
+  return { support_ticket_id: result.id };
 }
 
 // ============================================
@@ -1074,18 +1146,14 @@ export async function sendSupportMessage(data: {
 // ============================================
 
 export interface VehicleLocation {
-  trip_id: string;
-  vehicle_id: string;
+  tripId: string;
   latitude: number;
   longitude: number;
-  speed_kmh: number;
-  bearing: number;
-  last_updated: string;
-  current_stop?: string;
-  next_stop?: string;
-  estimated_arrival?: string;
-  current_latitude?: number;
-  current_longitude?: number;
+  heading?: number;
+  speed?: number;
+  accuracy?: number;
+  timestamp: string;
+  updatedAt?: string;
   progress_percent?: number;
 }
 
@@ -1102,16 +1170,15 @@ export async function getVehicleLocation(tripId: string): Promise<VehicleLocatio
     const mockLng = -1.5197 - (Math.random() * 3);
     
     return {
-      trip_id: tripId,
-      vehicle_id: 'VEH_001',
+      tripId: tripId,
       latitude: mockLat,
       longitude: mockLng,
-      speed_kmh: 75 + Math.random() * 30,
-      bearing: 270, // Direction ouest
-      last_updated: new Date().toISOString(),
-      current_stop: 'Koudougou',
-      next_stop: 'Bobo-Dioulasso',
-      estimated_arrival: new Date(Date.now() + 7200000).toISOString()
+      heading: 270,
+      speed: 75 + Math.random() * 30,
+      accuracy: 50,
+      timestamp: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      progress_percent: Math.random() * 100
     };
   }
 
@@ -1133,10 +1200,10 @@ export interface IncidentReportParams {
 }
 
 export interface IncidentReportResponse {
-  incident_id: string;
-  status: 'created' | 'pending' | 'acknowledged';
-  created_at: string;
-  message: string;
+  id: string;
+  status: 'open' | 'in-progress' | 'resolved';
+  createdAt: string;
+  message?: string;
 }
 
 /**
@@ -1163,25 +1230,21 @@ export async function reportIncident(params: IncidentReportParams): Promise<Inci
     });
     
     return {
-      incident_id: `INCIDENT_${Date.now()}`,
-      status: 'created',
-      created_at: new Date().toISOString(),
+      id: `INCIDENT_${Date.now()}`,
+      status: 'open',
+      createdAt: new Date().toISOString(),
       message: '[DEV MODE] Incident enregistré localement. Endpoint: POST /api/incidents'
     };
   }
 
-  const response = await fetch(`${BASE_URL}/incidents`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to report incident');
-  }
-
-  return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  const result = await apiClient.post<any>('/incidents', params);
+  return {
+    id: result.id,
+    status: result.status ?? 'open',
+    createdAt: result.createdAt ?? new Date().toISOString(),
+    message: result.message,
+  };
 }
 
 export interface LocationShareParams {
@@ -1231,16 +1294,6 @@ export async function shareLocation(params: LocationShareParams): Promise<Locati
     };
   }
 
-  const response = await fetch(`${BASE_URL}/share-location`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to share location');
-  }
-
-  return response.json();
+  const { apiClient } = await import('../services/api/apiClient');
+  return apiClient.post<LocationShareResponse>('/share-location', params);
 }

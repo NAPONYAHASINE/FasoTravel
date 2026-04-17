@@ -95,4 +95,60 @@ export class Operator extends BaseEntity {
 
   @Column({ name: 'baggage_price', type: 'int', default: 0 })
   baggagePrice: number;
+
+  // ========== Business Registration Fields ==========
+
+  @Column({ name: 'legal_name', type: 'varchar', length: 255, nullable: true })
+  legalName: string;
+
+  @Column({
+    name: 'registration_number',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  registrationNumber: string;
+
+  @Column({ name: 'tax_id', type: 'varchar', length: 100, nullable: true })
+  taxId: string;
+
+  @Column({ type: 'text', nullable: true })
+  address: string;
+
+  @Column({
+    type: 'numeric',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+  })
+  commission: number;
+
+  // ========== Contact Person ==========
+
+  @Column({
+    name: 'contact_person_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  contactPersonName: string;
+
+  @Column({
+    name: 'contact_person_whatsapp',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
+  contactPersonWhatsapp: string;
+
+  @Column({
+    name: 'contact_person_email',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  contactPersonEmail: string;
+
+  @Column({ name: 'approved_at', type: 'timestamptz', nullable: true })
+  approvedAt: Date;
 }

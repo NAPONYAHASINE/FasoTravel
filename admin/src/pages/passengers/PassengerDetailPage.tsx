@@ -97,8 +97,8 @@ export default function PassengerDetailPage() {
               <Phone className="w-4 h-4 text-gray-400" />{passenger.phone}
               {passenger.phoneVerified && <span className="text-green-500 text-xs">✓ Vérifié</span>}
             </p>
-            {passenger.profileImage && (
-              <img src={passenger.profileImage} alt={passenger.name} className="w-16 h-16 rounded-full object-cover" />
+            {(passenger.profileImageUrl || passenger.profileImage) && (
+              <img src={passenger.profileImageUrl || passenger.profileImage} alt={passenger.name} className="w-16 h-16 rounded-full object-cover" />
             )}
           </div>
         </div>

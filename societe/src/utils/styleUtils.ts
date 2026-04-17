@@ -246,11 +246,11 @@ export const getStoryStatusBadgeClass = (status: 'active' | 'scheduled' | 'expir
 /**
  * Retourne les classes CSS pour un badge de support ticket
  */
-export const getSupportTicketStatusBadgeClass = (status: 'open' | 'in_progress' | 'resolved' | 'closed'): string => {
+export const getSupportTicketStatusBadgeClass = (status: 'open' | 'in-progress' | 'resolved' | 'closed'): string => {
   switch (status) {
     case 'open':
       return 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400';
-    case 'in_progress':
+    case 'in-progress':
       return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400';
     case 'resolved':
       return 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400';

@@ -18,7 +18,7 @@ import bgDay from 'figma:asset/bcca83482c8b3b02fad6bfe11da57e59506831e5.png';
 
 interface OTPVerificationPageProps {
   identifier: string; // WhatsApp number or email
-  mode: 'auth' | 'payment'; // From auth flow or payment flow
+  mode: 'auth' | 'payment' | 'forgot-password'; // From auth flow, payment flow, or forgot password
   onVerified: (code: string) => void; // What to do after OTP verified
   onBack: () => void;
   darkMode?: boolean;
@@ -84,16 +84,22 @@ export function OTPVerificationPage({
     setError(null);
 
     try {
-      // Vérifier OTP via authService
-      await authService.verifyOtp(identifier, otp, mode);
-
-      feedback.success();
-      
-      // If auth mode and authData provided, complete authentication
-      if (mode === 'auth' && authData && onAuthSuccess) {
-        onAuthSuccess(authData);
-      } else {
+      if (mode === 'forgot-password') {
+        // For forgot-password, we just pass the OTP through — it will be validated at reset-password
+        feedback.success();
         onVerified(otp);
+      } else {
+        // Vérifier OTP via authService
+        await authService.verifyOtp(identifier, otp, mode);
+
+        feedback.success();
+      
+        // If auth mode and authData provided, complete authentication
+        if (mode === 'auth' && authData && onAuthSuccess) {
+          onAuthSuccess(authData);
+        } else {
+          onVerified(otp);
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur de vérification';
@@ -193,14 +199,16 @@ export function OTPVerificationPage({
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Vérification du code
             </h1>
-            {mode === 'auth' ? (
+            {mode === 'auth' || mode === 'forgot-password' ? (
               <>
                 <p className="text-base font-semibold text-gray-900 dark:text-white">
-                  Entrez le code reçu sur votre
+                  {mode === 'forgot-password' ? 'Entrez le code reçu pour réinitialiser votre mot de passe' : 'Entrez le code reçu sur votre'}
                 </p>
-                <p className="text-base font-bold text-green-600 dark:text-green-400 capitalize">
-                  {contactType}
-                </p>
+                {mode !== 'forgot-password' && (
+                  <p className="text-base font-bold text-green-600 dark:text-green-400 capitalize">
+                    {contactType}
+                  </p>
+                )}
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {maskedIdentifier}
                 </p>

@@ -25,7 +25,12 @@ class PaymentService {
 
     return apiClient.post<Payment>(
       API_ENDPOINTS.payments.create,
-      { bookingId, method, amount }
+      {
+        bookingId,
+        method,
+        amount,
+        idempotencyKey: `pay_${bookingId}_${Date.now()}`,
+      }
     );
   }
 

@@ -14,6 +14,7 @@ import IncidentsPage from './IncidentsPage';
 import AnalyticsPage from './AnalyticsPage';
 import PoliciesPage from './PoliciesPage';
 import SupportPage from './SupportPage';
+import ServicesPage from './ServicesPage';
 
 export default function ResponsableDashboard() {
   return (
@@ -51,6 +52,12 @@ export default function ResponsableDashboard() {
       <Route path="/gares" element={
         <DashboardLayout role="responsable" title="Gares">
           <StationsPage />
+        </DashboardLayout>
+      } />
+
+      <Route path="/services" element={
+        <DashboardLayout role="responsable" title="Services">
+          <ServicesPage />
         </DashboardLayout>
       } />
 

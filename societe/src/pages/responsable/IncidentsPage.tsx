@@ -61,7 +61,7 @@ export default function IncidentsPage() {
       validatedByName: user.name,
       validatedAt: new Date().toISOString(),
       validationComment: validationComment.trim() || undefined,
-      status: action === 'validated' ? 'in_progress' : 'closed'
+      status: action === 'validated' ? 'in-progress' : 'open'
     });
 
     setValidationDialogOpen(false);
@@ -199,10 +199,10 @@ export default function IncidentsPage() {
               Retards
             </Button>
             <Button
-              variant={filterType === 'breakdown' ? 'default' : 'outline'}
+              variant={filterType === 'mechanical' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFilterType('breakdown')}
-              className={filterType === 'breakdown' ? 'tf-btn-primary' : ''}
+              onClick={() => setFilterType('mechanical')}
+              className={filterType === 'mechanical' ? 'tf-btn-primary' : ''}
             >
               Pannes
             </Button>

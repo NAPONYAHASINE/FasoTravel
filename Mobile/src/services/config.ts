@@ -83,6 +83,8 @@ export const API_ENDPOINTS = {
     refresh: '/auth/refresh-token',
     verifyOtp: '/auth/verify-otp',
     resendOtp: '/auth/resend-otp',
+    forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
   },
   
   // Trips & Search
@@ -167,14 +169,14 @@ export const API_ENDPOINTS = {
   // Support
   support: {
     messages: '/support/messages',
-    incidents: '/support/incidents',
+    incidents: '/incidents',
     sendMessage: '/support/messages',
     assistantChat: '/support/assistant/chat',
     myMessages: '/support/messages/my-messages',
-    reportIncident: '/support/incidents',
-    myIncidents: '/support/incidents/my-incidents',
-    incidentDetail: (id: string) => `/support/incidents/${id}`,
-    closeIncident: (id: string) => `/support/incidents/${id}/close`,
+    reportIncident: '/incidents',
+    myIncidents: '/incidents/my-incidents',
+    incidentDetail: (id: string) => `/incidents/${id}`,
+    resolveIncident: (id: string) => `/incidents/${id}/resolve`,
   },
 
   // Platform policies
@@ -203,6 +205,12 @@ export const API_ENDPOINTS = {
     impression: (adId: string) => `/ads/${adId}/impression`,
     click: (adId: string) => `/ads/${adId}/click`,
     conversion: (adId: string) => `/ads/${adId}/conversion`,
+  },
+
+  // Promotions
+  promotions: {
+    validate: '/promotions/validate',
+    use: '/promotions/use',
   },
 } as const;
 

@@ -39,8 +39,14 @@ export function Login() {
       
       if (fn) {
         await fn(email, password);
-        toast.success('Code OTP envoyé ! Vérifiez votre email.');
-        navigate('/verify-otp');
+        // If already authenticated (admin direct tokens), go to dashboard
+        if (ctx?.isAuthenticated) {
+          toast.success('Connexion réussie !');
+          navigate('/');
+        } else {
+          toast.success('Code OTP envoyé ! Vérifiez votre email.');
+          navigate('/verify-otp');
+        }
       } else {
         setError('Le système n\'est pas encore prêt. Veuillez rafraîchir la page.');
       }

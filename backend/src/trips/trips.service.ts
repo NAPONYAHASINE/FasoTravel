@@ -102,6 +102,7 @@ export class TripsService {
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.fromStation', 'fromStation')
       .leftJoinAndSelect('t.toStation', 'toStation')
+      .leftJoinAndSelect('t.promotion', 'promotion')
       .where('t.status != :cancelled', { cancelled: 'cancelled' })
       .andWhere('t.departure_time BETWEEN :dateStart AND :dateEnd', {
         dateStart,
@@ -247,25 +248,33 @@ export class TripsService {
   async findPopularRoutes() {
     const routes = await this.tripRepo
       .createQueryBuilder('t')
+      .innerJoin('t.fromStation', 'fs')
+      .innerJoin('t.toStation', 'ts')
       .select('t.from_station_id', 'from_id')
       .addSelect('t.to_station_id', 'to_id')
+      .addSelect('fs.city', 'from_city')
+      .addSelect('ts.city', 'to_city')
       .addSelect('COUNT(*)', 'trip_count')
       .addSelect('ROUND(AVG(t.base_price))', 'avg_price')
       .groupBy('t.from_station_id')
       .addGroupBy('t.to_station_id')
+      .addGroupBy('fs.city')
+      .addGroupBy('ts.city')
       .orderBy('trip_count', 'DESC')
       .limit(10)
       .getRawMany<{
         from_id: string;
         to_id: string;
+        from_city: string;
+        to_city: string;
         trip_count: string;
         avg_price: string;
       }>();
 
     return routes.map((r, i) => ({
       id: `route_${i + 1}`,
-      from: r.from_id,
-      to: r.to_id,
+      from: r.from_city,
+      to: r.to_city,
       from_id: r.from_id,
       to_id: r.to_id,
       trip_count: parseInt(r.trip_count, 10),

@@ -23,7 +23,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
     name: '',
     legalName: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     address: '',
     registrationNumber: '',
     taxId: '',
@@ -33,9 +33,9 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
     managerPassword: '',
     managerPin: '',
     commission: 5,
-    logo: '',
+    logoUrl: '',
     amenities: [] as string[],
-    luggagePrice: 0
+    baggagePrice: 0
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +60,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
     // Convertir en base64
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFormData({ ...formData, logo: reader.result as string });
+      setFormData({ ...formData, logoUrl: reader.result as string });
     };
     reader.readAsDataURL(file);
   };
@@ -72,7 +72,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
       name: '',
       legalName: '',
       email: '',
-      phone: '',
+      phoneNumber: '',
       address: '',
       registrationNumber: '',
       taxId: '',
@@ -82,9 +82,9 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
       managerPassword: '',
       managerPin: '',
       commission: 5,
-      logo: '',
+      logoUrl: '',
       amenities: [],
-      luggagePrice: 0
+      baggagePrice: 0
     });
   };
 
@@ -179,8 +179,8 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
               <input
                 type="tel"
                 required
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                 className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="+226 XX XX XX XX"
               />
@@ -391,7 +391,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
             />
             
             {/* Bouton personnalisé */}
-            {!formData.logo ? (
+            {!formData.logoUrl ? (
               <label
                 htmlFor="logo-upload"
                 className="flex items-center justify-center gap-3 w-full px-6 py-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-red-500 dark:hover:border-red-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all"
@@ -411,7 +411,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
                 {/* Aperçu de l'image */}
                 <div className="flex items-center gap-4">
                   <img
-                    src={formData.logo}
+                    src={formData.logoUrl}
                     alt="Aperçu du logo"
                     className="w-20 h-20 object-contain rounded-lg bg-gray-100 dark:bg-gray-700"
                   />
@@ -432,7 +432,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
                     </label>
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, logo: '' })}
+                      onClick={() => setFormData({ ...formData, logoUrl: '' })}
                       className="px-4 py-2 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                     >
                       Supprimer
@@ -475,7 +475,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
                         setFormData({ 
                           ...formData, 
                           amenities: newAmenities,
-                          ...(option.value === 'luggage' ? { luggagePrice: 0 } : {})
+                          ...(option.value === 'luggage' ? { baggagePrice: 0 } : {})
                         });
                       }
                     }}
@@ -500,8 +500,8 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading = false 
                     min="0"
                     step="100"
                     required
-                    value={formData.luggagePrice}
-                    onChange={(e) => setFormData({ ...formData, luggagePrice: parseInt(e.target.value) || 0 })}
+                    value={formData.baggagePrice}
+                    onChange={(e) => setFormData({ ...formData, baggagePrice: parseInt(e.target.value) || 0 })}
                     className="w-full pl-11 pr-4 py-3 border border-amber-300 dark:border-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Ex: 1500"
                   />

@@ -40,6 +40,7 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
   const [agentTyping, setAgentTyping] = useState(false);
   const [isEscalated, setIsEscalated] = useState(false);
   const [agentConnected, setAgentConnected] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -82,8 +83,13 @@ export function ChatPage({ onBack, user }: ChatPageProps) {
     try {
       const assistant = await supportService.askVirtualAssistant({
         message: userText,
+        conversationId,
         userEmail: user?.email || email || undefined,
       });
+
+      if (assistant.conversationId) {
+        setConversationId(assistant.conversationId);
+      }
 
       addMessage('bot', assistant.answer, undefined, assistant.sources);
 

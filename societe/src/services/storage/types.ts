@@ -29,6 +29,7 @@ export type StorageKey =
   | 'cashTransactions'
   | 'priceSegments'
   | 'priceHistory'
+  | 'operatorServices'
   | 'auth_token'
   | 'auth_user'
   | 'refresh_token'
@@ -50,6 +51,7 @@ export interface StorageTypeMap {
   cashTransactions: CashTransaction[];
   priceSegments: any[]; // Type à définir
   priceHistory: any[]; // Type à définir
+  operatorServices: any[]; // OperatorServiceItem[]
   auth_token: string;
   auth_user: any; // Type User à définir
   refresh_token: string;

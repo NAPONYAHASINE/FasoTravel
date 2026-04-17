@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Promotion } from '../database/entities';
 import {
   CreatePromotionDto,
@@ -14,6 +18,7 @@ export class PromotionsService {
   constructor(
     @InjectRepository(Promotion)
     private readonly promoRepo: Repository<Promotion>,
+    private readonly dataSource: DataSource,
   ) {}
 
   // ─── Public / Mobile ──────────────────────────────────────
@@ -63,6 +68,29 @@ export class PromotionsService {
       valid: true,
       promotion: promo,
     };
+  }
+
+  /**
+   * POST /promotions/use — Atomically increment usesCount when a promotion is consumed.
+   * Uses optimistic concurrency via UPDATE ... SET usesCount = usesCount + 1 WHERE usesCount < maxUses.
+   */
+  async usePromotion(promotionId: string): Promise<{ used: boolean }> {
+    const result = await this.dataSource
+      .createQueryBuilder()
+      .update(Promotion)
+      .set({ usesCount: () => '"uses_count" + 1' })
+      .where('promotion_id = :id', { id: promotionId })
+      .andWhere('is_active = true')
+      .andWhere('(max_uses IS NULL OR uses_count < max_uses)')
+      .execute();
+
+    if (result.affected === 0) {
+      throw new ConflictException(
+        "Promotion invalide ou nombre maximum d'utilisations atteint",
+      );
+    }
+
+    return { used: true };
   }
 
   // ─── Admin ────────────────────────────────────────────────

@@ -38,6 +38,9 @@ describe('AdsService', () => {
       findOne: jest.fn(),
       find: jest.fn(),
       save: jest.fn((e: any) => Promise.resolve(e)),
+      create: jest.fn((e: any) => e),
+      remove: jest.fn(),
+      increment: jest.fn().mockResolvedValue(undefined),
       createQueryBuilder: jest.fn(() => ({
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
@@ -104,7 +107,11 @@ describe('AdsService', () => {
     it('should increment count and save impression', async () => {
       adRepo.findOne.mockResolvedValue({ ...mockAd });
       await service.trackImpression('ad-001', 'user-001', { page: 'home' });
-      expect(adRepo.save).toHaveBeenCalled();
+      expect(adRepo.increment).toHaveBeenCalledWith(
+        { id: 'ad-001' },
+        'impressionsCount',
+        1,
+      );
       expect(impressionRepo.save).toHaveBeenCalled();
     });
 
@@ -120,7 +127,11 @@ describe('AdsService', () => {
     it('should increment count and save click', async () => {
       adRepo.findOne.mockResolvedValue({ ...mockAd });
       await service.trackClick('ad-001', 'user-001', { page: 'home' });
-      expect(adRepo.save).toHaveBeenCalled();
+      expect(adRepo.increment).toHaveBeenCalledWith(
+        { id: 'ad-001' },
+        'clicksCount',
+        1,
+      );
       expect(clickRepo.save).toHaveBeenCalled();
     });
 

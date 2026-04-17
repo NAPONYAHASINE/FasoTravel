@@ -124,7 +124,7 @@ export class TicketsService {
   ): Promise<PaginatedResponse<Ticket>> {
     const [data, total] = await this.ticketRepo.findAndCount({
       where: { purchasedByUserId: userId },
-      relations: ['trip'],
+      relations: ['trip', 'operator'],
       order: { purchasedAt: 'DESC' },
       skip: pagination.skip,
       take: pagination.limit,
@@ -140,7 +140,7 @@ export class TicketsService {
   async findOne(ticketId: string): Promise<Ticket> {
     const ticket = await this.ticketRepo.findOne({
       where: { id: ticketId },
-      relations: ['trip', 'booking'],
+      relations: ['trip', 'booking', 'operator'],
     });
     if (!ticket) {
       throw new NotFoundException(`Ticket ${ticketId} not found`);
@@ -151,7 +151,7 @@ export class TicketsService {
   async downloadTicket(ticketId: string) {
     const ticket = await this.ticketRepo.findOne({
       where: { id: ticketId },
-      relations: ['trip', 'booking'],
+      relations: ['trip', 'booking', 'operator'],
     });
     if (!ticket) {
       throw new NotFoundException(`Ticket ${ticketId} not found`);

@@ -19,6 +19,8 @@ import { STORAGE_AUTH_TOKEN, STORAGE_REFRESH_TOKEN, STORAGE_CURRENT_USER, STORAG
 import type { User, AuthCredentials, AuthRegisterData, AuthResponse, PassengerUser } from '../../shared/types/common';
 
 class AuthService {
+  private pendingOtp: string = '';
+
   /**
    * Login utilisateur
    * Non-admin: backend renvoie { otpRequired, identifier } → OTP via WhatsApp
@@ -63,16 +65,33 @@ class AuthService {
   }
 
   /**
-   * Vérifie un code OTP
+   * Vérifie un code OTP et sauvegarde les tokens retournés
    */
-  async verifyOtp(identifier: string, code: string, mode: string): Promise<boolean> {
+  async verifyOtp(identifier: string, code: string, mode: string): Promise<AuthResponse> {
     if (isDevelopment()) {
-      // Mock: accepter tout code de 6 chiffres
-      return code.length === 6;
+      // Valider le code OTP exact généré au login
+      if (code.length !== 6) throw new Error('Code OTP invalide');
+      if (this.pendingOtp && code !== this.pendingOtp) {
+        throw new Error('Code OTP incorrect');
+      }
+      this.pendingOtp = '';
+      const storedUser = storageService.get<User>(STORAGE_CURRENT_USER);
+      const mockResponse: AuthResponse = {
+        user: storedUser || undefined,
+        token: `mock_token_${Date.now()}`,
+        refreshToken: `mock_refresh_${Date.now()}`,
+        expiresIn: 3600,
+      };
+      this.saveAuthData(mockResponse);
+      return mockResponse;
     }
 
-    await apiClient.post(API_ENDPOINTS.auth.verifyOtp, { identifier, code, mode });
-    return true;
+    const response = await apiClient.post<AuthResponse>(
+      API_ENDPOINTS.auth.verifyOtp,
+      { identifier, code, mode }
+    );
+    this.saveAuthData(response);
+    return response;
   }
 
   /**
@@ -80,11 +99,44 @@ class AuthService {
    */
   async resendOtp(identifier: string, mode: string): Promise<void> {
     if (isDevelopment()) {
-      // Mock: simule un délai
+      // Régénérer un nouveau code OTP
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      this.pendingOtp = otpCode;
+      console.log(`🔐 [DEV] Nouveau code OTP renvoyé à ${identifier.replace(/@phone\.transportbf\.bf$/, '')}: ${otpCode}`);
       return;
     }
 
     await apiClient.post(API_ENDPOINTS.auth.resendOtp, { identifier, mode });
+  }
+
+  /**
+   * Mot de passe oublié — envoie un OTP au numéro WhatsApp
+   */
+  async forgotPassword(email: string): Promise<{ message: string; otpCode?: string }> {
+    if (isDevelopment()) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log(`🔐 [DEV] OTP mot de passe oublié: ${otp}`);
+      return { message: 'OTP envoyé sur votre WhatsApp', otpCode: otp };
+    }
+
+    return apiClient.post<{ message: string; otpCode?: string }>(
+      API_ENDPOINTS.auth.forgotPassword,
+      { email }
+    );
+  }
+
+  /**
+   * Réinitialiser le mot de passe avec OTP
+   */
+  async resetPassword(email: string, code: string, newPassword: string): Promise<{ message: string }> {
+    if (isDevelopment()) {
+      return { message: 'Mot de passe réinitialisé avec succès' };
+    }
+
+    return apiClient.post<{ message: string }>(
+      API_ENDPOINTS.auth.resetPassword,
+      { email, code, newPassword }
+    );
   }
 
   /**
@@ -181,12 +233,15 @@ class AuthService {
   // ============================================
 
   private mockLogin(credentials: AuthCredentials): AuthResponse {
-    // Mock: simule OTP WhatsApp pour les non-admin
+    // Générer un vrai OTP aléatoire (comme Admin et Société)
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    this.pendingOtp = otpCode;
+    console.log(`🔐 [DEV] Code OTP envoyé à ${credentials.email.replace(/@phone\.transportbf\.bf$/, '')}: ${otpCode}`);
     return {
       otpRequired: true,
       identifier: credentials.email,
       message: 'OTP envoyé sur votre WhatsApp',
-      otpCode: '123456', // dev only
+      otpCode,
     };
   }
 

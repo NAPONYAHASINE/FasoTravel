@@ -160,9 +160,10 @@ export interface TransportCompany {
   id: string;
   name: string;
   legalName?: string;
-  logo?: string;
+  operatorLogo?: string;
+  logoUrl?: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
   
   // Business info
   registrationNumber?: string;
@@ -170,25 +171,23 @@ export interface TransportCompany {
   address?: string;
   
   // Platform settings
-  commission: number; // % commission taken by FasoTravel
+  commission?: number; // % commission taken by FasoTravel
   status: 'active' | 'suspended' | 'pending';
   
   // Additional services offered by the company
   amenities?: string[]; // e.g., ['wifi', 'coffee', 'ac', 'toilet', 'usb', 'tv', 'luggage']
-  luggagePrice?: number; // Price per extra luggage in FCFA (only relevant if amenities includes 'luggage')
+  baggagePrice?: number; // Price per extra luggage in FCFA
   
   // Contact person
   contactPersonName?: string;
   contactPersonWhatsapp?: string;
   contactPersonEmail?: string;
   
-  vehicleCount?: number;
+  fleetSize?: number;
   operatorId?: string;
   approvedAt?: string;
   
   // Stats (read-only, calculated)
-  totalVehicles?: number;
-  totalRoutes?: number;
   totalTrips?: number;
   rating?: number;
   
@@ -917,18 +916,21 @@ export function isPaginatedResponse<T>(response: any): response is PaginatedResp
 
 /**
  * Notification - System notifications for Admin
+ * Aligned with backend Notification entity (PK: notificationId)
  */
 export interface Notification {
-  id: string;
-  type: 'info' | 'warning' | 'error' | 'success';
+  notificationId: string;
+  userId?: string;
+  type: string;
   title: string;
   message: string;
-  read: boolean;
-  entityType?: 'company' | 'passenger' | 'trip' | 'payment' | 'incident';
-  entityId?: string;
-  actionUrl?: string;
+  isRead: boolean;
+  deepLink?: string;
+  imageUrl?: string;
   createdAt: string;
   readAt?: string;
+  expiresAt?: string;
+  metadata?: Record<string, any>;
 }
 
 /**

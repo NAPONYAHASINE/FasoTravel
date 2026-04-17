@@ -95,6 +95,7 @@ class LiveLocationService {
     try {
       await apiClient.post(`/trips/${context.tripId}/location/emit`, {
         userId: context.userId,
+        ticketId: context.ticketId,
         latitude: context.userLatitude,
         longitude: context.userLongitude,
         timestamp: new Date().toISOString(),
@@ -216,6 +217,7 @@ class LiveLocationService {
       accuracy: 50,
       timestamp: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      progress_percent: Math.round(progress * 100),
     };
   }
 }

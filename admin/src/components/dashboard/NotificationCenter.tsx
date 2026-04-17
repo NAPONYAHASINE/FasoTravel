@@ -592,7 +592,7 @@ export function NotificationCenter() {
     .slice()
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const unreadInboxCount = inboxItems.filter(n => !n.read).length;
+  const unreadInboxCount = inboxItems.filter(n => !n.isRead).length;
 
   const getInboxTypeBadge = (type: Notification['type']) => {
     if (type === 'error') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
@@ -602,10 +602,10 @@ export function NotificationCenter() {
   };
 
   const handleMarkAllInboxRead = async () => {
-    const unread = inboxItems.filter(n => !n.read);
+    const unread = inboxItems.filter(n => !n.isRead);
     if (unread.length === 0) return;
 
-    await Promise.allSettled(unread.map(n => markNotificationAsRead(n.id)));
+    await Promise.allSettled(unread.map(n => markNotificationAsRead(n.notificationId)));
     await refreshNotifications();
   };
 
@@ -747,9 +747,9 @@ export function NotificationCenter() {
             ) : (
               inboxItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.notificationId}
                   className={`rounded-xl border p-4 transition-colors ${
-                    item.read
+                    item.isRead
                       ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                       : 'bg-red-50/70 dark:bg-red-900/15 border-red-200 dark:border-red-800'
                   }`}
@@ -764,16 +764,16 @@ export function NotificationCenter() {
                         <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${getInboxTypeBadge(item.type)}`}>
                           {item.type}
                         </span>
-                        {!item.read && <span className="w-2 h-2 rounded-full bg-red-600" />}
+                        {!item.isRead && <span className="w-2 h-2 rounded-full bg-red-600" />}
                       </div>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{item.message}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                         {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: fr })}
                       </p>
                     </div>
-                    {!item.read && (
+                    {!item.isRead && (
                       <button
-                        onClick={() => void markNotificationAsRead(item.id)}
+                        onClick={() => void markNotificationAsRead(item.notificationId)}
                         className="text-xs text-red-600 dark:text-red-400 hover:underline whitespace-nowrap"
                       >
                         Marquer lu

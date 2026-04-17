@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, Max, IsIn } from 'class-validator';
 
 export class CreateStoryDto {
   @IsString()
@@ -79,6 +79,111 @@ export class UpdateStoryDto {
   @IsOptional()
   @IsString()
   ctaLink?: string;
+}
+
+// ─── Admin Story DTOs ───────────────────────────────────────────
+
+export class CreateAdminStoryDto {
+  @IsString()
+  title: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['image', 'video', 'gradient'])
+  mediaType?: string;
+
+  @IsOptional()
+  @IsString()
+  mediaUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  gradient?: string;
+
+  @IsOptional()
+  @IsString()
+  emoji?: string;
+
+  @IsOptional()
+  @IsString()
+  circleId?: string;
+
+  @IsOptional()
+  @IsString()
+  ctaText?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['internal', 'external', 'none'])
+  actionType?: string;
+
+  @IsOptional()
+  @IsString()
+  actionUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  internalPage?: string;
+
+  @IsOptional()
+  @IsString()
+  expiresAt?: string;
+}
+
+export class UpdateAdminStoryDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['image', 'video', 'gradient'])
+  mediaType?: string;
+
+  @IsOptional()
+  @IsString()
+  mediaUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  gradient?: string;
+
+  @IsOptional()
+  @IsString()
+  emoji?: string;
+
+  @IsOptional()
+  @IsString()
+  circleId?: string;
+
+  @IsOptional()
+  @IsString()
+  ctaText?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['internal', 'external', 'none'])
+  actionType?: string;
+
+  @IsOptional()
+  @IsString()
+  actionUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  internalPage?: string;
+
+  @IsOptional()
+  @IsString()
+  expiresAt?: string;
 }
 
 export class MarkViewedDto {

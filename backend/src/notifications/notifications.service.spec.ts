@@ -68,6 +68,7 @@ describe('NotificationsService', () => {
 
   const mockUserRepo = {
     countBy: jest.fn().mockResolvedValue(100),
+    find: jest.fn().mockResolvedValue([{ id: 'user_1' }, { id: 'user_2' }]),
   };
 
   const mockUserDeviceRepo = {
@@ -149,15 +150,18 @@ describe('NotificationsService', () => {
   });
 
   it('sendBulk without scheduledAt sends immediately', async () => {
-    mockUserRepo.countBy.mockResolvedValue(100);
+    const mockUsers = [{ id: 'user_1' }, { id: 'user_2' }];
+    mockUserRepo.find.mockResolvedValue(mockUsers);
+    mockNotificationRepo.save.mockResolvedValue(mockUsers);
     const result = await service.sendBulk({
       title: 'Test',
       message: 'Hello',
       channels: ['push'],
       audience: 'all_passengers',
     });
-    expect(result.sentCount).toBe(100);
-    expect(mockCampaignRepo.save).toHaveBeenCalled();
+    expect(result.sentCount).toBe(2);
+    expect(mockNotificationRepo.save).toHaveBeenCalled(); // Individual notifications
+    expect(mockCampaignRepo.save).toHaveBeenCalled(); // Campaign record
   });
 
   // ========== STATS ==========

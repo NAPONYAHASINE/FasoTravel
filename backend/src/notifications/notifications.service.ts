@@ -57,10 +57,12 @@ export class NotificationsService {
 
   async createNotification(dto: CreateNotificationDto) {
     const notif = this.notificationRepo.create({
+      userId: dto.userId,
       type: dto.type,
       title: dto.title,
       message: dto.message,
       deepLink: dto.actionUrl,
+      imageUrl: dto.imageUrl,
     });
     return this.notificationRepo.save(notif);
   }
@@ -85,7 +87,22 @@ export class NotificationsService {
     }
 
     // Immediate send
-    const audienceCount = await this.getAudienceCount(dto.audience);
+    const users = await this.getAudienceUsers(dto.audience);
+    const audienceCount = users.length;
+
+    // Create individual notification for each user
+    if (users.length > 0) {
+      const notifications = users.map((user) =>
+        this.notificationRepo.create({
+          userId: user.id,
+          type: dto.type ?? 'PROMO',
+          title: dto.title,
+          message: dto.message,
+          deepLink: dto.actionUrl,
+        }),
+      );
+      await this.notificationRepo.save(notifications);
+    }
 
     // Create campaign record
     const campaign = this.campaignRepo.create({
@@ -408,6 +425,28 @@ export class NotificationsService {
         return this.userRepo.countBy({ role: 'PASSENGER', status: 'active' });
       default:
         return this.userRepo.countBy({ role: 'PASSENGER' });
+    }
+  }
+
+  private async getAudienceUsers(
+    audience: string,
+  ): Promise<Array<{ id: string }>> {
+    switch (audience) {
+      case 'all_passengers':
+        return this.userRepo.find({
+          select: ['id'],
+          where: { role: 'PASSENGER' },
+        });
+      case 'active':
+        return this.userRepo.find({
+          select: ['id'],
+          where: { role: 'PASSENGER', status: 'active' },
+        });
+      default:
+        return this.userRepo.find({
+          select: ['id'],
+          where: { role: 'PASSENGER' },
+        });
     }
   }
 }

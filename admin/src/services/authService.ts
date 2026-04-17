@@ -64,7 +64,7 @@ class AuthService {
       const admin = MOCK_ADMIN_USERS.find(u => u.email.toLowerCase() === cleanEmail);
       
       if (!admin || cleanPassword !== 'Admin123!') {
-        return { success: false, error: 'Email ou mot de passe incorrect (Mode Mock: Utilisez "Admin123!")' };
+        return { success: false, error: 'Email ou mot de passe incorrect' };
       }
       
       // Générer OTP mock
@@ -78,18 +78,29 @@ class AuthService {
     }
     
     // MODE PRODUCTION
-    const response = await apiService.post<{ token: string; refreshToken: string; user: AdminUser }>(
+    const response = await apiService.post<{ token: string; refreshToken: string; user: AdminUser; expiresIn: number; otpRequired?: boolean; identifier?: string }>(
       ENDPOINTS.auth.login(),
       { email, password }
     );
     
     if (response.success && response.data) {
       this.pendingUser = response.data.user;
+
+      // Admin roles: backend returns tokens directly (no OTP)
+      if (response.data.token && !response.data.otpRequired) {
+        return {
+          success: true,
+          user: response.data.user,
+          token: response.data.token,
+          refreshToken: response.data.refreshToken,
+          otpSent: false,
+        };
+      }
+
+      // Non-admin: OTP flow
       return {
         success: true,
         user: response.data.user,
-        token: response.data.token,
-        refreshToken: response.data.refreshToken,
         otpSent: true,
       };
     }
@@ -104,9 +115,8 @@ class AuthService {
     if (AppConfig.isMock) {
       await new Promise(r => setTimeout(r, 800));
       
-      // Accepter le code généré OU "000000" pour les tests
-      if (code !== this.pendingOtp && code !== '000000') {
-        return { success: false, error: 'Code OTP incorrect. Vérifiez votre email ou utilisez "000000" en mode démo.' };
+      if (code !== this.pendingOtp) {
+        return { success: false, error: 'Code OTP incorrect. Vérifiez votre email et réessayez.' };
       }
       
       const user = this.pendingUser;
@@ -117,7 +127,7 @@ class AuthService {
     
     // MODE PRODUCTION
     const response = await apiService.post<{ token: string; refreshToken: string; user: AdminUser }>(
-      '/auth/verify-otp',
+      ENDPOINTS.auth.verifyOtp(),
       { code, email }
     );
     
@@ -199,7 +209,7 @@ class AuthService {
   }
 
   /**
-   * Réinitialiser le mot de passe
+   * Demander une réinitialisation de mot de passe (envoie OTP)
    */
   async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
     if (AppConfig.isMock) {
@@ -208,7 +218,7 @@ class AuthService {
     }
     
     const response = await apiService.post(
-      ENDPOINTS.auth.resetPassword(),
+      ENDPOINTS.auth.forgotPassword(),
       { email }
     );
     return { success: response.success, error: response.error };

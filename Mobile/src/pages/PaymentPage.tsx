@@ -244,6 +244,7 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, selectedPa
       const booking = await bookingService.createHoldBooking({
         tripId: reservationData.outbound?.trip_id || outboundTrip?.trip_id || '',
         numSeats: priceBreakdown.numPassengers,
+        seatNumbers: reservationData.outbound?.seats,
         unitPrice,
         passengerName: firstPassenger?.name,
         passengerPhone: firstPassenger?.phone,
@@ -264,6 +265,7 @@ export function PaymentPage({ reservationData, selectedPaymentMethod, selectedPa
         const ticket = await bookingService.confirmBooking({
           bookingId: booking.id,
           paymentMethod: paymentMethod as any,
+          totalPaid: priceBreakdown.totalToPay,
         });
 
         // 5. Mark coupon as used if applied

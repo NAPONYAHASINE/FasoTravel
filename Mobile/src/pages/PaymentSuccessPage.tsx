@@ -25,7 +25,7 @@ export function PaymentSuccessPage({ reservationData, onNavigate }: PaymentSucce
 
   useEffect(() => {
     // Track payment success event
-    console.log('Payment success event:', reservationData);
+    console.log('Payment success event:', { ticketId: reservationData.ticketId, totalPaid: reservationData.totalPaid });
     
     // Success feedback
     feedback.success();

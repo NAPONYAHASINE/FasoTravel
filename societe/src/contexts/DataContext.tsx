@@ -263,11 +263,11 @@ export interface Review {
 export interface Incident {
   id: string;
   tripId: string;
-  type: 'delay' | 'breakdown' | 'accident' | 'other';
+  type: 'delay' | 'cancellation' | 'mechanical' | 'accident' | 'other';
   title: string;
   description: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status: 'open' | 'in-progress' | 'resolved';
   
   // ✅ Validation par Manager/Responsable
   validationStatus: 'pending' | 'validated' | 'rejected';
@@ -289,7 +289,7 @@ export interface SupportTicket {
   description: string;
   category: 'technical' | 'financial' | 'operational' | 'other';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -1253,11 +1253,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     {
       id: 'incident_2',
       tripId: trips[1]?.id || 'trip_2',
-      type: 'breakdown',
+      type: 'mechanical',
       title: 'Panne mécanique',
       description: 'Le bus a eu un problème de moteur en cours de route. Les passagers attendent l\'intervention.',
       severity: 'high',
-      status: 'in_progress',
+      status: 'in-progress',
       validationStatus: 'validated',
       validatedBy: 'mgr_1',
       validatedByName: 'Marie Kaboré',
@@ -1296,7 +1296,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       description: 'Les ventes du guichet ne se synchronisent pas correctement avec le dashboard. Certaines transactions n\'apparaissent qu\'après plusieurs heures.',
       category: 'technical',
       priority: 'high',
-      status: 'in_progress',
+      status: 'in-progress',
       createdBy: 'mgr_1',
       createdByName: 'Amadou Traoré',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -1380,7 +1380,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       description: 'Sur l\'application mobile, les billets imprimés au guichet n\'affichent pas le QR code correctement. Le voyageur ne peut pas scanner son billet.',
       category: 'technical',
       priority: 'urgent',
-      status: 'in_progress',
+      status: 'in-progress',
       createdBy: 'mgr_3',
       createdByName: 'Ibrahim Ouédraogo',
       createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),

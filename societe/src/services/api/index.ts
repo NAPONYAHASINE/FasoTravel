@@ -15,6 +15,7 @@ export { stationService } from './station.service';
 export { scheduleService } from './schedule.service';
 export { pricingService } from './pricing.service';
 export { storyService } from './story.service';
+export { operatorServiceService } from './operatorService.service';
 
 // Export aussi les types
 export type * from '../types';

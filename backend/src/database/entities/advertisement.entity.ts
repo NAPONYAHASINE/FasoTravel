@@ -76,7 +76,7 @@ export class Advertisement {
   @Column({ name: 'clicks_count', type: 'int', default: 0 })
   clicksCount: number;
 
-  @Column({ name: 'created_by', type: 'uuid' })
+  @Column({ name: 'created_by', type: 'uuid', nullable: true })
   createdBy: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

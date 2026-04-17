@@ -40,35 +40,58 @@ export class CreateAdDto {
   @IsString()
   title!: string;
 
+  @IsOptional()
   @IsString()
-  type!: string;
+  description?: string;
+
+  @IsString()
+  mediaType!: string;
 
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  mediaUrl?: string;
 
   @IsOptional()
   @IsString()
-  linkUrl?: string;
+  gradient?: string;
 
   @IsOptional()
   @IsString()
-  advertiser?: string;
+  emoji?: string;
+
+  @IsOptional()
+  @IsString()
+  ctaText?: string;
+
+  @IsOptional()
+  @IsString()
+  actionType?: string;
+
+  @IsOptional()
+  @IsString()
+  actionUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  internalPage?: string;
+
+  @IsOptional()
+  internalData?: Record<string, any>;
 
   @IsOptional()
   targetPages?: string[];
+
+  @IsOptional()
+  targetNewUsers?: boolean;
+
+  @IsOptional()
+  priority?: number;
 
   @IsOptional()
   startDate?: string;
 
   @IsOptional()
   endDate?: string;
-
-  @IsOptional()
-  priority?: number;
-
-  @IsOptional()
-  targetNewUsers?: boolean;
 }
 
 export class UpdateAdDto {
@@ -78,22 +101,51 @@ export class UpdateAdDto {
 
   @IsOptional()
   @IsString()
-  type?: string;
+  description?: string;
 
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  mediaType?: string;
 
   @IsOptional()
   @IsString()
-  linkUrl?: string;
+  mediaUrl?: string;
 
   @IsOptional()
   @IsString()
-  advertiser?: string;
+  gradient?: string;
+
+  @IsOptional()
+  @IsString()
+  emoji?: string;
+
+  @IsOptional()
+  @IsString()
+  ctaText?: string;
+
+  @IsOptional()
+  @IsString()
+  actionType?: string;
+
+  @IsOptional()
+  @IsString()
+  actionUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  internalPage?: string;
+
+  @IsOptional()
+  internalData?: Record<string, any>;
 
   @IsOptional()
   targetPages?: string[];
+
+  @IsOptional()
+  targetNewUsers?: boolean;
+
+  @IsOptional()
+  priority?: number;
 
   @IsOptional()
   startDate?: string;
@@ -102,11 +154,5 @@ export class UpdateAdDto {
   endDate?: string;
 
   @IsOptional()
-  priority?: number;
-
-  @IsOptional()
   isActive?: boolean;
-
-  @IsOptional()
-  targetNewUsers?: boolean;
 }

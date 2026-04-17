@@ -74,7 +74,7 @@ export class CreateSupportMessageDto {
   message: string;
 
   @IsOptional()
-  @IsIn(['BOOKING', 'PAYMENT', 'TICKET', 'VEHICLE', 'OTHER'])
+  @IsIn(['BOOKING', 'PAYMENT', 'TECHNICAL', 'FEEDBACK', 'OTHER'])
   category?: string;
 
   @IsOptional()

@@ -12,8 +12,9 @@
  * - Design-system FasoTravel (PAGE_CLASSES, StatCard)
  */
 
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Edit, Ban, AlertCircle, Bus, MapPin, Route, Star } from 'lucide-react';
+import { ArrowLeft, Edit, Ban, AlertCircle, Bus, MapPin, Route, Star, Plus, Pencil, Trash2, Package, Coffee, Wifi, Shield, Crown } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -21,12 +22,90 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/ta
 import { StatCard } from '../../components/ui/stat-card';
 import { PAGE_CLASSES } from '../../lib/design-system';
 import { useCompanyDetail } from '../../hooks/useCompanyDetail';
+import { operatorServicesService } from '../../services/entitiesService';
+import type { OperatorService } from '../../shared/types/standardized';
 import { toast } from 'sonner@2.0.3';
+
+const SERVICE_TYPE_ICONS: Record<string, any> = {
+  luggage: Package,
+  food: Coffee,
+  wifi: Wifi,
+  insurance: Shield,
+  priority: Crown,
+  BAGGAGE: Package,
+  FOOD: Coffee,
+  COMFORT: Wifi,
+  ENTERTAINMENT: Crown,
+  OTHER: Shield,
+};
+
+const SERVICE_TYPE_LABELS: Record<string, string> = {
+  luggage: 'Bagages',
+  food: 'Restauration',
+  wifi: 'Wi-Fi',
+  insurance: 'Assurance',
+  priority: 'Priorité',
+  BAGGAGE: 'Bagages',
+  FOOD: 'Restauration',
+  COMFORT: 'Confort',
+  ENTERTAINMENT: 'Divertissement',
+  OTHER: 'Autre',
+};
 
 export default function CompanyDetailPage() {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   const { company, error, approve, suspend } = useCompanyDetail(companyId);
+
+  // Services state
+  const [services, setServices] = useState<OperatorService[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [editingService, setEditingService] = useState<OperatorService | null>(null);
+  const [serviceForm, setServiceForm] = useState({
+    name: '',
+    type: 'luggage' as string,
+    description: '',
+    price: 0,
+    currency: 'FCFA',
+  });
+
+  const loadServices = useCallback(async () => {
+    if (!companyId) return;
+    setServicesLoading(true);
+    const res = await operatorServicesService.getByOperator(companyId);
+    if (res.success && res.data) setServices(res.data);
+    setServicesLoading(false);
+  }, [companyId]);
+
+  useEffect(() => { loadServices(); }, [loadServices]);
+
+  const handleServiceSubmit = async () => {
+    if (!serviceForm.name.trim()) { toast.error('Nom du service requis'); return; }
+    if (editingService) {
+      const res = await operatorServicesService.update(editingService.id, serviceForm);
+      if (res.success) { toast.success('Service modifié'); } else { toast.error(res.error || 'Erreur'); }
+    } else {
+      const res = await operatorServicesService.create({ ...serviceForm, companyId: companyId! });
+      if (res.success) { toast.success('Service créé'); } else { toast.error(res.error || 'Erreur'); }
+    }
+    setShowServiceForm(false);
+    setEditingService(null);
+    setServiceForm({ name: '', type: 'luggage', description: '', price: 0, currency: 'FCFA' });
+    loadServices();
+  };
+
+  const handleDeleteService = async (id: string) => {
+    if (!confirm('Supprimer ce service ?')) return;
+    const res = await operatorServicesService.delete(id);
+    if (res.success) { toast.success('Service supprimé'); loadServices(); } else { toast.error(res.error || 'Erreur'); }
+  };
+
+  const openEditService = (svc: OperatorService) => {
+    setEditingService(svc);
+    setServiceForm({ name: svc.name, type: svc.type, description: svc.description || '', price: svc.price, currency: svc.currency });
+    setShowServiceForm(true);
+  };
 
   const handleApprove = async () => {
     const result = await approve();
@@ -144,6 +223,7 @@ export default function CompanyDetailPage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="business">Informations légales</TabsTrigger>
         </TabsList>
@@ -219,6 +299,94 @@ export default function CompanyDetailPage() {
                 <div className="text-gray-900 dark:text-white">{company.address || 'Non renseignée'}</div>
               </div>
             </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="services" className="mt-4">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg text-gray-900 dark:text-white">Services proposés</h3>
+              <Button size="sm" onClick={() => { setEditingService(null); setServiceForm({ name: '', type: 'luggage', description: '', price: 0, currency: 'FCFA' }); setShowServiceForm(true); }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Ajouter
+              </Button>
+            </div>
+
+            {/* Service Form Dialog */}
+            {showServiceForm && (
+              <Card className="p-4 mb-4 border-2 border-blue-200 dark:border-blue-800">
+                <h4 className="text-sm font-medium mb-3 text-gray-900 dark:text-white">{editingService ? 'Modifier le service' : 'Nouveau service'}</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 dark:text-gray-400">Nom</label>
+                    <input className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value={serviceForm.name} onChange={e => setServiceForm(f => ({ ...f, name: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 dark:text-gray-400">Type</label>
+                    <select className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value={serviceForm.type} onChange={e => setServiceForm(f => ({ ...f, type: e.target.value }))}>
+                      <option value="luggage">Bagages</option>
+                      <option value="food">Restauration</option>
+                      <option value="wifi">Wi-Fi</option>
+                      <option value="insurance">Assurance</option>
+                      <option value="priority">Priorité</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 dark:text-gray-400">Prix (FCFA)</label>
+                    <input type="number" className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value={serviceForm.price} onChange={e => setServiceForm(f => ({ ...f, price: Number(e.target.value) }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 dark:text-gray-400">Description</label>
+                    <input className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value={serviceForm.description} onChange={e => setServiceForm(f => ({ ...f, description: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <Button size="sm" onClick={handleServiceSubmit}>{editingService ? 'Enregistrer' : 'Créer'}</Button>
+                  <Button size="sm" variant="outline" onClick={() => { setShowServiceForm(false); setEditingService(null); }}>Annuler</Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Services List */}
+            {servicesLoading ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Chargement...</p>
+            ) : services.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Aucun service configuré pour cette société.</p>
+            ) : (
+              <div className="space-y-3">
+                {services.map(svc => {
+                  const Icon = SERVICE_TYPE_ICONS[svc.type] || Package;
+                  return (
+                    <div key={svc.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">{svc.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {SERVICE_TYPE_LABELS[svc.type] || svc.type}
+                            {svc.description && ` — ${svc.description}`}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium text-gray-900 dark:text-white">{svc.price.toLocaleString('fr-FR')} {svc.currency}</span>
+                        <Badge className={svc.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}>
+                          {svc.status === 'active' ? 'Actif' : 'Inactif'}
+                        </Badge>
+                        <Button size="sm" variant="ghost" onClick={() => openEditService(svc)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDeleteService(svc.id)}>
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         </TabsContent>
       </Tabs>

@@ -23,7 +23,7 @@ export type PaymentMethod = 'cash' | 'orange_money' | 'moov_money' | 'wave' | 'c
 export type UserRole = 'PASSENGER' | 'OPERATOR' | 'ADMIN' | 'SUPPORT';
 export type SeatStatus = 'available' | 'hold' | 'paid' | 'offline_reserved' | 'selected';
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
-export type IncidentStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type IncidentStatus = 'open' | 'in-progress' | 'resolved';
 
 // ============================================
 // USER & AUTHENTICATION
@@ -109,11 +109,25 @@ export interface Route {
 export interface Operator {
   id: string;
   name: string;
-  email: string;
-  phone: string;
+  operatorLogo?: string;
   logoUrl?: string;
-  baseCity?: string;
-  status: 'active' | 'inactive';
+  description?: string;
+  phoneNumber?: string;
+  email?: string;
+  websiteUrl?: string;
+  foundedYear?: number;
+  fleetSize?: number;
+  totalTrips?: number;
+  amenities?: string[];
+  baggagePrice?: number;
+  rating?: number;
+  totalReviews?: number;
+  isVerified?: boolean;
+  status: string;
+  openingHours?: string;
+  primaryStationId?: string;
+  primaryStationName?: string;
+  primaryStationCity?: string;
   createdAt: string;
 }
 
@@ -309,7 +323,7 @@ export interface Incident {
   id: string;
   tripId: string;
   userId: string;
-  type: 'delay' | 'accident' | 'missing_passenger' | 'vehicle_issue' | 'other';
+  type: 'accident' | 'delay' | 'cancellation' | 'mechanical' | 'other';
   description: string;
   status: IncidentStatus;
   attachments?: string[]; // photo URLs
@@ -322,7 +336,7 @@ export interface SupportMessage {
   userId: string;
   subject: string;
   message: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
   attachments?: string[];
   response?: string;
   createdAt: string;
@@ -392,6 +406,7 @@ export interface NearbyStationsParams {
 export interface CreateHoldBookingParams {
   tripId: string;
   numSeats: number;
+  seatNumbers?: string[];
   unitPrice?: number;
   selectedServices?: string[];
   passengerName?: string;
@@ -401,6 +416,7 @@ export interface CreateHoldBookingParams {
 export interface ConfirmBookingParams {
   bookingId: string;
   paymentMethod: PaymentMethod;
+  totalPaid?: number; // Montant total payé (ticket + frais de service + frais paiement)
   paymentData?: Record<string, any>; // pour fournisseur spécifique
 }
 

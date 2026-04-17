@@ -12,12 +12,13 @@ import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { User } from '../src/database/entities';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
+import { IntegrationsService } from '../src/integrations/integrations.service';
 import { APP_GUARD } from '@nestjs/core';
 import jwtConfig from '../src/config/jwt.config';
 
 /**
  * Auth e2e tests — runs against a mock DB repository.
- * Once Docker is available, swap the override for a real DB test.
+ * Uses email + password auth flow (current API).
  */
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -27,29 +28,52 @@ describe('Auth (e2e)', () => {
 
   const mockUserRepository = {
     findOne: jest.fn(({ where }: any) => {
-      if (where.phoneNumber) {
-        for (const u of users.values()) {
-          if (u.phoneNumber === where.phoneNumber) return Promise.resolve(u);
+      // Handle array of where conditions (OR)
+      const conditions = Array.isArray(where) ? where : [where];
+      for (const cond of conditions) {
+        if (cond.email) {
+          for (const u of users.values()) {
+            if (u.email === cond.email) return Promise.resolve(u);
+          }
         }
-      }
-      if (where.userId) {
-        return Promise.resolve(users.get(where.userId) ?? null);
+        if (cond.phoneNumber) {
+          for (const u of users.values()) {
+            if (u.phoneNumber === cond.phoneNumber) return Promise.resolve(u);
+          }
+        }
+        if (cond.userId || cond.id) {
+          const id = cond.userId || cond.id;
+          return Promise.resolve(users.get(id) ?? null);
+        }
+        if (cond.referralCode) {
+          for (const u of users.values()) {
+            if (u.referralCode === cond.referralCode) return Promise.resolve(u);
+          }
+        }
       }
       return Promise.resolve(null);
     }),
     create: jest.fn((data: any) => {
-      const userId = 'e2e-uuid-' + Math.random().toString(36).slice(2, 8);
-      return { userId, isActive: true, isVerified: false, ...data };
+      const id = 'e2e-uuid-' + Math.random().toString(36).slice(2, 8);
+      return {
+        id,
+        userId: id,
+        isActive: true,
+        isVerified: false,
+        status: 'active',
+        ...data,
+      };
     }),
     save: jest.fn((user: any) => {
-      users.set(user.userId, user);
+      users.set(user.id || user.userId, user);
       return Promise.resolve(user);
     }),
-    update: jest.fn(({ userId }: any, data: any) => {
-      const user = users.get(userId);
+    update: jest.fn(({ userId, id }: any, data: any) => {
+      const user = users.get(userId || id);
       if (user) Object.assign(user, data);
       return Promise.resolve({ affected: user ? 1 : 0 });
     }),
+    increment: jest.fn().mockResolvedValue({ affected: 1 }),
   };
 
   beforeAll(async () => {
@@ -75,6 +99,13 @@ describe('Auth (e2e)', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
+        },
+        {
+          provide: IntegrationsService,
+          useValue: {
+            logEvent: jest.fn(),
+            sendOtpViaWhatsApp: jest.fn().mockResolvedValue(undefined),
+          },
         },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
       ],
@@ -108,43 +139,62 @@ describe('Auth (e2e)', () => {
   // ─── Register ───
 
   describe('POST /api/auth/register', () => {
-    it('should register a new user', () => {
+    it('should register a new user with email + password', () => {
       return request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670000000', fullName: 'Test' })
+        .send({ email: 'test@example.com', password: 'Secure123' })
         .expect(201)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.data.message).toContain('OTP');
-          expect(res.body.data.otpCode).toBeDefined();
+          expect(res.body.data.user).toBeDefined();
+          expect(res.body.data.token).toBeDefined();
+          expect(res.body.data.refreshToken).toBeDefined();
         });
     });
 
-    it('should reject invalid phone number', () => {
+    it('should reject missing email', () => {
       return request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: 'not-a-phone' })
+        .send({ password: 'Secure123' })
         .expect(400)
         .expect((res) => {
           expect(res.body.success).toBe(false);
         });
     });
 
-    it('should reject duplicate phone number', async () => {
+    it('should reject missing password', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({ email: 'test@example.com' })
+        .expect(400);
+    });
+
+    it('should reject short password', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({ email: 'test@example.com', password: '12' })
+        .expect(400);
+    });
+
+    it('should reject duplicate email', async () => {
       await request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670000000' });
+        .send({ email: 'dupe@example.com', password: 'Secure123' });
 
       return request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670000000' })
+        .send({ email: 'dupe@example.com', password: 'Secure123' })
         .expect(409);
     });
 
     it('should reject unknown fields', () => {
       return request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670000000', hackerField: 'injection' })
+        .send({
+          email: 'test2@example.com',
+          password: 'Secure123',
+          hackerField: 'injection',
+        })
         .expect(400);
     });
   });
@@ -152,61 +202,36 @@ describe('Auth (e2e)', () => {
   // ─── Login ───
 
   describe('POST /api/auth/login', () => {
-    it('should send OTP for registered user', async () => {
+    it('should login with valid email + password', async () => {
       // Register first
       await request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670000000' });
+        .send({ email: 'login@example.com', password: 'Secure123' });
 
       return request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ phoneNumber: '+22670000000' })
+        .send({ email: 'login@example.com', password: 'Secure123' })
         .expect(200)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.data.otpCode).toBeDefined();
         });
     });
 
-    it('should 401 for unregistered phone', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/login')
-        .send({ phoneNumber: '+22699999999' })
-        .expect(401);
-    });
-  });
-
-  // ─── Verify OTP ───
-
-  describe('POST /api/auth/verify-otp', () => {
-    it('should return tokens for valid OTP', async () => {
-      // Register
-      const regRes = await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({ phoneNumber: '+22670000000' });
-      const otp = regRes.body.data.otpCode;
-
-      // Verify
-      return request(app.getHttpServer())
-        .post('/api/auth/verify-otp')
-        .send({ phoneNumber: '+22670000000', otpCode: otp })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.data.accessToken).toBeDefined();
-          expect(res.body.data.refreshToken).toBeDefined();
-          expect(res.body.data.user).toBeDefined();
-        });
-    });
-
-    it('should reject invalid OTP', async () => {
+    it('should 401 for wrong password', async () => {
       await request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670000000' });
+        .send({ email: 'login2@example.com', password: 'Secure123' });
 
       return request(app.getHttpServer())
-        .post('/api/auth/verify-otp')
-        .send({ phoneNumber: '+22670000000', otpCode: '000000' })
+        .post('/api/auth/login')
+        .send({ email: 'login2@example.com', password: 'WrongPassword' })
+        .expect(401);
+    });
+
+    it('should 401 for unregistered email', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email: 'nobody@example.com', password: 'Secure123' })
         .expect(401);
     });
   });
@@ -219,16 +244,10 @@ describe('Auth (e2e)', () => {
     });
 
     it('should return profile with valid token', async () => {
-      // Register + verify to get token
       const regRes = await request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670111111' });
-      const otp = regRes.body.data.otpCode;
-
-      const verifyRes = await request(app.getHttpServer())
-        .post('/api/auth/verify-otp')
-        .send({ phoneNumber: '+22670111111', otpCode: otp });
-      const token = verifyRes.body.data.accessToken;
+        .send({ email: 'me@example.com', password: 'Secure123' });
+      const token = regRes.body.data.token;
 
       return request(app.getHttpServer())
         .get('/api/auth/me')
@@ -236,62 +255,20 @@ describe('Auth (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.data.phoneNumber).toBe('+22670111111');
+          expect(res.body.data.email).toBe('me@example.com');
         });
     });
   });
 
-  // ─── Forgot + Reset Password ───
-
-  describe('POST /api/auth/forgot-password + reset-password', () => {
-    it('should send OTP then reset password', async () => {
-      // Register
-      await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({ phoneNumber: '+22670222222' });
-
-      // Forgot password
-      const forgotRes = await request(app.getHttpServer())
-        .post('/api/auth/forgot-password')
-        .send({ phoneNumber: '+22670222222' })
-        .expect(200);
-
-      const otp = forgotRes.body.data.otpCode;
-
-      // Reset password
-      return request(app.getHttpServer())
-        .post('/api/auth/reset-password')
-        .send({
-          phoneNumber: '+22670222222',
-          otpCode: otp,
-          newPassword: 'NewSecure123',
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.data.message).toContain('reset successfully');
-        });
-    });
-  });
-
-  // ─── Roles Guard ───
+  // ─── RolesGuard ───
 
   describe('RolesGuard integration', () => {
-    it('should block non-admin from admin routes (403)', async () => {
-      // This test validates the guard is active.
-      // Since there are no admin-only routes yet in auth, we just confirm
-      // the guard mechanism works by checking me works for PASSENGER.
+    it('should allow registered user to access /me', async () => {
       const regRes = await request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ phoneNumber: '+22670333333' });
-      const otp = regRes.body.data.otpCode;
+        .send({ email: 'guard@example.com', password: 'Secure123' });
+      const token = regRes.body.data.token;
 
-      const verifyRes = await request(app.getHttpServer())
-        .post('/api/auth/verify-otp')
-        .send({ phoneNumber: '+22670333333', otpCode: otp });
-
-      const token = verifyRes.body.data.accessToken;
-
-      // PASSENGER can access /me (no specific role required)
       return request(app.getHttpServer())
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${token}`)

@@ -27,6 +27,7 @@ import {
   OTP_EXPIRATION_MINUTES,
   REFERRAL_CODE_PREFIX,
   TICKET_CODE_LENGTH,
+  POINTS_PER_REFERRAL,
 } from '../common/constants';
 import { generateAlphanumericCode } from '../common/utils/code-generator';
 
@@ -75,6 +76,17 @@ export class AuthService {
     let role = dto.role || UserRole.PASSENGER;
     if (role === 'cashier') role = UserRole.CAISSIER;
 
+    // Resolve referral code → referrer user ID
+    let referredByUserId: string | undefined;
+    if (dto.referralCode) {
+      const referrer = await this.userRepository.findOne({
+        where: { referralCode: dto.referralCode },
+      });
+      if (referrer) {
+        referredByUserId = referrer.id;
+      }
+    }
+
     const user = this.userRepository.create({
       email: dto.email,
       passwordHash,
@@ -86,13 +98,27 @@ export class AuthService {
       status: UserStatus.ACTIVE,
       isVerified: false,
       referralCode: this.generateReferralCode(),
-      referredBy: dto.referralCode || undefined,
+      referredBy: referredByUserId,
       companyId: dto.companyId,
       gareId: dto.gareId,
       gareName: dto.gareName,
     });
 
     const savedUser = await this.userRepository.save(user);
+
+    // Credit referrer if applicable
+    if (referredByUserId) {
+      await this.userRepository.increment(
+        { id: referredByUserId },
+        'totalReferrals',
+        1,
+      );
+      await this.userRepository.increment(
+        { id: referredByUserId },
+        'referralPointsBalance',
+        POINTS_PER_REFERRAL,
+      );
+    }
 
     // Return tokens directly (frontends expect immediate auth)
     const tokens = await this.generateTokens(savedUser);

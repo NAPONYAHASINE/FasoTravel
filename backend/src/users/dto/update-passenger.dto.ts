@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEmail } from 'class-validator';
+import { IsOptional, IsString, IsEmail, IsBoolean, IsIn } from 'class-validator';
 
 export class UpdatePassengerDto {
   @IsOptional()
@@ -12,4 +12,13 @@ export class UpdatePassengerDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['fr', 'en', 'mo'])
+  preferredLanguage?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  pushEnabled?: boolean;
 }

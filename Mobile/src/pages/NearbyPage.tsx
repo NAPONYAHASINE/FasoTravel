@@ -181,7 +181,7 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
     }
 
     // Validate coordinates are available
-    if (!vehicleLocation.current_latitude || !vehicleLocation.current_longitude) {
+    if (!vehicleLocation.latitude || !vehicleLocation.longitude) {
       window.alert('Position non disponible. Veuillez vérifier l\'accès à la géolocalisation.');
       return;
     }
@@ -190,8 +190,8 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
       trip_id: autoTripId,
       description: incidentText.trim(),
       timestamp: new Date().toISOString(),
-      latitude: vehicleLocation.current_latitude,
-      longitude: vehicleLocation.current_longitude
+      latitude: vehicleLocation.latitude,
+      longitude: vehicleLocation.longitude
     });
 
     if (result) {
@@ -211,15 +211,15 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
     }
 
     // Validate coordinates are available
-    if (!vehicleLocation.current_latitude || !vehicleLocation.current_longitude) {
+    if (!vehicleLocation.latitude || !vehicleLocation.longitude) {
       window.alert('Position non disponible. Veuillez vérifier l\'accès à la géolocalisation.');
       return;
     }
 
     const result = await shareLocation({
       trip_id: autoTripId,
-      latitude: vehicleLocation.current_latitude,
-      longitude: vehicleLocation.current_longitude,
+      latitude: vehicleLocation.latitude,
+      longitude: vehicleLocation.longitude,
       timestamp: new Date().toISOString()
     });
 
@@ -373,7 +373,7 @@ export function NearbyPage({ trackingTripId, onNavigate }: NearbyPageProps) {
                   <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
                     <p className="text-xs text-green-600 dark:text-green-400 mb-1">Position</p>
                     <p className="text-sm font-mono text-gray-900 dark:text-white">
-                      {vehicleLocation.current_latitude?.toFixed(4)}, {vehicleLocation.current_longitude?.toFixed(4)}
+                      {vehicleLocation.latitude?.toFixed(4)}, {vehicleLocation.longitude?.toFixed(4)}
                     </p>
                   </div>
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">

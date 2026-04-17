@@ -17,6 +17,7 @@ import { Switch } from '../components/ui/switch';
 import { setLanguage, Language } from '../lib/i18n';
 import { motion } from 'motion/react';
 import { feedback } from '../lib/interactions';
+import { updateUserProfile, exportUserData } from '../lib/api';
 
 interface ProfilePageProps {
   onNavigate: (page: Page) => void;
@@ -41,9 +42,9 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
   const [userEmail, setUserEmail] = useState(updatedUserData?.email || storedUser?.email || '');
   const [userPhone, setUserPhone] = useState(updatedUserData?.phone || storedUser?.phone || '');
   
-  const [language, setLang] = useState<Language>('fr');
+  const [language, setLang] = useState<Language>((storedUser?.preferredLanguage as Language) || 'fr');
   const [geoConsent, setGeoConsent] = useState(true);
-  const [pushConsent, setPushConsent] = useState(true);
+  const [pushConsent, setPushConsent] = useState(storedUser?.pushEnabled !== false);
 
   // Update user data when updatedUserData prop changes (from edit-profile)
   useEffect(() => {
@@ -62,14 +63,15 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
   const handleLanguageChange = (newLang: Language) => {
     setLang(newLang);
     setLanguage(newLang);
-    console.log('Language changed to:', newLang);
-    // PATCH /users/me { language: newLang }
+    // Persist to backend
+    updateUserProfile({ preferredLanguage: newLang }).catch(err =>
+      console.error('Failed to save language:', err)
+    );
   };
 
   const handleGeoConsentChange = (enabled: boolean) => {
     setGeoConsent(enabled);
-    console.log('Geo consent:', enabled);
-    // PATCH /users/me { geo_consent: enabled, geo_consent_timestamp: new Date() }
+    // Geo consent is browser-level (Permissions API), not saved on backend
     if (!enabled) {
       alert('La géolocalisation a été désactivée.\n\nVous ne pourrez plus voir les gares et véhicules à proximité.\n\nVos données de localisation existantes seront supprimées dans 7 jours.');
     }
@@ -77,14 +79,19 @@ export function ProfilePage({ onNavigate, onBack, onLogout, darkMode = false, on
 
   const handlePushConsentChange = (enabled: boolean) => {
     setPushConsent(enabled);
-    console.log('Push consent:', enabled);
-    // PATCH /users/me { push_consent: enabled, push_consent_timestamp: new Date() }
+    updateUserProfile({ pushEnabled: enabled }).catch(() => {
+      setPushConsent(!enabled);
+    });
   };
 
   const handleDataExport = () => {
-    console.log('Export user data');
-    // GET /users/me/export
-    alert('Export de vos données en cours...\n\nVous recevrez un email avec toutes vos données personnelles au format JSON.');
+    exportUserData()
+      .then(() => {
+        alert('Export de vos données en cours...\n\nVous recevrez un email avec toutes vos données personnelles au format JSON.');
+      })
+      .catch(() => {
+        alert('Erreur lors de l\'export. Veuillez réessayer.');
+      });
   };
 
   const handleLogout = () => {

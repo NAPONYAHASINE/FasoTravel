@@ -9,7 +9,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { StoriesService } from './stories.service';
-import { CreateStoryDto, UpdateStoryDto, MarkViewedDto } from './dto';
+import {
+  CreateStoryDto,
+  UpdateStoryDto,
+  MarkViewedDto,
+  CreateAdminStoryDto,
+  UpdateAdminStoryDto,
+} from './dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -151,14 +157,14 @@ export class AdminStoriesController {
   @Post()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Admin: create story' })
-  create(@Body() dto: CreateStoryDto) {
+  create(@Body() dto: CreateAdminStoryDto) {
     return this.storiesService.createAdminStory(dto);
   }
 
   @Put(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Admin: update story' })
-  update(@Param('id') id: string, @Body() dto: UpdateStoryDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateAdminStoryDto) {
     return this.storiesService.updateAdminStory(id, dto);
   }
 

@@ -83,10 +83,12 @@ class TripService {
     }
 
     // PRODUCTION: Call backend API
+    // Backend SearchTripsDto expects: from, to, date, passengers
     const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) queryParams.append(key, String(value));
-    });
+    if (params.fromStationId) queryParams.append('from', params.fromStationId);
+    if (params.toStationId) queryParams.append('to', params.toStationId);
+    if (params.departureDate) queryParams.append('date', params.departureDate);
+    if (params.numPassengers) queryParams.append('passengers', String(params.numPassengers));
 
     return apiClient.get<Trip[]>(`${API_ENDPOINTS.trips.search}?${queryParams}`);
   }

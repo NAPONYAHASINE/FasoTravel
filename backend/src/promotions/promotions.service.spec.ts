@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ConflictException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { PromotionsService } from './promotions.service';
 import { Promotion } from '../database/entities';
 
 describe('PromotionsService', () => {
   let service: PromotionsService;
   let promoRepo: Record<string, jest.Mock>;
+  let dataSource: { createQueryBuilder: jest.Mock };
 
   const mockPromo: Partial<Promotion> = {
     promotionId: 'PROMO-001',
@@ -36,10 +38,21 @@ describe('PromotionsService', () => {
       })),
     };
 
+    dataSource = {
+      createQueryBuilder: jest.fn(() => ({
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 1 }),
+      })),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PromotionsService,
         { provide: getRepositoryToken(Promotion), useValue: promoRepo },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 
@@ -172,6 +185,27 @@ describe('PromotionsService', () => {
       promoRepo.findOne.mockResolvedValue(mockPromo);
       await service.remove('PROMO-001');
       expect(promoRepo.remove).toHaveBeenCalled();
+    });
+  });
+
+  describe('usePromotion', () => {
+    it('should atomically increment usesCount', async () => {
+      const result = await service.usePromotion('PROMO-001');
+      expect(result.used).toBe(true);
+      expect(dataSource.createQueryBuilder).toHaveBeenCalled();
+    });
+
+    it('should throw ConflictException when max uses reached', async () => {
+      dataSource.createQueryBuilder.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
+      });
+      await expect(service.usePromotion('PROMO-001')).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 });

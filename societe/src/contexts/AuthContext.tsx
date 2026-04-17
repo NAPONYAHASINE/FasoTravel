@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isDevelopment()) {
         // Dev mode: 2 étapes identiques au mode prod
         if (otp) {
-          // Étape 2: vérifier OTP — accepter tout code 6 chiffres en dev
+          // Étape 2: vérifier OTP — valide le code exact généré au login
           const response = await authService.verifyOtp(email, otp);
           const u = response.user as any;
           authUser = {

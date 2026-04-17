@@ -13,6 +13,7 @@ import type {
   Trip as ModelTrip,
   Ticket as ModelTicket,
   Operator as ModelOperator,
+  OperatorService as ModelOperatorService,
 } from '../data/models';
 import type { VehicleLocation } from '../services/types';
 import { liveLocationService } from '../services/api/liveLocation.service';
@@ -427,6 +428,41 @@ export function useOperatorById(operatorId: string | null) {
   }, [operatorId]);
 
   return { operator, isLoading, error };
+}
+
+/**
+ * Hook pour récupérer les services d'un opérateur
+ * ✅ BACKEND READY: GET /operators/{operator_id}/services
+ */
+export function useOperatorServices(operatorId: string | null) {
+  const [services, setServices] = useState<ModelOperatorService[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!operatorId) {
+      setServices([]);
+      return;
+    }
+
+    async function fetchServices() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await api.getOperatorServices(operatorId!);
+        setServices(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load services');
+        console.error('Error fetching operator services:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchServices();
+  }, [operatorId]);
+
+  return { services, isLoading, error };
 }
 
 /**
@@ -1147,8 +1183,8 @@ export function useUnreadNotificationCount() {
  *   const result = await reportIncident({
  *     trip_id: embarkedTicket.trip_id,
  *     description: 'Accident sur la route',
- *     latitude: vehicleLocation.current_latitude,
- *     longitude: vehicleLocation.current_longitude,
+ *     latitude: vehicleLocation.latitude,
+ *     longitude: vehicleLocation.longitude,
  *     timestamp: new Date().toISOString()
  *   });
  *   if (result) console.log('Incident créé:', result.incident_id);
@@ -1190,8 +1226,8 @@ export function useReportIncident() {
  * const handleShare = async () => {
  *   const result = await shareLocation({
  *     trip_id: embarkedTicket.trip_id,
- *     latitude: vehicleLocation.current_latitude,
- *     longitude: vehicleLocation.current_longitude,
+ *     latitude: vehicleLocation.latitude,
+ *     longitude: vehicleLocation.longitude,
  *     timestamp: new Date().toISOString()
  *   });
  *   if (result) console.log('Position partagée');

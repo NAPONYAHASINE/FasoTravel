@@ -65,6 +65,7 @@ export const API_ENDPOINTS = {
     login: '/auth/login',
     logout: '/auth/logout',
     me: '/auth/me',
+    forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
     refreshToken: '/auth/refresh-token',
     verifyOtp: '/auth/verify-otp',
@@ -102,6 +103,10 @@ export const API_ENDPOINTS = {
   // Stories
   stories: '/stories',
   storiesUpload: '/stories/upload',
+  
+  // Services opérateur
+  operatorServices: (operatorId: string) => `/operators/${operatorId}/services`,
+  adminOperatorServices: '/admin/operator-services',
   
   // Transactions caisse
   cashTransactions: '/cash-transactions',

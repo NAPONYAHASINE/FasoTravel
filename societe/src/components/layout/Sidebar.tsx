@@ -1,4 +1,4 @@
-import { LayoutDashboard, Map, Ticket, Settings, Users, TrendingUp, Calendar, MessageSquare, HelpCircle, LogOut, ChevronLeft, ChevronRight, Building2, MapPin, DollarSign, BarChart3, Image, Star, Clock, Ban, AlertTriangle, Gift } from "lucide-react";
+import { LayoutDashboard, Map, Ticket, Settings, Users, TrendingUp, Calendar, MessageSquare, HelpCircle, LogOut, ChevronLeft, ChevronRight, Building2, MapPin, DollarSign, BarChart3, Image, Star, Clock, Ban, AlertTriangle, Gift, Package } from "lucide-react";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
@@ -28,6 +28,7 @@ export default function Sidebar({ role }: SidebarProps) {
       { icon: Clock, label: 'Horaires & Sièges', path: '/responsable/horaires' },
       { icon: DollarSign, label: 'Tarification', path: '/responsable/tarification' },
       { icon: Building2, label: 'Gares', path: '/responsable/gares' },
+      { icon: Package, label: 'Services', path: '/responsable/services' },
       { icon: Users, label: 'Managers', path: '/responsable/managers' },
       { icon: Image, label: 'Stories', path: '/responsable/stories' },
       { icon: Gift, label: 'Promotions', path: '/responsable/promotions' },

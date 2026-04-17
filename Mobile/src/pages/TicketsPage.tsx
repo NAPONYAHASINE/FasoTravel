@@ -76,8 +76,8 @@ export function TicketsPage({ onNavigate }: TicketsPageProps) {
   // Embarqués: boarded et NON expirés
   const embarkedTickets = filteredTickets.filter(t => t.status === 'boarded' && !isTicketExpired(t));
   
-  // Annulés: cancelled
-  const cancelledTickets = filteredTickets.filter(t => t.status === 'cancelled');
+  // Annulés: cancelled ou refunded
+  const cancelledTickets = filteredTickets.filter(t => t.status === 'cancelled' || t.status === 'refunded');
   
   // Expirés: (active ou boarded) ET expirés (departure_time < now)
   const expiredTickets = filteredTickets.filter(t => {

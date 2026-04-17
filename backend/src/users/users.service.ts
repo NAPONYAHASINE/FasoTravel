@@ -103,6 +103,8 @@ export class UsersService {
     if (dto.name) user.name = dto.name;
     if (dto.email) user.email = dto.email;
     if (dto.phone) user.phoneNumber = dto.phone;
+    if (dto.preferredLanguage) user.preferredLanguage = dto.preferredLanguage;
+    if (dto.pushEnabled !== undefined) user.pushEnabled = dto.pushEnabled;
 
     const saved = await this.userRepo.save(user);
     this.logger.log(`Passenger ${id} updated`);
@@ -207,7 +209,7 @@ export class UsersService {
         user.name ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
       email: user.email,
       phone: user.phoneNumber,
-      status: user.status as 'active' | 'suspended',
+      status: user.status as 'active' | 'inactive' | 'suspended',
       verified: user.isVerified,
       createdAt: user.createdAt?.toISOString(),
       updatedAt: user.updatedAt?.toISOString(),
@@ -215,6 +217,8 @@ export class UsersService {
       referralCode: user.referralCode,
       referralPointsBalance: user.referralPointsBalance,
       badgeLevel: user.badgeLevel,
+      preferredLanguage: user.preferredLanguage ?? 'fr',
+      pushEnabled: user.pushEnabled ?? true,
     };
   }
 

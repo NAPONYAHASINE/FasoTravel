@@ -34,7 +34,7 @@ export interface ReferralCoupon {
   code: string;
   amount: number;        // ex: 500 or 1000 FCFA
   pointsCost: number;    // ex: 100 or 200
-  status: 'active' | 'used' | 'expired';
+  status: 'active' | 'used' | 'expired' | 'cancelled';
   createdAt: string;
   expiresAt: string;
   usedAt?: string;

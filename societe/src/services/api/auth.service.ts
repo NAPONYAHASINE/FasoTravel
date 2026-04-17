@@ -14,11 +14,14 @@ import type { AuthResponse, OperatorUser } from '../../shared/types/common';
 import type { LoginDto, RegisterDto, ResetPasswordDto } from '../types';
 
 class AuthService {
+  private pendingOtp: string = '';
+  private pendingUser: any = null;
+
   /**
    * Connexion utilisateur
    */
   async login(data: LoginDto): Promise<AuthResponse> {
-    logger.info('🔐 Tentative connexion', { email: data.email });
+    logger.info('🔐 Tentative connexion');
 
     if (isDevelopment()) {
       // MODE LOCAL : Vérifier dans localStorage
@@ -64,17 +67,23 @@ class AuthService {
       }
 
       // Étape 1 : retourner otpRequired (ne PAS sauvegarder de session)
-      // On stocke temporairement l'user pour que verifyOtp puisse le retrouver
-      storageService.set('_pending_otp_user', user);
+      // Stocker en mémoire (comme Admin) — pas dans localStorage
+      this.pendingUser = user;
+
+      // Générer un vrai code OTP
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      this.pendingOtp = otpCode;
+
+      // Afficher le code OTP uniquement dans la console (comme Admin)
+      console.log(`🔐 [DEV] Code OTP envoyé à ${data.email.replace(/@phone\.transportbf\.bf$/, '')}: ${otpCode}`);
 
       const authResponse: AuthResponse = {
         otpRequired: true,
         identifier: data.email,
-        message: 'OTP envoyé sur votre WhatsApp (mode démo: entrez 123456)',
-        otpCode: '123456', // affiché en dev uniquement
+        message: 'OTP envoyé sur votre WhatsApp',
       };
 
-      logger.info('📨 OTP requis (local)', { email: data.email, otpCode: '123456' });
+      logger.info('📨 OTP requis (local)');
 
       return authResponse;
     } else {
@@ -83,7 +92,7 @@ class AuthService {
 
       // Si OTP requis (envoyé via WhatsApp), ne pas sauvegarder de tokens
       if (authResponse.otpRequired) {
-        logger.info('📨 OTP requis via WhatsApp', { identifier: authResponse.identifier });
+        logger.info('📨 OTP requis via WhatsApp');
         return authResponse;
       }
 
@@ -99,7 +108,6 @@ class AuthService {
       }
 
 logger.info('✅ Connexion réussie (API)', {
-        user: authResponse.user?.email,
         role: (authResponse.user as OperatorUser)?.role 
       });
 
@@ -111,7 +119,7 @@ logger.info('✅ Connexion réussie (API)', {
    * Inscription utilisateur
    */
   async register(data: RegisterDto): Promise<AuthResponse> {
-    logger.info('📝 Inscription utilisateur', { email: data.email, role: data.role });
+    logger.info('📝 Inscription utilisateur', { role: data.role });
 
     if (isDevelopment()) {
       // En mode local, l'inscription se fait via les pages de gestion
@@ -163,18 +171,32 @@ logger.info('✅ Connexion réussie (API)', {
   }
 
   /**
-   * Réinitialiser le mot de passe
+   * Mot de passe oublié — envoie un OTP
    */
-  async resetPassword(data: ResetPasswordDto): Promise<void> {
-    logger.info('🔄 Réinitialisation mot de passe', { email: data.email });
+  async forgotPassword(email: string): Promise<{ message: string; otpCode?: string }> {
+    logger.info('🔄 Demande de réinitialisation mot de passe');
 
     if (isDevelopment()) {
-      // Simuler l'envoi d'email
-      logger.warn('⚠️ Email de réinitialisation simulé (mode local)');
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      logger.warn(`⚠️ OTP mot de passe oublié (mode local): ${otp}`);
+      return { message: 'OTP envoyé sur votre WhatsApp', otpCode: otp };
+    } else {
+      return await apiClient.post(API_ENDPOINTS.auth.forgotPassword, { email });
+    }
+  }
+
+  /**
+   * Réinitialiser le mot de passe avec OTP
+   */
+  async resetPassword(data: ResetPasswordDto): Promise<void> {
+    logger.info('🔄 Réinitialisation mot de passe');
+
+    if (isDevelopment()) {
+      logger.warn('⚠️ Mot de passe réinitialisé (mode local)');
       return;
     } else {
       await apiClient.post(API_ENDPOINTS.auth.resetPassword, data);
-      logger.info('✅ Email de réinitialisation envoyé');
+      logger.info('✅ Mot de passe réinitialisé');
     }
   }
 
@@ -210,12 +232,17 @@ logger.info('✅ Connexion réussie (API)', {
    */
   async verifyOtp(identifier: string, code: string): Promise<AuthResponse> {
     if (isDevelopment()) {
-      // Mock: accepter tout code de 6 chiffres
       if (code.length !== 6) throw new Error('Code OTP invalide');
 
-      // Récupérer l'utilisateur stocké lors du login (étape 1)
-      const pendingUser = storageService.get('_pending_otp_user');
-      storageService.remove('_pending_otp_user');
+      // Vérifier le code OTP contre celui généré au login (en mémoire)
+      if (this.pendingOtp && code !== this.pendingOtp) {
+        throw new Error('Code OTP incorrect');
+      }
+
+      // Récupérer l'utilisateur stocké en mémoire lors du login
+      const pendingUser = this.pendingUser;
+      this.pendingOtp = '';
+      this.pendingUser = null;
 
       if (!pendingUser) {
         throw new Error('Session expirée, veuillez vous reconnecter');
@@ -275,7 +302,11 @@ logger.info('✅ Connexion réussie (API)', {
    */
   async resendOtp(email: string): Promise<{ message: string; otpCode?: string }> {
     if (isDevelopment()) {
-      return { message: 'OTP renvoyé sur votre WhatsApp', otpCode: '123456' };
+      // Régénérer un nouveau code OTP
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      this.pendingOtp = otpCode;
+      console.log(`🔐 [DEV] Nouveau code OTP renvoyé à ${email.replace(/@phone\.transportbf\.bf$/, '')}: ${otpCode}`);
+      return { message: 'OTP renvoyé sur votre WhatsApp' };
     }
 
     return apiClient.post(API_ENDPOINTS.auth.resendOtp, { email });

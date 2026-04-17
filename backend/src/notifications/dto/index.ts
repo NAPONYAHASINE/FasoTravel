@@ -117,6 +117,10 @@ export class UpdateTemplateDto {
 }
 
 export class CreateNotificationDto {
+  @IsOptional()
+  @IsString()
+  userId?: string;
+
   @IsString()
   type: string;
 
@@ -129,4 +133,8 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsString()
   actionUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }

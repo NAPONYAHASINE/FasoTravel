@@ -119,7 +119,7 @@ class BookingService {
       passengerName: passengerInfo?.name || 'Passager',
       passengerPhone: passengerInfo?.phone || '',
       seatNumber: 'A1',
-      price: booking.totalPrice,
+      price: params.totalPaid ?? booking.totalPrice,
       paymentMethod: params.paymentMethod,
       status: 'active',
       qrCode: `QR_${Date.now()}`,

@@ -360,11 +360,6 @@ export default function LoginPage() {
                   </button>
                 </form>
 
-                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-xs text-blue-800 dark:text-blue-200">
-                    💡 <strong>Mode démo :</strong> Numéro WhatsApp et mot de passe pré-remplis. Cliquez sur "Continuer" puis entrez un code OTP à 6 chiffres.
-                  </p>
-                </div>
               </div>
             </div>
           )}
@@ -434,11 +429,6 @@ export default function LoginPage() {
                   </button>
                 </form>
 
-                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-xs text-blue-800 dark:text-blue-200">
-                    💡 <strong>Mode démo :</strong> Entrez n'importe quel code à 6 chiffres (ex: 123456)
-                  </p>
-                </div>
               </div>
             </div>
           )}

@@ -256,7 +256,8 @@ export default function App() {
     const protectedPages: Page[] = ['trip-detail', 'seat-selection', 'payment', 'tickets', 'support', 'profile', 'edit-profile', 'rating-review', 'referral'];
     
     // Si c'est une page protégée et l'utilisateur n'est pas connecté, rediriger vers auth
-    if (protectedPages.includes(page) && !appState.user) {
+    // Exception: edit-profile en mode mot de passe oublié
+    if (protectedPages.includes(page) && !appState.user && !(page === 'edit-profile' && (appState as any).forgotPasswordEmail)) {
       setAppState(prev => ({
         ...prev,
         currentPage: 'auth',
@@ -318,13 +319,17 @@ export default function App() {
   const handleAuth = (user: User) => {
     // Store auth data temporarily and navigate to OTP verification
     setPendingAuthData(user);
+    const isForgotPassword = user.loginIdentifier?.startsWith('forgot:');
+    const identifier = isForgotPassword
+      ? `${user.loginIdentifier!.replace('forgot:', '')}@phone.transportbf.bf`
+      : (user.loginIdentifier || user.phone || user.email || '');
     setAppState(prev => ({
       ...prev,
       currentPage: 'otp-verification',
       otpData: {
-        identifier: user.loginIdentifier || user.phone || user.email || '',
-        mode: 'auth',
-        returnPage: 'home'
+        identifier,
+        mode: isForgotPassword ? 'forgot-password' as any : 'auth',
+        returnPage: isForgotPassword ? 'edit-profile' : 'home'
       },
       history: [...prev.history, prev.currentPage]
     }));
@@ -341,9 +346,27 @@ export default function App() {
           currentPage: returnPage,
           showAuth: false,
           authReturnTo: undefined,
-          otpData: undefined
+          otpData: undefined,
         };
       });
+      setPendingAuthData(null);
+    }
+  };
+
+  const handleForgotPasswordOtpVerified = (otpCode: string) => {
+    // After forgot-password OTP verification, go to edit-profile with password reset data
+    if (pendingAuthData) {
+      const phone = pendingAuthData.loginIdentifier?.replace('forgot:', '') || '';
+      const email = `${phone}@phone.transportbf.bf`;
+      setAppState(prev => ({
+        ...prev,
+        user: null,
+        currentPage: 'edit-profile' as any,
+        showAuth: false,
+        otpData: undefined,
+        forgotPasswordEmail: email,
+        forgotPasswordOtp: otpCode,
+      }));
       setPendingAuthData(null);
     }
   };
@@ -414,10 +437,12 @@ export default function App() {
             identifier={appState.otpData.identifier}
             mode={appState.otpData.mode}
             paymentMethod={appState.otpData.paymentMethod}
-            onVerified={(_code) => {
+            onVerified={(code) => {
               // After OTP verified
               if (appState.otpData!.mode === 'auth') {
                 handleOtpVerified();
+              } else if (appState.otpData!.mode === 'forgot-password') {
+                handleForgotPasswordOtpVerified(code);
               } else if (appState.otpData!.mode === 'payment') {
                 // Continue to return page for payment with preserved paymentMethod
                 navigateTo(appState.otpData!.returnPage, { 
@@ -601,9 +626,32 @@ export default function App() {
             onNavigate={navigateTo}
             onBack={goBack}
             onUpdateUser={syncUserProfile}
+            onAutoLogin={(appState as any).forgotPasswordEmail ? () => {
+              // After password reset, auto-login: create a session from pendingAuthData
+              const fpEmail = (appState as any).forgotPasswordEmail;
+              const phone = fpEmail?.replace(/@phone\.transportbf\.bf$/, '') || '';
+              const autoUser: User = {
+                name: phone,
+                phone,
+                email: fpEmail,
+                isGuest: false,
+              };
+              localStorage.setItem('auth_user', JSON.stringify(autoUser));
+              setAppState(prev => ({
+                ...prev,
+                user: autoUser,
+                currentPage: 'home',
+                showAuth: false,
+                forgotPasswordEmail: undefined,
+                forgotPasswordOtp: undefined,
+                history: [],
+              }));
+            } : undefined}
             initialName={appState.profileData?.name || derivedUserName}
             initialEmail={appState.profileData?.email || appState.user?.email}
             initialPhone={appState.profileData?.phone || appState.user?.phone}
+            forgotPasswordEmail={(appState as any).forgotPasswordEmail}
+            forgotPasswordOtp={(appState as any).forgotPasswordOtp}
           />
         );
 

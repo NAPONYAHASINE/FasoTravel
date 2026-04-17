@@ -3,13 +3,13 @@
  * 
  * BACKEND INTEGRATION:
  * - Utilise le hook useStories() pour récupérer les stories depuis l'API
- * - Les administrateurs peuvent créer des stories via le backend (API POST /api/stories)
- * - Les stories sont récupérées depuis la base de données
- * - Event: story_viewed, story_clicked (à implémenter avec analytics)
+ * - Les administrateurs créent des stories via le backend (POST /admin/stories)
+ * - GET /stories/active retourne les stories actives
  * 
- * PROMO SUPPORT:
- * - Story avec promo_id redirige vers SearchPage avec filtre promo
- * - Bouton CTA: "Voir les offres" si promo_id, sinon "En savoir plus" si link_url
+ * CTA SUPPORT:
+ * - actionType 'internal' → navigation vers une page de l'app (internalPage)
+ * - actionType 'external' → ouverture d'un lien (actionUrl)
+ * - actionType 'none' → bouton "Fermer"
  */
 
 import { motion } from 'motion/react';
@@ -23,18 +23,6 @@ interface StoriesCircleProps {
   onNavigate?: (page: Page, data?: any) => void;
 }
 
-// Map category to description
-const getCategoryDescription = (category: string): string => {
-  const descriptions: Record<string, string> = {
-    'PROMO': '🎁 Profitez de nos offres promotionnelles !',
-    'NEW': '✨ Découvrez nos nouveautés',
-    'DESTINATION': '🏖️ Explorez le Burkina Faso',
-    'TIPS': '💡 Conseils pour voyager en toute sécurité',
-    'PARTNERS': '🤝 Nos partenaires de confiance',
-    'ANNOUNCEMENT': '📢 Informations importantes'
-  };
-  return descriptions[category] || 'Découvrez plus...';
-};
 
 export function StoriesCircle({ onNavigate }: StoriesCircleProps) {
   const { stories, isLoading, error } = useStories();
@@ -170,37 +158,63 @@ export function StoriesCircle({ onNavigate }: StoriesCircleProps) {
 
           {/* Story Content */}
           <motion.div
-            className={`w-full max-w-md mx-4 aspect-[9/16] rounded-3xl bg-gradient-to-br ${selectedStory.gradient} p-8 flex flex-col items-center justify-center text-white shadow-2xl`}
+            className={`w-full max-w-md mx-4 aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl relative ${
+              selectedStory.mediaType === 'gradient'
+                ? `bg-gradient-to-br ${selectedStory.gradient}`
+                : 'bg-black'
+            }`}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <span className="text-8xl mb-6">{selectedStory.emoji || '📢'}</span>
-            <h2 className="text-3xl mb-4 text-center">{selectedStory.title}</h2>
-            <p className="text-center text-white/90 mb-8">
-              {selectedStory.description || getCategoryDescription(selectedStory.category)}
-            </p>
-            {/* ✅ Support promo_id OR link_url */}
-            {selectedStory.promo_id ? (
+            {selectedStory.mediaType === 'image' && selectedStory.mediaUrl && (
+              <img
+                src={selectedStory.mediaUrl}
+                alt={selectedStory.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+            {selectedStory.mediaType === 'video' && selectedStory.mediaUrl && (
+              <video
+                src={selectedStory.mediaUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+            <div className="relative z-10 w-full h-full p-8 flex flex-col items-center justify-center text-white">
+              {selectedStory.mediaType === 'gradient' && (
+                <span className="text-8xl mb-6">{selectedStory.emoji || '📢'}</span>
+              )}
+              <h2 className="text-3xl mb-4 text-center drop-shadow-lg">{selectedStory.title}</h2>
+              <p className="text-center text-white/90 mb-8 drop-shadow-md">
+                {selectedStory.description}
+              </p>
+            {/* CTA based on actionType */}
+            {selectedStory.actionType === 'internal' && selectedStory.internalPage ? (
               <motion.button
                 onClick={() => {
                   feedback.tap();
-                  onNavigate?.('search-results', { promo_id: selectedStory.promo_id });
+                  onNavigate?.(selectedStory.internalPage as Page);
                   handleClose();
                 }}
                 className="px-8 py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Voir les offres →
+                {selectedStory.ctaText || 'Voir →'}
               </motion.button>
-            ) : selectedStory.link_url ? (
+            ) : selectedStory.actionType === 'external' && selectedStory.actionUrl ? (
               <motion.a
-                href={selectedStory.link_url}
-                className="px-8 py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100"
+                href={selectedStory.actionUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-8 py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 inline-block"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                En savoir plus
+                {selectedStory.ctaText || 'En savoir plus'}
               </motion.a>
             ) : (
               <motion.button
@@ -212,6 +226,7 @@ export function StoriesCircle({ onNavigate }: StoriesCircleProps) {
                 Fermer
               </motion.button>
             )}
+            </div>
           </motion.div>
         </motion.div>
       )}
